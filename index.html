@@ -1624,25 +1624,24 @@ function renderDateNav(sheet){
     else activeDate[sheet] = todayStr;
   }
 
-  const cur = activeDate[sheet];
-  const prevDate = addDays(cur, -1);
-  const nextDate = addDays(cur, 1);
+  const cur = activeDate[sheet]; // null = Tất cả, string = ngày cụ thể
+  const displayDate = (cur && cur.length===10) ? cur : todayVN();
+  const prevDate = addDays(displayDate, -1);
+  const nextDate = addDays(displayDate, 1);
 
-  // Label for center
-  const isToday = cur === todayStr;
-  const isTomorrow = cur === addDays(todayStr, 1);
-  const isYesterday = cur === addDays(todayStr, -1);
-  const parts = cur.split('-');
+  const isAll = !cur || cur.length!==10;
+  const isToday = displayDate === todayStr;
+  const isTomorrow = displayDate === addDays(todayStr, 1);
+  const isYesterday = displayDate === addDays(todayStr, -1);
+  const parts = displayDate.split('-');
   const fmtLabel = parseInt(parts[2]) + '/' + parseInt(parts[1]) + '/' + parts[0];
   let label = fmtLabel;
-  if(isToday) label = '📅 Hôm nay (' + parseInt(parts[2]) + '/' + parseInt(parts[1]) + ')';
+  if(isAll) label = 'Tất cả';
+  else if(isToday) label = '📅 Hôm nay (' + parseInt(parts[2]) + '/' + parseInt(parts[1]) + ')';
   else if(isTomorrow) label = '⏭ Ngày mai (' + parseInt(parts[2]) + '/' + parseInt(parts[1]) + ')';
   else if(isYesterday) label = '⏮ Hôm qua (' + parseInt(parts[2]) + '/' + parseInt(parts[1]) + ')';
 
-  const curCount = data[sheet].filter(r=>r.ngay===cur).length;
-  const hasPrev = true; // always allow going back
-  const hasNext = true; // always allow going forward (for pre-import)
-  const isAllMode = !cur;
+  const curCount = isAll ? data[sheet].length : data[sheet].filter(r=>r.ngay===displayDate).length;
 
   nav.innerHTML = `
     <div style="display:flex;align-items:center;gap:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;overflow:hidden">
@@ -1658,11 +1657,11 @@ function renderDateNav(sheet){
         onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background='none'">&#8250;</button>
     </div>
     <button onclick="setActiveDate('${sheet}',null)"
-      style="background:none;border:1px solid var(--gray-border);border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;color:var(--text-muted);transition:all .15s"
-      onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)';this.style.color='var(--text-muted)'">
+      style="background:${isAll?'var(--red)':'none'};color:${isAll?'#fff':'var(--text-muted)'};border:1px solid ${isAll?'var(--red)':'var(--gray-border)'};border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;transition:all .15s"
+      onmouseover="this.style.borderColor='var(--red)';this.style.color='${isAll?'#fff':'var(--red)'}'" onmouseout="this.style.borderColor='${isAll?'var(--red)':'var(--gray-border)'}';this.style.color='${isAll?'#fff':'var(--text-muted)'}'">
       Tất cả
     </button>
-    <input type="date" value="${cur}" onchange="setActiveDate('${sheet}',this.value)"
+    <input type="date" value="${isAll?'':displayDate}" onchange="setActiveDate('${sheet}',this.value)"
       style="height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:8px;padding:0 8px;cursor:pointer">`;
 }
 
