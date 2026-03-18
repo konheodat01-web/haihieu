@@ -1701,7 +1701,7 @@ function updateWsIcons(){
   });
 }
 
-function renderHai(){
+function getWsIcon(url, rowId){
   if(!url) return '';
   try {
     const q = url.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
@@ -1711,7 +1711,6 @@ function renderHai(){
     });
     const icon  = ws ? (WS_STATUS_ICON[ws.status]||'✅') : '🔍';
     const title = ws ? (ws.brand+' — '+ws.status) : 'Chưa nhận diện';
-    // Store url in data attribute to avoid escaping issues in onclick
     return `<button class="ws-lookup-btn" data-url="${url.replace(/"/g,'&quot;')}" data-rowid="${rowId}" title="${title.replace(/"/g,'&quot;')}" style="background:none;border:none;cursor:pointer;font-size:13px;padding:1px 3px;flex-shrink:0">${icon}</button>`;
   } catch(e){ return ''; }
 }
@@ -1951,6 +1950,7 @@ function showPage(name){
 function closeModal(e){
   if(!e||e.target===document.getElementById('modalOverlay')||!e.target.closest('.modal'))
     document.getElementById('modalOverlay').classList.remove('open');
+  setTimeout(updateWsIcons, 50);
 }
 
 function toast(msg, bg='#27ae60'){
