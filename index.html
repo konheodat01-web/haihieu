@@ -1656,10 +1656,8 @@ function renderDateNav(sheet){
         style="background:none;border:none;border-left:1px solid var(--gray-border);padding:6px 12px;cursor:pointer;font-size:14px;color:var(--text-muted);transition:all .15s"
         onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background='none'">&#8250;</button>
     </div>
-    <button onclick="setActiveDate('${sheet}',null)"
-      style="background:${isAll?'var(--red)':'none'};color:${isAll?'#fff':'var(--text-muted)'};border:1px solid ${isAll?'var(--red)':'var(--gray-border)'};border-radius:8px;padding:5px 12px;font-size:12px;cursor:pointer;transition:all .15s"
-      onmouseover="this.style.borderColor='var(--red)';this.style.color='${isAll?'#fff':'var(--red)'}'" onmouseout="this.style.borderColor='${isAll?'var(--red)':'var(--gray-border)'}';this.style.color='${isAll?'#fff':'var(--text-muted)'}'">
-      Tất cả
+    <button onclick="setActiveDate('${sheet}',null)" class="date-tab${isAll?' date-tab-active':''}">
+      Tất cả ${isAll?'('+data[sheet].length+')':''}
     </button>
     <input type="date" value="${isAll?'':displayDate}" onchange="setActiveDate('${sheet}',this.value)"
       style="height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:8px;padding:0 8px;cursor:pointer">`;
