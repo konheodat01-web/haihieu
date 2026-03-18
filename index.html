@@ -1675,7 +1675,7 @@ function navDate(sheet, dir){
 }
 
 function setActiveDate(sheet, date){
-  activeDate[sheet] = date || null;
+  activeDate[sheet] = (date && date.length===10) ? date : null;
   if(sheet==='hai') renderHai(); else renderHieu();
 }
 
@@ -1813,7 +1813,10 @@ function toggleRow(sheet, id, checked){
 
 function getVisibleRows(sheet){
   let rows = applyFilters(sheet, data[sheet]);
-  if(activeDate[sheet]) rows = rows.filter(r=>r.ngay===activeDate[sheet]);
+  // Only filter by date if activeDate is a valid date string (not null/undefined = Tất cả)
+  if(activeDate[sheet] && typeof activeDate[sheet]==='string' && activeDate[sheet].length===10){
+    rows = rows.filter(r=>r.ngay===activeDate[sheet]);
+  }
   const kw = (document.getElementById('kwSearch'+sheet.charAt(0).toUpperCase()+sheet.slice(1))||{}).value?.toLowerCase()||'';
   if(kw) rows = rows.filter(r=>(r.keyword||'').toLowerCase().includes(kw));
   return rows;
