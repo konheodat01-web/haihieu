@@ -1682,6 +1682,13 @@ function setActiveDate(sheet, date){
   if(sheet==='hai') renderHai(); else renderHieu();
 }
 
+// Delegated handler for website copy buttons
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('.ws-copy-btn');
+  if(!btn) return;
+  copyText(btn.dataset.val, btn);
+});
+
 // Delegated handler for website lookup buttons (avoids inline onclick escaping issues)
 document.addEventListener('click', e=>{
   const btn = e.target.closest('.ws-lookup-btn');
@@ -3663,17 +3670,19 @@ function showWebsiteInfo(w, found, url=''){
       </div>`;
     document.getElementById('wiBtnEdit').style.display='none';
   } else {
+    const safeAcc = (w.account||'').replace(/"/g,'&quot;');
+    const safePwd = (w.password||'').replace(/"/g,'&quot;');
     const rows=[
       ['Brand', w.brand],
       ['URL', `<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
       ['Quản trị', w.url&&w.admin?`<a href="${w.url}${w.admin}" target="_blank" style="color:var(--blue)">${w.url}${w.admin}</a>`:(w.admin||'—')],
       ['Tài khoản', w.account ? `<div style="display:flex;align-items:center;gap:6px">
-        <span style="user-select:all;flex:1">${w.account}</span>
-        <button onclick="copyText('${w.account.replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 6px;font-size:11px;color:var(--text-muted);transition:all .15s" title="Copy tài khoản">📋</button>
+        <span style="flex:1;user-select:all">${w.account}</span>
+        <button class="ws-copy-btn" data-val="${safeAcc}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
       </div>` : '—'],
       ['Mật khẩu', w.password ? `<div style="display:flex;align-items:center;gap:6px">
-        <span style="user-select:all;flex:1;font-family:monospace">${w.password}</span>
-        <button onclick="copyText('${w.password.replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 6px;font-size:11px;color:var(--text-muted);transition:all .15s" title="Copy mật khẩu">📋</button>
+        <span style="flex:1;user-select:all;font-family:monospace;letter-spacing:1px">${w.password}</span>
+        <button class="ws-copy-btn" data-val="${safePwd}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
       </div>` : '—'],
       ['Trạng thái', `<span style="color:${WS_STATUS_COLOR[w.status]||'#999'};font-weight:600">${WS_STATUS_ICON[w.status]||''} ${w.status}</span>`],
       w.note?['Ghi chú', w.note]:null,
