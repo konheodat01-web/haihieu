@@ -3664,13 +3664,19 @@ function showWebsiteInfo(w, found, url=''){
     document.getElementById('wiBtnEdit').style.display='none';
   } else {
     const rows=[
-      ['Brand',w.brand],
-      ['URL',`<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
-      ['Quản trị',w.url&&w.admin?`<a href="${w.url}${w.admin}" target="_blank" style="color:var(--blue)">${w.url}${w.admin}</a>`:(w.admin||'—')],
-      ['Tài khoản',`<span style="user-select:all">${w.account||'—'}</span>`],
-      ['Mật khẩu',w.password?`<span style="font-family:monospace;cursor:pointer;user-select:all" onclick="this.textContent=this.textContent==='••••••'?'${w.password.replace(/'/g,"\\'")}':'••••••'">••••••</span>`:'—'],
-      ['Trạng thái',`<span style="color:${WS_STATUS_COLOR[w.status]||'#999'};font-weight:600">${WS_STATUS_ICON[w.status]||''} ${w.status}</span>`],
-      w.note?['Ghi chú',w.note]:null,
+      ['Brand', w.brand],
+      ['URL', `<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
+      ['Quản trị', w.url&&w.admin?`<a href="${w.url}${w.admin}" target="_blank" style="color:var(--blue)">${w.url}${w.admin}</a>`:(w.admin||'—')],
+      ['Tài khoản', w.account ? `<div style="display:flex;align-items:center;gap:6px">
+        <span style="user-select:all;flex:1">${w.account}</span>
+        <button onclick="copyText('${w.account.replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 6px;font-size:11px;color:var(--text-muted);transition:all .15s" title="Copy tài khoản">📋</button>
+      </div>` : '—'],
+      ['Mật khẩu', w.password ? `<div style="display:flex;align-items:center;gap:6px">
+        <span style="user-select:all;flex:1;font-family:monospace">${w.password}</span>
+        <button onclick="copyText('${w.password.replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 6px;font-size:11px;color:var(--text-muted);transition:all .15s" title="Copy mật khẩu">📋</button>
+      </div>` : '—'],
+      ['Trạng thái', `<span style="color:${WS_STATUS_COLOR[w.status]||'#999'};font-weight:600">${WS_STATUS_ICON[w.status]||''} ${w.status}</span>`],
+      w.note?['Ghi chú', w.note]:null,
     ].filter(Boolean);
     body.innerHTML=`
       <div style="padding:12px 16px;background:#f0faf4;border-bottom:1px solid #b7e4c7;display:flex;align-items:center;gap:8px">
