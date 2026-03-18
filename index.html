@@ -1590,7 +1590,7 @@ function applyFilters(sheet, rows){
 }
 
 // Active date filter per sheet (null = show all, or 'YYYY-MM-DD')
-const activeDate = {hai: null, hieu: null};
+const activeDate = {hai: undefined, hieu: undefined};
 
 function getSheetDates(sheet){
   const all = [...new Set(data[sheet].map(r=>r.ngay).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
@@ -1616,8 +1616,8 @@ function renderDateNav(sheet){
   const todayStr = todayVN();
   const dates = getSheetDates(sheet); // sorted desc
 
-  // Auto-init: after 12h → today, else → most recent
-  if(!activeDate[sheet]){
+  // Auto-init ONLY if activeDate has never been set (undefined), not if user chose "Tất cả" (null)
+  if(activeDate[sheet] === undefined){
     const hour = new Date().getHours();
     if(hour >= 12 && dates.includes(todayStr)) activeDate[sheet] = todayStr;
     else if(dates.length) activeDate[sheet] = dates[0];
