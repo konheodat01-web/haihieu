@@ -3555,24 +3555,30 @@ function clearWebsiteForm(){
 }
 
 function saveWebsite(){
-  const brand=(document.getElementById('wf_brand').value||'').trim();
-  const url=(document.getElementById('wf_url').value||'').trim();
+  const brand=(document.getElementById('wf_brand')?.value||'').trim();
+  const url=(document.getElementById('wf_url')?.value||'').trim();
   if(!brand){toast('Vui lòng nhập tên brand!','#e74c3c');return;}
+  const newId = editingWsId ? editingWsId : wsNextId++;
   const obj={
-    id:editingWsId||wsNextId++,
-    brand,url,
-    admin:document.getElementById('wf_admin').value.trim(),
-    account:document.getElementById('wf_account').value.trim(),
-    password:document.getElementById('wf_password').value,
-    status:document.getElementById('wf_status').value,
-    note:document.getElementById('wf_note').value.trim(),
+    id: newId,
+    brand, url,
+    admin: (document.getElementById('wf_admin')?.value||'').trim(),
+    account: (document.getElementById('wf_account')?.value||'').trim(),
+    password: document.getElementById('wf_password')?.value||'',
+    status: document.getElementById('wf_status')?.value||'Tốt',
+    note: (document.getElementById('wf_note')?.value||'').trim(),
   };
-  if(editingWsId){const i=websites.findIndex(w=>w.id===editingWsId);if(i>=0)websites[i]=obj;}
-  else websites.unshift(obj);
+  if(editingWsId){
+    const i=websites.findIndex(w=>w.id===editingWsId);
+    if(i>=0) websites[i]=obj; else websites.unshift(obj);
+  } else {
+    websites.unshift(obj);
+  }
+  editingWsId=null;
   clearWebsiteForm();
   saveAppData();
   renderWebsites();
-  toast('✓ Đã lưu website!');
+  toast('✓ Đã lưu website: '+brand);
 }
 
 function deleteWebsite(){
