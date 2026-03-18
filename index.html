@@ -322,6 +322,7 @@
             <th class="fh" onclick="openFilter('hai','keyword',this)">Keyword <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','loai',this)">Loại bài <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','website',this)">Website <span class="fh-ic">&#9660;</span></th>
+            <th style="width:28px;text-align:center" title="Trạng thái web">WS</th>
             <th class="fh" onclick="openFilter('hai','anchor',this)">Anchor <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','chuyenMuc',this)">Chuyên mục <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
@@ -408,6 +409,7 @@
             <th class="fh" onclick="openFilter('hieu','keyword',this)">Keyword <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','loai',this)">Loại bài <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','website',this)">Website <span class="fh-ic">&#9660;</span></th>
+            <th style="width:28px;text-align:center" title="Trạng thái web">WS</th>
             <th class="fh" onclick="openFilter('hieu','anchor',this)">Anchor <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','chuyenMuc',this)">Chuyên mục <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
@@ -1111,8 +1113,12 @@
 
 <script>
 let currentMember = 'admin'; // declared first to avoid TDZ
-let websites = []; // declared early to avoid TDZ in renderHai/renderHieu
-let wsNextId = 1;
+let websites = [
+  {id:1, brand:'Debet', url:'https://debets.sbs', admin:'/wp-admin', account:'dybala5858585858@gmail.com', password:'Mktb2022@', status:'Tốt', note:''},
+];
+let wsNextId = 2;
+const WS_STATUS_COLOR = {'Tốt':'#27ae60','Chờ cấp lại mật khẩu':'#e67e22','Lỗi web':'#e74c3c'};
+const WS_STATUS_ICON  = {'Tốt':'✅','Chờ cấp lại mật khẩu':'🔒','Lỗi web':'⚠️'};
 const LOAI_CONFIG = {
   'Tinh Gọn':      {price: 14000, color: 'red'},
   'Chỉ Viết':      {price:  4000, color: 'blue'},
@@ -1693,11 +1699,9 @@ function updateWsIcons(){
       const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
       return wu===q||wu.includes(q)||q.includes(wu);
     });
-    if(ws){
-      btn.textContent = WS_STATUS_ICON[ws.status]||'✅';
-      btn.title = ws.brand+' — '+ws.status;
-      btn.style.opacity='1';
-    }
+    btn.textContent = ws ? (WS_STATUS_ICON[ws.status]||'✅') : '🔍';
+    btn.title = ws ? (ws.brand+' — '+ws.status) : 'Kiểm tra website';
+    btn.style.opacity = ws ? '1' : '0.5';
   });
 }
 
@@ -1739,10 +1743,10 @@ function renderHai(){
       <td class="ec" onclick="editCell('hai',${r.id},'keyword',this)" style="font-weight:500;max-width:200px">${r.keyword}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'loai',this)">${loaiBadge(r.loai)}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'website',this)" style="max-width:130px">
-        <div style="display:flex;align-items:center;gap:3px">
-          <span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${r.website||''}">${r.website||'<span style=color:var(--text-muted)>—</span>'}</span>
-          ${r.website?`<button class="ws-lookup-btn" data-url="${r.website}" style="background:none;border:none;cursor:pointer;font-size:13px;padding:1px 3px;flex-shrink:0;opacity:.7" title="Kiểm tra website">🔍</button>`:''}
-        </div>
+        <span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.website||''}">${r.website||'<span style=color:var(--text-muted)>—</span>'}</span>
+      </td>
+      <td style="width:28px;text-align:center;padding:0 2px">
+        ${r.website?`<button class="ws-lookup-btn" data-url="${r.website}" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px;display:block;margin:auto" title="Kiểm tra website">🔍</button>`:''}
       </td>
       <td class="ec" onclick="editCell('hai',${r.id},'anchor',this)" style="color:var(--text-muted);max-width:100px">${r.anchor||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
@@ -1780,10 +1784,10 @@ function renderHieu(){
       <td class="ec" onclick="editCell('hieu',${r.id},'keyword',this)" style="font-weight:500;max-width:200px">${r.keyword}</td>
       <td class="ec" onclick="editCell('hieu',${r.id},'loai',this)">${loaiBadge(r.loai)}</td>
       <td class="ec" onclick="editCell('hieu',${r.id},'website',this)" style="max-width:130px">
-        <div style="display:flex;align-items:center;gap:3px">
-          <span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${r.website||''}">${r.website||'<span style=color:var(--text-muted)>—</span>'}</span>
-          ${r.website?`<button class="ws-lookup-btn" data-url="${r.website}" style="background:none;border:none;cursor:pointer;font-size:13px;padding:1px 3px;flex-shrink:0;opacity:.7" title="Kiểm tra website">🔍</button>`:''}
-        </div>
+        <span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.website||''}">${r.website||'<span style=color:var(--text-muted)>—</span>'}</span>
+      </td>
+      <td style="width:28px;text-align:center;padding:0 2px">
+        ${r.website?`<button class="ws-lookup-btn" data-url="${r.website}" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px;display:block;margin:auto" title="Kiểm tra website">🔍</button>`:''}
       </td>
       <td class="ec" onclick="editCell('hieu',${r.id},'anchor',this)" style="color:var(--text-muted);max-width:100px">${r.anchor||'—'}</td>
       <td class="ec" onclick="editCell('hieu',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
@@ -1944,7 +1948,7 @@ function showPage(name){
   if(name==='hai') renderHai();
   if(name==='hieu') renderHieu();
   if(name==='tasks') renderTasksOverview();
-  if(name==='links') renderLinks();
+  if(name==='links'){ renderLinks(); renderWebsites(); }
 }
 
 function closeModal(e){
@@ -3494,9 +3498,6 @@ function switchLinksTab(tab){
 
 // ===== WEBSITES =====
 let editingWsId = null;
-
-const WS_STATUS_COLOR = {'Tốt':'#27ae60','Chờ cấp lại mật khẩu':'#e67e22','Lỗi web':'#e74c3c'};
-const WS_STATUS_ICON  = {'Tốt':'✅','Chờ cấp lại mật khẩu':'🔒','Lỗi web':'⚠️'};
 
 function renderWebsites(){
   const q=(document.getElementById('websiteSearch')||{}).value?.toLowerCase()||'';
