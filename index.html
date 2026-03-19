@@ -2128,32 +2128,31 @@ function initFirebaseListener(){
 
   window._fbDb.ref('appData').on('value', (snapshot)=>{
     const r = snapshot.val();
-    if(!r || !r._ts) return;
-    if(r._sid === _sessionId) return; // skip own pushes
-    const localTs = parseInt(localStorage.getItem('wt_ts')||'0');
-    if(r._ts <= localTs) return; // skip older data
-    // Safety: don't overwrite if local has more rows
-    if((r.hai||[]).length < data.hai.length) return;
-    if((r.hieu||[]).length < data.hieu.length) return;
+    if(!r) return;
+    // Only skip pushes from THIS session (to avoid echo)
+    if(r._sid && r._sid === _sessionId) return;
 
     try{
-      if(r.hai) data.hai=r.hai;
-      if(r.hieu) data.hieu=r.hieu;
-      if(r.tasks) tasks=r.tasks;
-      if(r.links) links=r.links;
-      if(r.linkCategories) linkCategories=r.linkCategories;
+      data.hai = r.hai || data.hai;
+      data.hieu = r.hieu || data.hieu;
+      tasks = r.tasks || tasks;
+      links = r.links || links;
+      linkCategories = r.linkCategories || linkCategories;
       if(r.websites && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+
       localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
       localStorage.setItem('wt_tasks', JSON.stringify(tasks));
       localStorage.setItem('wt_links', JSON.stringify(links));
       localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
       localStorage.setItem('wt_websites', JSON.stringify(websites));
-      localStorage.setItem('wt_ts', String(r._ts));
+      if(r._ts) localStorage.setItem('wt_ts', String(r._ts));
+
       renderDashboard(); renderHai(); renderHieu();
       const active=document.querySelector('.page.active')?.id?.replace('page-','');
       if(active==='tasks') renderTasksOverview();
       else if(active==='links'){renderLinks();renderWebsites();}
+
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
     }catch(e){console.warn('Firebase receive error',e);}
@@ -2302,7 +2301,9 @@ function getProjectCols(task){
 
 function calcProjectProgress(task){
   if(!task.cards||!task.cards.length) return 0;
-  const done = task.cards.filter(c=>c.colId==='done'||(task.cols&&task.cols[task.cols.length-1]?.id===c.colId)).length;
+  const cols = getProjectCols(task);
+  const lastColId = cols[cols.length-1].id;
+  const done = task.cards.filter(c=>c.colId===lastColId||c.colId==='done').length;
   return Math.round(done/task.cards.length*100);
 }
 
@@ -2551,8 +2552,7 @@ function closeNewProjectModal(){document.getElementById('newProjectModal').class
 function parseSteps(stepsText){
   const lines = stepsText.trim().split('\n').map(l=>l.trim()).filter(l=>l);
   if(!lines.length) return null;
-  const cols = lines.map((l,i)=>{
-    // Extract label: remove "Bước X:", "Step X:", "1.", "1)" prefix
+  const midCols = lines.map((l,i)=>{
     const label = l.replace(/^(b.{0,4}c\s*\d+|step\s*\d+|\d+)\s*[:.)]\s*/i,'').trim() || l;
     return {
       id:'col_s'+i,
@@ -2560,8 +2560,12 @@ function parseSteps(stepsText){
       color:['#2980b9','#8e44ad','#16a085','#d35400','#c0392b','#2c3e50'][i%6]
     };
   });
-  cols.push({id:'done',label:'Hoàn thành',color:'#27ae60'});
-  return cols;
+  return [
+    {id:'col_new', label:'Chưa làm', color:'#95a5a6'},
+    ...midCols,
+    {id:'col_pending', label:'Pending', color:'#e67e22'},
+    {id:'done', label:'Hoàn thành', color:'#27ae60'},
+  ];
 }
 
 function saveProject(){
@@ -2803,7 +2807,7 @@ async function qi_parse(){
 
   // Build columns: from steps if present, else default
   const cols=stepLines.length>=1?parseSteps(stepLines.join('\n')):null;
-  const firstColId=cols?cols[0].id:'todo';
+  const firstColId=cols?cols[0].id:'col_new';
 
   // Build cards: one per domain, or one per desc line if no domain
   const itemLines=domainLines.length>0?domainLines:descLines;
@@ -2863,7 +2867,7 @@ async function qi_parse(){
         Kanban: <b style="color:var(--text)">${colList.join(' → ')}</b>
       </div>
       <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text)">Task con (${t.cards.length} thẻ — vào cột "${colList[0]}")</div>
-      <div style="display:flex;flex-direction:column;gap:4px">
+      <div data-cards style="display:flex;flex-direction:column;gap:4px">
         ${t.cards.map((c,i)=>`
           <div style="display:flex;align-items:center;gap:6px;background:#fff;border-radius:5px;padding:5px 8px;border:1px solid var(--gray-border)">
             <span style="font-size:11px;color:var(--text-muted);min-width:20px">${i+1}.</span>
