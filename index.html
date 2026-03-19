@@ -2063,6 +2063,7 @@ function saveAppData(){
     localStorage.setItem('wt_links', JSON.stringify(links));
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
     localStorage.setItem('wt_websites', JSON.stringify(websites));
+    localStorage.setItem('wt_ts', String(Date.now()));
   }catch(e){}
 
   // Sync to Firebase (cross-device)
@@ -2110,13 +2111,12 @@ function forceSyncToCloud(){
 function initFirebaseListener(){
   if(!window._fbReady || !window._fbDb) return;
 
+  // Load from Firebase on first open
   window._fbDb.ref('appData').once('value', (snapshot)=>{
     const remote = snapshot.val();
     if(!remote || !remote._ts) return;
-
-    // If remote data is newer or local is empty, load from Firebase
     const localTs = parseInt(localStorage.getItem('wt_ts')||'0');
-    if(remote._ts > localTs || data.hai.length===0){
+    if(remote._ts > localTs){
       try{
         if(remote.hai && remote.hai.length) data.hai=remote.hai;
         if(remote.hieu && remote.hieu.length) data.hieu=remote.hieu;
@@ -2124,38 +2124,54 @@ function initFirebaseListener(){
         if(remote.links && remote.links.length) links=remote.links;
         if(remote.linkCategories) linkCategories=remote.linkCategories;
         if(remote.websites && remote.websites.length){ websites=remote.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
-        localStorage.setItem('wt_ts', remote._ts);
+        // Save to localStorage so it persists on refresh
+        localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
+        localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
+        localStorage.setItem('wt_tasks', JSON.stringify(tasks));
+        localStorage.setItem('wt_links', JSON.stringify(links));
+        localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
+        localStorage.setItem('wt_websites', JSON.stringify(websites));
+        localStorage.setItem('wt_ts', String(remote._ts));
         // Re-render
         renderDashboard(); renderHai(); renderHieu();
         const ind=document.getElementById('syncIndicator');
-        if(ind){ind.textContent='☁ Đã tải dữ liệu từ đám mây';ind.style.opacity='1';ind.style.color='#2980b9';setTimeout(()=>ind.style.opacity='0',3000);}
+        if(ind){ind.textContent='☁ Đã tải từ đám mây';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
       }catch(e){console.warn('Firebase load error',e);}
     }
-  });
 
-  // Then listen for real-time updates
-  let firstCall = true;
-  window._fbDb.ref('appData').on('value', (snapshot)=>{
-    if(firstCall){ firstCall=false; return; }
-    const remote = snapshot.val();
-    if(!remote) return;
-    try{
-      if(remote.hai) data.hai=remote.hai;
-      if(remote.hieu) data.hieu=remote.hieu;
-      if(remote.tasks) tasks=remote.tasks;
-      if(remote.links) links=remote.links;
-      if(remote.linkCategories) linkCategories=remote.linkCategories;
-      if(remote.websites){ websites=remote.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
-      if(remote._ts) localStorage.setItem('wt_ts', remote._ts);
-      const active=document.querySelector('.page.active')?.id?.replace('page-','');
-      if(active==='hai') renderHai();
-      else if(active==='hieu') renderHieu();
-      else if(active==='dashboard') renderDashboard();
-      else if(active==='tasks') renderTasksOverview();
-      else if(active==='links'){renderLinks();renderWebsites();}
-      const ind=document.getElementById('syncIndicator');
-      if(ind){ind.textContent='🔄 Đã nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#2980b9';setTimeout(()=>ind.style.opacity='0',2000);}
-    }catch(e){console.warn('Firebase receive error',e);}
+    // After initial load, listen for real-time updates from other devices
+    window._fbDb.ref('appData').on('value', (snap)=>{
+      const r = snap.val();
+      if(!r) return;
+      const localTs2 = parseInt(localStorage.getItem('wt_ts')||'0');
+      // Only apply if newer than what we have
+      if(r._ts && r._ts <= localTs2) return;
+      try{
+        if(r.hai) data.hai=r.hai;
+        if(r.hieu) data.hieu=r.hieu;
+        if(r.tasks) tasks=r.tasks;
+        if(r.links) links=r.links;
+        if(r.linkCategories) linkCategories=r.linkCategories;
+        if(r.websites){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+        if(r._ts){
+          localStorage.setItem('wt_ts', String(r._ts));
+          localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
+          localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
+          localStorage.setItem('wt_tasks', JSON.stringify(tasks));
+          localStorage.setItem('wt_links', JSON.stringify(links));
+          localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
+          localStorage.setItem('wt_websites', JSON.stringify(websites));
+        }
+        const active=document.querySelector('.page.active')?.id?.replace('page-','');
+        if(active==='hai') renderHai();
+        else if(active==='hieu') renderHieu();
+        else if(active==='dashboard') renderDashboard();
+        else if(active==='tasks') renderTasksOverview();
+        else if(active==='links'){renderLinks();renderWebsites();}
+        const ind=document.getElementById('syncIndicator');
+        if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',2000);}
+      }catch(e){console.warn('Firebase receive error',e);}
+    });
   });
 }
 
