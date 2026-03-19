@@ -473,6 +473,14 @@
 
     <div id="projectGrid"></div>
     <div id="emptyProjects" class="empty" style="display:none"><div class="icon">&#128203;</div>Chưa có task nào.</div>
+
+    <!-- BULK BAR TASKS -->
+    <div id="taskBulkBar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2c3e50;color:#fff;border-radius:10px;padding:10px 18px;display:none;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:500;white-space:nowrap">
+      <span id="taskBulkCount" style="font-size:13px;font-weight:600">0 task</span>
+      <button onclick="bulkTaskDone()" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">✓ Done hàng loạt</button>
+      <button onclick="bulkTaskDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá hàng loạt</button>
+      <button onclick="clearTaskSelection()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;padding:0 4px">×</button>
+    </div>
   </div>
   <div id="taskSubBoard" style="display:none">
     <div class="panel-header" style="background:#fff;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:14px;padding:10px 16px">
@@ -2040,6 +2048,7 @@ function showPage(name){
   if(name==='hai') renderHai();
   if(name==='hieu') renderHieu();
   if(name==='tasks') renderTasksOverview();
+  if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
 }
 
@@ -2315,7 +2324,13 @@ function daysSince(from){
 function renderTasksOverview(){
   renderPendingSummary();
   const fp=(document.getElementById('tkFilterPerson')||{}).value||'';
-  let list = tasks.filter(t=>!fp||t.person===fp);
+  // Member filter: Hải/Hiếu only see their tasks
+  const memberFilter = currentMember==='admin'?'':currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
+  let list = tasks.filter(t=>{
+    if(memberFilter && t.person!==memberFilter) return false;
+    if(fp && t.person!==fp) return false;
+    return true;
+  });
   const grid = document.getElementById('projectGrid');
   const empty = document.getElementById('emptyProjects');
   if(!list.length){grid.innerHTML='';empty.style.display='block';return;}
@@ -2334,28 +2349,39 @@ function renderTasksOverview(){
     const lastCol = cols[cols.length-1];
     const doneCards = (t.cards||[]).filter(c=>c.colId===lastCol.id||c.colId==='done').length;
     const totalCards = (t.cards||[]).length;
-    return `<div class="task-row" onclick="openProjectBoard(${t.id})">
-      <div class="task-row-main">
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
-          ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:10px">${t.person}</span>`:''}
-          <span style="font-weight:600;font-size:13px">${t.name}</span>
-        </div>
-        ${t.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.4">${t.desc.slice(0,100)}${t.desc.length>100?'…':''}</div>`:''}
+    const isDone = pct>=100;
+    return `<div class="task-row ${isDone?'task-row-done':''}" style="display:flex;align-items:center;gap:0" data-tid="${t.id}">
+      <div style="padding:0 10px;flex-shrink:0" onclick="event.stopPropagation()">
+        <input type="checkbox" class="task-chk" data-tid="${t.id}" onchange="onTaskCheck(${t.id},this)"
+          style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
       </div>
-      <div class="task-row-meta">
-        <span style="font-size:11px;color:var(--text-muted)" title="Nhận ${t.from?fmtDate(t.from):'?'}">📅 ${ageLabel}</span>
-        ${t.deadline
-          ?`<span style="font-size:11px">${daysLeft(t.deadline)||`<span style='color:var(--text-muted);font-size:11px'>DL: ${fmtDate(t.deadline)}</span>`}</span>`
-          :'<span style="font-size:11px;color:var(--gray-border)">Không có deadline</span>'}
-        ${totalCards?`<span style="font-size:11px;color:var(--text-muted)">${doneCards}/${totalCards} thẻ</span>`:''}
-        <div style="display:flex;align-items:center;gap:5px;min-width:80px">
-          <div style="flex:1;height:5px;background:var(--gray-border);border-radius:3px;overflow:hidden">
-            <div style="width:${pct}%;height:100%;background:${pcolor};border-radius:3px"></div>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="openProjectBoard(${t.id})">
+        <div class="task-row-main">
+          <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+            <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
+            ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:10px">${t.person}</span>`:''}
+            <span style="font-weight:600;font-size:13px${isDone?';text-decoration:line-through;color:var(--text-muted)':''}">${t.name}</span>
+            ${isDone?'<span style="font-size:10px;background:#27ae6022;color:#27ae60;border-radius:10px;padding:1px 7px;font-weight:600">Done</span>':''}
           </div>
-          <span style="font-size:11px;color:var(--text-muted);min-width:28px">${pct}%</span>
+          ${t.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;line-height:1.4">${t.desc.slice(0,100)}${t.desc.length>100?'…':''}</div>`:''}
+        </div>
+        <div class="task-row-meta">
+          <span style="font-size:11px;color:var(--text-muted)" title="Nhận ${t.from?fmtDate(t.from):'?'}">📅 ${ageLabel}</span>
+          ${t.deadline
+            ?`<span style="font-size:11px">${daysLeft(t.deadline)||`<span style='color:var(--text-muted);font-size:11px'>DL: ${fmtDate(t.deadline)}</span>`}</span>`
+            :'<span style="font-size:11px;color:var(--gray-border)">Không có deadline</span>'}
+          ${totalCards?`<span style="font-size:11px;color:var(--text-muted)">${doneCards}/${totalCards} thẻ</span>`:''}
+          <div style="display:flex;align-items:center;gap:5px;min-width:80px">
+            <div style="flex:1;height:5px;background:var(--gray-border);border-radius:3px;overflow:hidden">
+              <div style="width:${pct}%;height:100%;background:${pcolor};border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);min-width:28px">${pct}%</span>
+          </div>
         </div>
       </div>
+      <button onclick="event.stopPropagation();confirmDeleteTask(${t.id})" title="Xoá task"
+        style="background:none;border:none;cursor:pointer;padding:8px 12px;color:var(--text-muted);font-size:15px;opacity:.4;transition:opacity .15s;flex-shrink:0"
+        onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.4;this.style.color='var(--text-muted)'">🗑</button>
     </div>`;
   };
 
@@ -4023,6 +4049,68 @@ function toggleLfAuth(){
   const checked = document.getElementById('lf_has_auth').checked;
   const fields = document.getElementById('lf_auth_fields');
   if(fields) fields.style.display = checked ? 'flex' : 'none';
+}
+
+// ===== TASK SELECTION & BULK =====
+let selectedTaskIds = new Set();
+
+function onTaskCheck(id, chk){
+  if(chk.checked) selectedTaskIds.add(id);
+  else selectedTaskIds.delete(id);
+  updateTaskBulkBar();
+}
+
+function updateTaskBulkBar(){
+  const bar = document.getElementById('taskBulkBar');
+  const cnt = document.getElementById('taskBulkCount');
+  if(!bar) return;
+  if(selectedTaskIds.size > 0){
+    bar.style.display='flex';
+    cnt.textContent = selectedTaskIds.size + ' task đã chọn';
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function clearTaskSelection(){
+  selectedTaskIds.clear();
+  document.querySelectorAll('.task-chk').forEach(c=>c.checked=false);
+  updateTaskBulkBar();
+}
+
+function confirmDeleteTask(id){
+  if(!confirm('Xoá task này?')) return;
+  tasks = tasks.filter(t=>t.id!==id);
+  selectedTaskIds.delete(id);
+  saveAppData();
+  renderTasksOverview();
+  toast('Đã xoá task.');
+}
+
+function bulkTaskDelete(){
+  if(!selectedTaskIds.size) return;
+  const n = selectedTaskIds.size;
+  if(!confirm('Xoá ' + n + ' task đã chọn?')) return;
+  tasks = tasks.filter(t=>!selectedTaskIds.has(t.id));
+  selectedTaskIds.clear();
+  saveAppData();
+  renderTasksOverview();
+  toast('Đã xoá ' + n + ' task.');
+}
+
+function bulkTaskDone(){
+  if(!selectedTaskIds.size) return;
+  const n = selectedTaskIds.size;
+  tasks.forEach(t=>{
+    if(!selectedTaskIds.has(t.id)) return;
+    const cols = getProjectCols(t);
+    const lastColId = cols[cols.length-1].id;
+    (t.cards||[]).forEach(c=>{ c.colId = lastColId; });
+  });
+  selectedTaskIds.clear();
+  saveAppData();
+  renderTasksOverview();
+  toast('✓ Đã Done ' + n + ' task!');
 }
 </script>
 </body></html>
