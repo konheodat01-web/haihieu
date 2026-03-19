@@ -27,7 +27,7 @@
   nav button.active{color:var(--red);border-left-color:var(--red);background:#fdf2f2;font-weight:600}
   nav .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);padding:14px 18px 4px;opacity:.7}
 
-  main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box;overflow-x:auto}
+  main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box;overflow-x:hidden}
   main.board-mode{overflow-x:visible;padding:16px 20px 0}
   
   .page{display:none}
@@ -60,7 +60,7 @@
   td.num{text-align:right}
   
   .panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-border)}
-  .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:56px;z-index:92;background:#fff}
+  .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
   .panel-title{font-weight:600;font-size:14px}
   .panel-body{padding:16px}
   
@@ -79,7 +79,7 @@
   .btn-danger{background:#fff;border-color:#e74c3c;color:#e74c3c}
   .btn-danger:hover{background:#fdf2f2}
   
-  .table-wrap{width:100%}
+  .table-wrap{width:100%;overflow-x:auto}
   .data{width:100%;border-collapse:collapse;min-width:900px;font-size:13px}
   table.data th{background:var(--gray-light);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);border-bottom:1px solid var(--gray-border);white-space:nowrap}
   table.data td{padding:9px 12px;border-bottom:1px solid var(--gray-border);vertical-align:middle}
@@ -586,11 +586,7 @@
     <div id="taskBulkBar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2c3e50;color:#fff;border-radius:10px;padding:10px 18px;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:500;white-space:nowrap">
       <span id="taskBulkCount" style="font-size:13px;font-weight:600">0 task</span>
       <div style="width:1px;height:20px;background:rgba(255,255,255,.2)"></div>
-      <button onclick="taskMoveBulk('top')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Lên trên cùng">⬆</button>
-      <button onclick="taskMoveBulk('up')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Lên 1 bậc">▲ Lên</button>
-      <button onclick="taskMoveBulk('down')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Xuống 1 bậc">▼ Xuống</button>
-      <button onclick="taskMoveBulk('bottom')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Xuống dưới cùng">⬇</button>
-      <div style="width:1px;height:20px;background:rgba(255,255,255,.2)"></div>
+
       <button onclick="bulkTaskDone()" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">✓ Done hàng loạt</button>
       <button onclick="bulkTaskDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá hàng loạt</button>
       <button onclick="clearTaskSelection()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;padding:0 4px">×</button>
@@ -2456,28 +2452,7 @@ document.getElementById('fDate').value = todayVN();
 
 // ===== LOCAL STORAGE PERSISTENCE =====
 // Set sticky top values dynamically based on actual rendered heights
-function updateStickyTops(sheet){
-  const S = sheet.charAt(0).toUpperCase()+sheet.slice(1);
-  const panel = document.querySelector('#page-'+sheet+' .panel-header');
-  const dateNav = document.getElementById('dateNav'+S);
-  const bulkBar = document.getElementById('bulkBar'+S);
-  const thead = document.querySelector('#table'+S+' thead');
-  if(!panel || !dateNav || !bulkBar) return;
-  const hdr = 56;
-  const ph = panel.getBoundingClientRect().height;
-  const dh = dateNav.getBoundingClientRect().height;
-  const bh = bulkBar.getBoundingClientRect().height;
-  dateNav.style.cssText += ';position:sticky;background:#fafafa;z-index:91;top:'+(hdr+ph)+'px';
-  bulkBar.style.position='sticky';
-  bulkBar.style.zIndex='90';
-  bulkBar.style.top=(hdr+ph+dh)+'px';
-  if(thead){ thead.querySelectorAll('th').forEach(th=>{
-    th.style.position='sticky';
-    th.style.zIndex='88';
-    th.style.background='var(--gray-light)';
-    th.style.top=(hdr+ph+dh+bh)+'px';
-  }); }
-}
+function updateStickyTops(sheet){} // no-op: sticky handled by CSS
 
 function saveAppData(){
   const ts = Date.now();
@@ -2772,32 +2747,6 @@ function daysSince(from){
 }
 
 // ---- OVERVIEW as LIST ----
-function taskMoveBulk(dir){
-  if(!selectedTaskIds.size) return;
-  // Get current indices of selected tasks
-  let indices = [];
-  tasks.forEach((t,i)=>{ if(selectedTaskIds.has(t.id)) indices.push(i); });
-  if(!indices.length) return;
-  // Sort: for up/top process top-first; for down/bottom process bottom-first
-  if(dir==='down'||dir==='bottom') indices.sort((a,b)=>b-a);
-  else indices.sort((a,b)=>a-b);
-  indices.forEach(cur=>{
-    const cur2 = tasks.findIndex(t=>t.id===tasks[cur]?.id); // re-find after splices
-    if(cur2<0) return;
-    let ni;
-    if(dir==='up') ni=Math.max(0,cur2-1);
-    else if(dir==='down') ni=Math.min(tasks.length-1,cur2+1);
-    else if(dir==='top') ni=0;
-    else if(dir==='bottom') ni=tasks.length-1;
-    else return;
-    if(ni===cur2) return;
-    const [m]=tasks.splice(cur2,1);
-    tasks.splice(ni,0,m);
-  });
-  _saveTaskOrder();
-  renderTasksOverview();
-}
-
 function taskMove(id, dir){
   const idx = tasks.findIndex(t=>t.id===id);
   if(idx<0) return;
@@ -2836,7 +2785,12 @@ const _taskRowMap = {};
 
 function deduplicateTasks(){
   const seen = new Set();
-  tasks = tasks.filter(t=>{ if(seen.has(t.id)) return false; seen.add(t.id); return true; });
+  let maxId = tasks.reduce((m,t)=>Math.max(m,t.id||0),0);
+  tasks = tasks.map(t=>{
+    if(seen.has(t.id)){ t = {...t, id: ++maxId}; }
+    seen.add(t.id);
+    return t;
+  });
 }
 
 function openTask(id){
@@ -2906,8 +2860,12 @@ function renderTasksOverview(){
           </div>
         </div>
       </div>
+      <div style="display:flex;flex-direction:column;gap:2px;padding:0 2px;flex-shrink:0" onclick="event.stopPropagation()">
+        <button onclick="taskMove(${t.id},'up')" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;color:var(--text-muted);font-size:10px;padding:1px 5px;line-height:1.4;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)';this.style.color='var(--text-muted)'">▲</button>
+        <button onclick="taskMove(${t.id},'down')" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;color:var(--text-muted);font-size:10px;padding:1px 5px;line-height:1.4;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)';this.style.color='var(--text-muted)'">▼</button>
+      </div>
       <button onclick="event.stopPropagation();confirmDeleteTask(${t.id})" title="Xoá task"
-        style="background:none;border:none;cursor:pointer;padding:8px 12px;color:var(--text-muted);font-size:15px;opacity:.4;transition:opacity .15s;flex-shrink:0"
+        style="background:none;border:none;cursor:pointer;padding:8px 8px;color:var(--text-muted);font-size:15px;opacity:.4;transition:opacity .15s;flex-shrink:0"
         onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.4;this.style.color='var(--text-muted)'">🗑</button>
     </div>`;
   };
@@ -4916,10 +4874,11 @@ function undoDeleteTask(id){
 
 function bulkTaskDelete(){
   if(!selectedTaskIds.size) return;
-  const n = selectedTaskIds.size;
+  const ids = new Set([...selectedTaskIds].map(x=>parseInt(x)));
+  const n = ids.size;
   if(!confirm('Chuyển ' + n + ' task vào thùng rác?')) return;
-  tasks.forEach(t=>{ if(selectedTaskIds.has(t.id)) deletedTasks.unshift({...t,_deletedAt:Date.now()}); });
-  tasks = tasks.filter(t=>!selectedTaskIds.has(t.id));
+  tasks.forEach(t=>{ if(ids.has(parseInt(t.id))) deletedTasks.unshift({...t,_deletedAt:Date.now()}); });
+  tasks = tasks.filter(t=>!ids.has(parseInt(t.id)));
   selectedTaskIds.clear();
   saveAppData();
   renderTasksOverview();
@@ -4928,9 +4887,10 @@ function bulkTaskDelete(){
 
 function bulkTaskDone(){
   if(!selectedTaskIds.size) return;
-  const n = selectedTaskIds.size;
+  const _doneIds = new Set([...selectedTaskIds].map(x=>parseInt(x)));
+  const n = _doneIds.size;
   tasks.forEach(t=>{
-    if(!selectedTaskIds.has(t.id)) return;
+    if(!_doneIds.has(parseInt(t.id))) return;
     const cols = getProjectCols(t);
     const lastColId = cols[cols.length-1].id;
     (t.cards||[]).forEach(c=>{ c.colId = lastColId; });
