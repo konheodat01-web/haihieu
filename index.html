@@ -150,7 +150,11 @@
   td.ec input,td.ec select{display:block}
   tr.row-selected td{background:#fff3f3 !important}
   .task-group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 2px;margin-bottom:6px;border-bottom:1px solid var(--gray-border)}
-  .task-row{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:box-shadow .15s,border-color .15s;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .task-row{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:box-shadow .15s,border-color .15s,opacity .15s;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .task-row.drag-over{border:2px dashed var(--red);background:#fdf2f2}
+  .task-row.dragging{opacity:.35}
+  .drag-handle{cursor:grab;padding:0 6px 0 0;color:var(--gray-border);font-size:16px;flex-shrink:0;user-select:none;line-height:1}
+  .drag-handle:hover{color:var(--text-muted)}
   .task-row:hover{box-shadow:0 2px 10px rgba(0,0,0,.08);border-color:#c8c8c8}
   .task-row-main{flex:1;min-width:200px}
   .task-row-meta{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex-shrink:0}
@@ -268,7 +272,35 @@
       <div id="ql_extra_web" style="display:none;flex-direction:column;gap:8px">
         <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="wp-admin"></div>
         <div class="form-group"><label>Tài khoản</label><input type="text" id="ql_account" style="width:100%"></div>
-        <div class="form-group"><label>Mật khẩu</label><input type="text" id="ql_password" style="width:100%"></div>
+        <div class="form-group"><label>Mật khẩu</label>
+          <div style="display:flex;gap:4px">
+            <input type="password" id="ql_password" style="flex:1">
+            <button type="button" onclick="const i=document.getElementById('ql_password');i.type=i.type==='password'?'text':'password'" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer">👁</button>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div class="form-group"><label>Team</label>
+            <select id="ql_team" style="width:100%">
+              <option value="Team 01">Team 01</option>
+              <option value="Team 02">Team 02</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Người quản lý</label>
+            <select id="ql_owner" style="width:100%">
+              <option value="Công ty">Công ty</option>
+              <option value="Hải">Hải</option>
+              <option value="Hiếu">Hiếu</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group"><label>Trạng thái</label>
+          <select id="ql_status" style="width:100%">
+            <option value="Tốt">✅ Tốt</option>
+            <option value="Chờ cấp lại mật khẩu">🔒 Chờ cấp lại mật khẩu</option>
+            <option value="Lỗi web">⚠️ Lỗi web</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Ghi chú</label><textarea id="ql_note" rows="2" style="width:100%"></textarea></div>
       </div>
       <div style="display:flex;gap:8px">
         <button onclick="qlSave()" class="btn btn-primary" style="flex:1">✓ Lưu</button>
@@ -2567,6 +2599,40 @@ function daysSince(from){
 }
 
 // ---- OVERVIEW as LIST ----
+let _taskDragId = null;
+
+function taskDragStart(e, id){
+  _taskDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{ const el=document.querySelector(`.task-row[data-tid="${id}"]`); if(el) el.classList.add('dragging'); }, 0);
+}
+
+function taskDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const row = e.currentTarget;
+  row.classList.add('drag-over');
+}
+
+function taskDragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function taskDrop(e, targetId){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!_taskDragId || _taskDragId === targetId) return;
+  const fromIdx = tasks.findIndex(t=>t.id===_taskDragId);
+  const toIdx   = tasks.findIndex(t=>t.id===targetId);
+  if(fromIdx<0 || toIdx<0) return;
+  const [moved] = tasks.splice(fromIdx, 1);
+  tasks.splice(toIdx, 0, moved);
+  _taskDragId = null;
+  saveAppData();
+  renderTasksOverview();
+}
+
+
 function renderTasksOverview(){
   updateTrashBadge();
   renderPendingSummary();
@@ -2597,8 +2663,15 @@ function renderTasksOverview(){
     const doneCards = (t.cards||[]).filter(c=>c.colId===lastCol.id||c.colId==='done').length;
     const totalCards = (t.cards||[]).length;
     const isDone = pct>=100;
-    return `<div class="task-row ${isDone?'task-row-done':''}" style="display:flex;align-items:center;gap:0" data-tid="${t.id}">
-      <div style="padding:0 10px;flex-shrink:0" onclick="event.stopPropagation()">
+    return `<div class="task-row ${isDone?'task-row-done':''}" style="display:flex;align-items:center;gap:0" data-tid="${t.id}"
+      ondragover="taskDragOver(event)"
+      ondragleave="taskDragLeave(event)"
+      ondrop="taskDrop(event,${t.id})">
+      <div class="drag-handle" title="Kéo để sắp xếp"
+        draggable="true"
+        ondragstart="taskDragStart(event,${t.id})"
+        onclick="event.stopPropagation()">⠿</div>
+      <div style="padding:0 6px;flex-shrink:0" onclick="event.stopPropagation()">
         <input type="checkbox" class="task-chk" data-tid="${t.id}" onchange="onTaskCheck(${t.id},this)"
           style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
       </div>
@@ -4727,6 +4800,10 @@ function qlOpenAdd(){
   document.getElementById('ql_admin').value='';
   document.getElementById('ql_account').value='';
   document.getElementById('ql_password').value='';
+  const _qlNote=document.getElementById('ql_note'); if(_qlNote) _qlNote.value='';
+  const _qlTeam=document.getElementById('ql_team'); if(_qlTeam) _qlTeam.value='Team 01';
+  const _qlOwner=document.getElementById('ql_owner'); if(_qlOwner) _qlOwner.value='Công ty';
+  const _qlStatus=document.getElementById('ql_status'); if(_qlStatus) _qlStatus.value='Tốt';
   document.getElementById('ql_type').value='work';
   qlTypeChange();
   document.getElementById('qlAddModal').style.display='block';
@@ -4764,7 +4841,11 @@ function qlSave(){
       admin:normalizeAdmin(document.getElementById('ql_admin')?.value),
       account:(document.getElementById('ql_account')?.value||'').trim(),
       password:document.getElementById('ql_password')?.value||'',
-      status:'Tốt', note:'', team:'Team 01', owner:'Công ty', group:'',
+      status:document.getElementById('ql_status')?.value||'Tốt',
+      note:(document.getElementById('ql_note')?.value||'').trim(),
+      team:document.getElementById('ql_team')?.value||'Team 01',
+      owner:document.getElementById('ql_owner')?.value||'Công ty',
+      group:'',
     });
   }
   saveAppData();
