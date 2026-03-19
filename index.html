@@ -3568,35 +3568,27 @@ function renderLinkSection(type, gridId, emptyId, cntId){
   if(!list.length){grid.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
 
-  // Group by group field
-  const groups={};
-  list.forEach(l=>{const g=l.group||'Khác';if(!groups[g])groups[g]=[];groups[g].push(l);});
-
-  grid.innerHTML=Object.entries(groups).map(([grp,items])=>`
-    <div class="link-group-label" style="margin-top:${grp===Object.keys(groups)[0]?'0':'10px'}">
-      &#128193; ${grp} <span style="font-weight:400;opacity:.6">(${items.length})</span>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:4px">
-      ${items.map(l=>`
-        <div onclick="editLink(${l.id})" style="background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:box-shadow .15s,border-color .15s;display:flex;align-items:center;gap:12px"
-          onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)';this.style.borderColor='#bbb'"
-          onmouseout="this.style.boxShadow='';this.style.borderColor='var(--gray-border)'">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px">
-              &#128279; ${l.name}
-              ${getOwnerBadge(l.owner)}
-            </div>
-            <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${l.url}</div>
-            ${l.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${l.desc}</div>`:''}
-            ${l.note?`<div style="font-size:11px;color:var(--blue);margin-top:2px">📝 ${l.note}</div>`:''}
-          </div>
-          ${l.account?`<div style="display:flex;gap:4px" onclick="event.stopPropagation()">
-            <button onclick="copyText('${(l.account||'').replace(/'/g,"\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>
-            ${l.password?`<button onclick="copyText('${(l.password||'').replace(/'/g,"\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
-          </div>`:''}
-          <a href="${l.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap">Mở</a>
-        </div>`).join('')}
-    </div>`).join('');
+  // Flat list — group shown as tag
+  grid.innerHTML=list.map(l=>{
+    const grpTag = l.group&&l.group!=='Khác' ? `<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fff3cd;color:#856404;font-weight:400">${l.group}</span>` : '';
+    const accBtn = l.account ? `<div style="display:flex;gap:4px" onclick="event.stopPropagation()"><button onclick="copyText(_copyMap['lk_acc_${l.id}'],this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>${l.password?`<button onclick="copyText(_copyMap['lk_pwd_${l.id}'],this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}</div>` : '';
+    _copyMap['lk_acc_'+l.id] = l.account||'';
+    _copyMap['lk_pwd_'+l.id] = l.password||'';
+    return `<div onclick="editLink(${l.id})" style="background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:box-shadow .15s,border-color .15s;display:flex;align-items:center;gap:12px;margin-bottom:4px"
+      onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)';this.style.borderColor='#bbb'"
+      onmouseout="this.style.boxShadow='';this.style.borderColor='var(--gray-border)'">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          🔗 ${l.name} ${grpTag} ${getOwnerBadge(l.owner)}
+        </div>
+        <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${l.url}</div>
+        ${l.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${l.desc}</div>`:''}
+        ${l.note?`<div style="font-size:11px;color:var(--blue);margin-top:2px">📝 ${l.note}</div>`:''}
+      </div>
+      ${accBtn}
+      <a href="${l.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap">Mở</a>
+    </div>`;
+  }).join('');
 }
 
 function renderLinks(){
@@ -4314,40 +4306,40 @@ function renderWebsites(){
   if(!list.length){if(grid)grid.innerHTML='';if(empty)empty.style.display='block';return;}
   if(empty)empty.style.display='none';
 
-  // Group by team then group
-  const grouped={};
-  list.forEach(w=>{
-    const team=w.team||'Team 01';
-    const grp=team==='Team 01'?(w.group||'Không nhóm'):'Team 02';
-    const key=team+'|||'+grp;
-    if(!grouped[key]) grouped[key]=[];
-    grouped[key].push(w);
-  });
+  // Group by Team only (2 fixed groups), group con shown as tag
+  const team1 = list.filter(w=>w.team!=='Team 02');
+  const team2 = list.filter(w=>w.team==='Team 02');
 
-  grid.innerHTML=Object.entries(grouped).map(([key,items])=>{
-    const [team,grp]=key.split('|||');
-    const label=team==='Team 02'?`🔒 Team 02`:`📁 ${grp} <span style="font-size:10px;color:var(--text-muted);font-weight:400">(${team})</span>`;
-    return `<div style="margin-bottom:16px">
-      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:4px 0;margin-bottom:6px;border-bottom:1px solid var(--gray-border)">${label} — ${items.length}</div>
-      ${items.map(w=>`
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;cursor:pointer;transition:box-shadow .15s;background:#fff"
-          onclick="openWebsiteForm(${w.id})" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
-          <div style="width:36px;height:36px;border-radius:8px;background:${WS_STATUS_COLOR[w.status]||'#999'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${WS_STATUS_ICON[w.status]||'🌐'}</div>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-weight:600;font-size:13px">${w.brand}</span>
-              ${w.owner&&w.owner!=='Chung'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:${w.owner==='Hải'?'#fdf2f2':'#f0f7fd'};color:${w.owner==='Hải'?'var(--red)':'var(--blue)'}">${w.owner}</span>`:''}
-            </div>
-            <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
-            ${w.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${w.note}</div>`:''}
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-            <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
-            ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
-          </div>
-        </div>`).join('')}
+  const renderWsRow = w => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;cursor:pointer;transition:box-shadow .15s;background:#fff"
+      onclick="openWebsiteForm(${w.id})" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+      <div style="width:36px;height:36px;border-radius:8px;background:${WS_STATUS_COLOR[w.status]||'#999'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${WS_STATUS_ICON[w.status]||'🌐'}</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:13px">${w.brand}</span>
+          ${w.group?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fff3cd;color:#856404">${w.group}</span>`:''}
+          ${w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:${w.owner==='Hải'?'#fdf2f2':'#f0f7fd'};color:${w.owner==='Hải'?'var(--red)':'var(--blue)'}">${w.owner}</span>`:''}
+        </div>
+        <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${w.url||''}</div>
+        ${w.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${w.note}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
+        ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
+      </div>
     </div>`;
-  }).join('');
+
+  let html = '';
+  if(team1.length){
+    html += `<div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:4px 0;margin-bottom:6px;border-bottom:1px solid var(--gray-border)">Team 01 — ${team1.length}</div>`;
+    html += team1.map(renderWsRow).join('');
+  }
+  if(team2.length){
+    html += `<div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:4px 0;margin:${team1.length?'14px':0} 0 6px;border-bottom:1px solid var(--gray-border)">🔒 Team 02 — ${team2.length}</div>`;
+    html += team2.map(renderWsRow).join('');
+  }
+  grid.innerHTML=html;
+
 }
 
 function openWebsiteForm(id=null){
