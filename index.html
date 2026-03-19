@@ -2193,6 +2193,7 @@ function showPage(name){
   if(name==='tasks') renderTasksOverview();
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
+  try{ localStorage.setItem('wt_activePage', name); } catch(e){}
 }
 
 function closeModal(e){
@@ -2559,6 +2560,7 @@ function renderTasksOverview(){
 
 function openProjectBoard(id){
   currentProjectId = id;
+  try{ localStorage.setItem('wt_activeProject', String(id)); } catch(e){}
   const t = tasks.find(x=>x.id===id);
   if(!t) return;
   document.getElementById('tasksOverview').style.display='none';
@@ -2572,6 +2574,7 @@ function openProjectBoard(id){
 
 function backToOverview(){
   currentProjectId=null;
+  try{ localStorage.removeItem('wt_activeProject'); } catch(e){}
   document.getElementById('taskSubBoard').style.display='none';
   document.getElementById('tasksOverview').style.display='block';
   document.querySelector('main').classList.remove('board-mode');
@@ -3368,19 +3371,7 @@ let linkCategories = {
   web:  ['Client', 'Social', 'Hosting', 'Domain', 'Khác'],
 };
 
-// ===== INIT — load after all variables declared =====
-loadAppData();
-renderDashboard();
-renderHai();
-renderHieu();
-window._appLoaded = true;
-window._appData = data;
-window._tasks = tasks;
-window._links = links;
-window._linkCategories = linkCategories;
-window._websites = websites;
-// Start Firebase real-time listener
-setTimeout(initFirebaseListener, 1000);
+// (init moved to end)
 
 function populateGroupSelect(typeVal){
   const type = typeVal || (document.getElementById('lf_type')||{}).value || 'work';
@@ -4682,6 +4673,39 @@ function qlSave(){
   qlCloseAdd();
   toast('✓ Đã thêm: '+name);
 }
+// ===== INIT — load after all variables declared =====
+loadAppData();
+renderDashboard();
+renderHai();
+renderHieu();
+window._appLoaded = true;
+window._appData = data;
+window._tasks = tasks;
+window._links = links;
+window._linkCategories = linkCategories;
+window._websites = websites;
+
+// Restore last active page & sub-board
+(function restorePosition(){
+  try{
+    const savedPage = localStorage.getItem('wt_activePage') || 'dashboard';
+    const validPages = ['dashboard','hai','hieu','add','import','tasks','links'];
+    const page = validPages.includes(savedPage) ? savedPage : 'dashboard';
+    showPage(page);
+    if(page === 'tasks'){
+      const savedProjectId = localStorage.getItem('wt_activeProject');
+      if(savedProjectId){
+        const pid = parseInt(savedProjectId);
+        const t = tasks.find(x=>x.id===pid);
+        if(t) openProjectBoard(pid);
+      }
+    }
+  }catch(e){ showPage('dashboard'); }
+})();
+
+// Start Firebase real-time listener
+setTimeout(initFirebaseListener, 1000);
+
 </script>
 </body></html>
 
