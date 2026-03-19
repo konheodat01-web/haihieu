@@ -232,6 +232,7 @@
   </div>
   <div class="meta" id="currentDate"></div>
   <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#27ae60;white-space:nowrap">☁ Đã đồng bộ</div>
+  <button onclick="forceSyncToCloud()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
 </header>
 
 <nav>
@@ -2082,14 +2083,60 @@ function saveAppData(){
   }
 }
 
+function forceSyncToCloud(){
+  if(!window._fbReady || !window._fbDb){
+    toast('Firebase chưa kết nối!','#e74c3c'); return;
+  }
+  const ind=document.getElementById('syncIndicator');
+  if(ind){ind.textContent='☁ Đang sync...';ind.style.opacity='1';ind.style.color='#e67e22';}
+  window._fbDb.ref('appData').set({
+    hai: data.hai,
+    hieu: data.hieu,
+    tasks,
+    links,
+    linkCategories,
+    websites,
+    _ts: Date.now()
+  }).then(()=>{
+    toast('☁ Đã đồng bộ toàn bộ dữ liệu lên đám mây!');
+    if(ind){ind.textContent='☁ Đã sync xong';ind.style.color='#27ae60';setTimeout(()=>ind.style.opacity='0',3000);}
+  }).catch(e=>{
+    toast('Lỗi sync: '+e.message,'#e74c3c');
+  });
+}
+
 function initFirebaseListener(){
   if(!window._fbReady || !window._fbDb) return;
-  let firstLoad = true;
+
+  window._fbDb.ref('appData').once('value', (snapshot)=>{
+    const remote = snapshot.val();
+    if(!remote || !remote._ts) return;
+
+    // If remote data is newer or local is empty, load from Firebase
+    const localTs = parseInt(localStorage.getItem('wt_ts')||'0');
+    if(remote._ts > localTs || data.hai.length===0){
+      try{
+        if(remote.hai && remote.hai.length) data.hai=remote.hai;
+        if(remote.hieu && remote.hieu.length) data.hieu=remote.hieu;
+        if(remote.tasks && remote.tasks.length) tasks=remote.tasks;
+        if(remote.links && remote.links.length) links=remote.links;
+        if(remote.linkCategories) linkCategories=remote.linkCategories;
+        if(remote.websites && remote.websites.length){ websites=remote.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+        localStorage.setItem('wt_ts', remote._ts);
+        // Re-render
+        renderDashboard(); renderHai(); renderHieu();
+        const ind=document.getElementById('syncIndicator');
+        if(ind){ind.textContent='☁ Đã tải dữ liệu từ đám mây';ind.style.opacity='1';ind.style.color='#2980b9';setTimeout(()=>ind.style.opacity='0',3000);}
+      }catch(e){console.warn('Firebase load error',e);}
+    }
+  });
+
+  // Then listen for real-time updates
+  let firstCall = true;
   window._fbDb.ref('appData').on('value', (snapshot)=>{
+    if(firstCall){ firstCall=false; return; }
     const remote = snapshot.val();
     if(!remote) return;
-    if(firstLoad){ firstLoad=false; return; } // skip initial load (already have localStorage)
-    // Update local data from remote
     try{
       if(remote.hai) data.hai=remote.hai;
       if(remote.hieu) data.hieu=remote.hieu;
@@ -2097,7 +2144,7 @@ function initFirebaseListener(){
       if(remote.links) links=remote.links;
       if(remote.linkCategories) linkCategories=remote.linkCategories;
       if(remote.websites){ websites=remote.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
-      // Re-render current page
+      if(remote._ts) localStorage.setItem('wt_ts', remote._ts);
       const active=document.querySelector('.page.active')?.id?.replace('page-','');
       if(active==='hai') renderHai();
       else if(active==='hieu') renderHieu();
