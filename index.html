@@ -2546,13 +2546,17 @@ function initFirebaseListener(){
       data.hai = Array.isArray(r.hai) ? r.hai : (r.hai != null ? r.hai : []);
       data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
       tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
-      // Restore manual sort order if saved
+      // Restore manual sort order if saved (no duplicates)
       try{
-        const savedOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
+        // Prefer Firebase taskOrder over localStorage
+        const fbOrder = Array.isArray(r.taskOrder) ? r.taskOrder : null;
+        const lsOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
+        const savedOrder = fbOrder || lsOrder;
         if(savedOrder.length){
-          const map = {}; tasks.forEach(t=>{ map[t.id]=t; });
-          const ordered = savedOrder.map(id=>map[id]).filter(Boolean);
-          const rest = tasks.filter(t=>!savedOrder.includes(t.id));
+          const taskMap = {}; tasks.forEach(t=>{ taskMap[t.id]=t; });
+          const ordered = savedOrder.map(id=>taskMap[id]).filter(Boolean);
+          const orderedIds = new Set(savedOrder);
+          const rest = tasks.filter(t=>!orderedIds.has(t.id));
           tasks = [...ordered, ...rest];
         }
       } catch(e){}
@@ -2598,9 +2602,10 @@ function loadAppData(){
       try{
         const savedOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
         if(savedOrder.length){
-          const map = {}; tasks.forEach(task=>{ map[task.id]=task; });
-          const ordered = savedOrder.map(id=>map[id]).filter(Boolean);
-          const rest = tasks.filter(task=>!savedOrder.includes(task.id));
+          const taskMap = {}; tasks.forEach(task=>{ taskMap[task.id]=task; });
+          const orderedIds = new Set(savedOrder);
+          const ordered = savedOrder.map(id=>taskMap[id]).filter(Boolean);
+          const rest = tasks.filter(task=>!orderedIds.has(task.id));
           tasks = [...ordered, ...rest];
         }
       } catch(e){}
@@ -2799,12 +2804,18 @@ function taskMove(id, dir){
   renderTasksOverview();
 }
 
-// Save order+tasks to localStorage only — no Firebase push to avoid duplicate bug
+// Save order+tasks to localStorage AND Firebase
 function _saveTaskOrder(){
   try{
     localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id)));
     localStorage.setItem('wt_tasks', JSON.stringify(tasks));
   }catch(e){}
+  // Push to Firebase (order array included to prevent duplicate on restore)
+  if(window._fbReady && window._fbDb){
+    window._fbDb.ref('appData/tasks').set(tasks).catch(()=>{});
+    window._fbDb.ref('appData/taskOrder').set(tasks.map(t=>t.id)).catch(()=>{});
+    window._fbDb.ref('appData/_sid').set(_sessionId).catch(()=>{});
+  }
 }
 
 
@@ -2814,15 +2825,9 @@ function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 const _taskRowMap = {};
 
 function openTask(id){
-  // id comes from HTML as number literal - find by strict equality
   const numId = parseInt(id);
-  const t = tasks.find(x=>x.id===numId || x.id===id);
-  console.log('openTask called:', id, 'numId:', numId, 'tasks:', tasks.map(x=>({id:x.id,name:x.name})));
-  if(!t){ 
-    // Try finding latest task as fallback debug
-    console.warn('Not found! All task ids:', tasks.map(x=>x.id));
-    return; 
-  }
+  const t = tasks.find(x=>x.id===numId);
+  if(!t) return;
   openProjectBoard(t.id);
 }
 
