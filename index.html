@@ -27,7 +27,7 @@
   nav button.active{color:var(--red);border-left-color:var(--red);background:#fdf2f2;font-weight:600}
   nav .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);padding:14px 18px 4px;opacity:.7}
 
-  main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box}
+  main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box;overflow-x:auto}
   main.board-mode{overflow-x:visible;padding:16px 20px 0}
   
   .page{display:none}
@@ -79,7 +79,7 @@
   .btn-danger{background:#fff;border-color:#e74c3c;color:#e74c3c}
   .btn-danger:hover{background:#fdf2f2}
   
-  .table-wrap{width:100%;overflow-x:auto}
+  .table-wrap{width:100%}
   .data{width:100%;border-collapse:collapse;min-width:900px;font-size:13px}
   table.data th{background:var(--gray-light);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);border-bottom:1px solid var(--gray-border);white-space:nowrap}
   table.data td{padding:9px 12px;border-bottom:1px solid var(--gray-border);vertical-align:middle}
@@ -2461,18 +2461,22 @@ function updateStickyTops(sheet){
   const panel = document.querySelector('#page-'+sheet+' .panel-header');
   const dateNav = document.getElementById('dateNav'+S);
   const bulkBar = document.getElementById('bulkBar'+S);
+  const thead = document.querySelector('#table'+S+' thead');
   if(!panel || !dateNav || !bulkBar) return;
-  // Measure actual heights after render
   const hdr = 56;
   const ph = panel.getBoundingClientRect().height;
   const dh = dateNav.getBoundingClientRect().height;
-  dateNav.style.position='sticky';
-  dateNav.style.background='#fafafa';
-  dateNav.style.zIndex='91';
-  dateNav.style.top=(hdr+ph)+'px';
+  const bh = bulkBar.getBoundingClientRect().height;
+  dateNav.style.cssText += ';position:sticky;background:#fafafa;z-index:91;top:'+(hdr+ph)+'px';
   bulkBar.style.position='sticky';
   bulkBar.style.zIndex='90';
   bulkBar.style.top=(hdr+ph+dh)+'px';
+  if(thead){ thead.querySelectorAll('th').forEach(th=>{
+    th.style.position='sticky';
+    th.style.zIndex='88';
+    th.style.background='var(--gray-light)';
+    th.style.top=(hdr+ph+dh+bh)+'px';
+  }); }
 }
 
 function saveAppData(){
@@ -2546,6 +2550,7 @@ function initFirebaseListener(){
       data.hai = Array.isArray(r.hai) ? r.hai : (r.hai != null ? r.hai : []);
       data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
       tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
+      deduplicateTasks();
       // Restore manual sort order if saved (no duplicates)
       try{
         // Prefer Firebase taskOrder over localStorage
@@ -2599,6 +2604,7 @@ function loadAppData(){
     if(hieu) data.hieu = JSON.parse(hieu);
     if(t){
       tasks = JSON.parse(t);
+      deduplicateTasks();
       try{
         const savedOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
         if(savedOrder.length){
@@ -2768,20 +2774,24 @@ function daysSince(from){
 // ---- OVERVIEW as LIST ----
 function taskMoveBulk(dir){
   if(!selectedTaskIds.size) return;
-  const ids = [...selectedTaskIds];
-  ids.sort((a,b)=>tasks.findIndex(t=>t.id===a)-tasks.findIndex(t=>t.id===b));
-  if(dir==='down'||dir==='bottom') ids.reverse();
-  ids.forEach(id=>{
-    const cur = tasks.findIndex(t=>t.id===id);
-    if(cur<0) return;
+  // Get current indices of selected tasks
+  let indices = [];
+  tasks.forEach((t,i)=>{ if(selectedTaskIds.has(t.id)) indices.push(i); });
+  if(!indices.length) return;
+  // Sort: for up/top process top-first; for down/bottom process bottom-first
+  if(dir==='down'||dir==='bottom') indices.sort((a,b)=>b-a);
+  else indices.sort((a,b)=>a-b);
+  indices.forEach(cur=>{
+    const cur2 = tasks.findIndex(t=>t.id===tasks[cur]?.id); // re-find after splices
+    if(cur2<0) return;
     let ni;
-    if(dir==='up') ni=Math.max(0,cur-1);
-    else if(dir==='down') ni=Math.min(tasks.length-1,cur+1);
+    if(dir==='up') ni=Math.max(0,cur2-1);
+    else if(dir==='down') ni=Math.min(tasks.length-1,cur2+1);
     else if(dir==='top') ni=0;
     else if(dir==='bottom') ni=tasks.length-1;
     else return;
-    if(ni===cur) return;
-    const [m]=tasks.splice(cur,1);
+    if(ni===cur2) return;
+    const [m]=tasks.splice(cur2,1);
     tasks.splice(ni,0,m);
   });
   _saveTaskOrder();
@@ -2823,6 +2833,11 @@ function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 
 
 const _taskRowMap = {};
+
+function deduplicateTasks(){
+  const seen = new Set();
+  tasks = tasks.filter(t=>{ if(seen.has(t.id)) return false; seen.add(t.id); return true; });
+}
 
 function openTask(id){
   const numId = parseInt(id);
@@ -4851,8 +4866,9 @@ function toggleLfAuth(){
 let selectedTaskIds = new Set();
 
 function onTaskCheck(id, chk){
-  if(chk.checked) selectedTaskIds.add(id);
-  else selectedTaskIds.delete(id);
+  const numId = parseInt(id);
+  if(chk.checked) selectedTaskIds.add(numId);
+  else selectedTaskIds.delete(numId);
 
   updateTaskBulkBar();
 }
