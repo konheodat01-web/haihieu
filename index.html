@@ -1628,8 +1628,11 @@ function editCell(sheet, id, field, el){
 
   const save=()=>{
     const newVal = inp.value.trim();
-    if(newVal !== orig){ cur[field]=newVal; saveAppData(); }
-    else { cur[field]=newVal; }
+    if(newVal !== orig){
+      cur[field]=newVal;
+      if(field==='anchor') cur._anchorManual = (newVal !== ''); // mark manual if non-empty
+      saveAppData();
+    } else { cur[field]=newVal; }
     renderVal();
     updateWsIcons();
   };
@@ -2058,6 +2061,30 @@ document.addEventListener('click', e=>{
   checkWebsiteInSheet(btn.dataset.url, btn);
 });
 
+function findBrandByUrl(url){
+  if(!url) return '';
+  const q=url.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const ws=websites.find(w=>{
+    const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    return wu===q||wu.includes(q)||q.includes(wu);
+  });
+  return ws ? ws.brand : '';
+}
+
+// Auto-fill anchor for rows where anchor is empty and not manually set
+function autoFillAnchors(){
+  let changed=false;
+  ['hai','hieu'].forEach(sheet=>{
+    data[sheet].forEach(r=>{
+      if(r._anchorManual) return; // skip manually set
+      if(r.anchor) return;        // skip already filled (even if auto)
+      const brand=findBrandByUrl(r.website);
+      if(brand){ r.anchor=brand; changed=true; }
+    });
+  });
+  if(changed) saveAppData();
+}
+
 function updateWsIcons(){
   document.querySelectorAll('.ws-lookup-btn').forEach(btn=>{
     const url = btn.dataset.url;
@@ -2071,6 +2098,7 @@ function updateWsIcons(){
     btn.title = ws ? (ws.brand+' — '+ws.status) : 'Kiểm tra website';
     btn.style.opacity = ws ? '1' : '0.5';
   });
+  autoFillAnchors();
 }
 
 function getWsIcon(url, rowId){
@@ -2410,6 +2438,16 @@ function initFirebaseListener(){
       data.hai = Array.isArray(r.hai) ? r.hai : (r.hai != null ? r.hai : []);
       data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
       tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
+      // Restore manual sort order if saved
+      try{
+        const savedOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
+        if(savedOrder.length){
+          const map = {}; tasks.forEach(t=>{ map[t.id]=t; });
+          const ordered = savedOrder.map(id=>map[id]).filter(Boolean);
+          const rest = tasks.filter(t=>!savedOrder.includes(t.id));
+          tasks = [...ordered, ...rest];
+        }
+      } catch(e){}
       if(Array.isArray(r.deletedTasks)) deletedTasks=r.deletedTasks;
       localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
       links = Array.isArray(r.links) ? r.links : (r.links != null ? r.links : []);
@@ -2447,7 +2485,18 @@ function loadAppData(){
     const lc = localStorage.getItem('wt_link_categories');
     if(hai) data.hai = JSON.parse(hai);
     if(hieu) data.hieu = JSON.parse(hieu);
-    if(t) tasks = JSON.parse(t);
+    if(t){
+      tasks = JSON.parse(t);
+      try{
+        const savedOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
+        if(savedOrder.length){
+          const map = {}; tasks.forEach(task=>{ map[task.id]=task; });
+          const ordered = savedOrder.map(id=>map[id]).filter(Boolean);
+          const rest = tasks.filter(task=>!savedOrder.includes(task.id));
+          tasks = [...ordered, ...rest];
+        }
+      } catch(e){}
+    }
     const dt=localStorage.getItem('wt_deleted_tasks'); if(dt) deletedTasks=JSON.parse(dt);
     if(l) links = JSON.parse(l);
     if(lc) linkCategories = JSON.parse(lc);
@@ -2645,6 +2694,8 @@ function taskDrop(e, targetId){
   if(fromIdx<0 || toIdx<0) return;
   const [moved] = tasks.splice(fromIdx, 1);
   tasks.splice(toIdx, 0, moved);
+  // Save explicit order so Firebase listener can restore it
+  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); } catch(e){}
   saveAppData();
   renderTasksOverview();
 }
@@ -2693,7 +2744,7 @@ function renderTasksOverview(){
         <input type="checkbox" class="task-chk" data-tid="${t.id}" onchange="onTaskCheck(${t.id},this)"
           style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
       </div>
-      <div style="flex:1;min-width:0;cursor:pointer" onclick="openProjectBoard(${t.id})">
+      <div style="flex:1;min-width:0;cursor:pointer" data-open-task="${t.id}">
         <div class="task-row-main">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
             <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
@@ -3562,6 +3613,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
   populateGroupSelect('work');
 });
 
+// Delegated click for task rows - avoids inline onclick issues
+document.addEventListener('click', e=>{
+  const el = e.target.closest('[data-open-task]');
+  if(!el) return;
+  if(_isDraggingTask) return;
+  const id = parseInt(el.dataset.openTask);
+  if(id) openProjectBoard(id);
+});
+
 function openCategoryManager(){
   renderCategoryLists();
   document.getElementById('categoryModal').classList.add('open');
@@ -4258,6 +4318,7 @@ function saveWebsite(){
   clearWebsiteForm();
   saveAppData();
   renderWebsites();
+  autoFillAnchors();
   updateWsIcons();
   toast('✓ Đã lưu website: '+brand);
 }
