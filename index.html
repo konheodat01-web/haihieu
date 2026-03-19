@@ -2067,13 +2067,19 @@ function saveAppData(){
   }catch(e){}
 
   if(window._fbReady && window._fbDb){
+    console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
       tasks, links, linkCategories, websites, _ts: ts
     }).then(()=>{
+      console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='☁ Đã đồng bộ';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',1500);}
-    }).catch(e=>{ console.warn('Firebase sync failed',e); });
+    }).catch(e=>{
+      console.error('Firebase push FAILED:', e);
+    });
+  } else {
+    console.warn('Firebase not ready, _fbReady=', window._fbReady);
   }
 }
 
