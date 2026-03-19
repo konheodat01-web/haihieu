@@ -60,7 +60,7 @@
   td.num{text-align:right}
   
   .panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-border)}
-  .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:92;background:#fff}
+  .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:56px;z-index:92;background:#fff}
   .panel-title{font-weight:600;font-size:14px}
   .panel-body{padding:16px}
   
@@ -2463,12 +2463,13 @@ function updateStickyTops(sheet){
   const bulkBar = document.getElementById('bulkBar'+S);
   const thead = document.querySelector('#table'+S+' thead');
   if(!panel) return;
+  const hdr = 56; // fixed header height
   const ph = panel.offsetHeight;
   const dh = dateNav ? dateNav.offsetHeight : 0;
   const bh = bulkBar ? bulkBar.offsetHeight : 0;
-  if(dateNav){ dateNav.style.position='sticky'; dateNav.style.top=ph+'px'; dateNav.style.zIndex='92'; dateNav.style.background='#fafafa'; }
-  if(bulkBar){ bulkBar.style.top=(ph+dh)+'px'; }
-  if(thead){ const rows=thead.querySelectorAll('th'); rows.forEach(th=>{ th.style.top=(ph+dh+bh)+'px'; }); }
+  if(dateNav){ dateNav.style.position='sticky'; dateNav.style.top=(hdr+ph)+'px'; dateNav.style.zIndex='92'; dateNav.style.background='#fafafa'; }
+  if(bulkBar){ bulkBar.style.top=(hdr+ph+dh)+'px'; }
+  if(thead){ thead.querySelectorAll('th').forEach(th=>{ th.style.position='sticky'; th.style.zIndex='88'; th.style.background='var(--gray-light)'; th.style.top=(hdr+ph+dh+bh)+'px'; }); }
 }
 
 function saveAppData(){
@@ -2800,6 +2801,14 @@ function taskMove(id, dir){
 function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 
 
+const _taskRowMap = {};
+
+function openTask(id){
+  const t = tasks.find(x=>x.id===id);
+  if(!t){ console.warn('Task not found:', id, tasks.map(x=>x.id)); return; }
+  openProjectBoard(id);
+}
+
 function renderTasksOverview(){
   updateTrashBadge();
   renderPendingSummary();
@@ -2836,7 +2845,7 @@ function renderTasksOverview(){
         <input type="checkbox" class="task-chk" data-tid="${t.id}" onchange="onTaskCheck(${t.id},this)"
           style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
       </div>
-      <div style="flex:1;min-width:0;cursor:pointer" onclick="event.stopPropagation();openProjectBoard(${t.id})">
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="event.stopPropagation();openTask(${t.id})">
         <div class="task-row-main">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
             <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
