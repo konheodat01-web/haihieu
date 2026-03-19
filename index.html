@@ -60,7 +60,9 @@
   td.num{text-align:right}
   
   .panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-border)}
-  .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  #page-hai .panel, #page-hieu .panel{display:flex;flex-direction:column;height:calc(100vh - 96px)}
+  #page-hai .table-wrap, #page-hieu .table-wrap{overflow-y:auto;flex:1;overflow-x:auto}
+  .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0}
   .panel-title{font-weight:600;font-size:14px}
   .panel-body{padding:16px}
   
@@ -81,7 +83,7 @@
   
   .table-wrap{width:100%;overflow-x:auto}
   .data{width:100%;border-collapse:collapse;min-width:900px;font-size:13px}
-  table.data th{background:var(--gray-light);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);border-bottom:1px solid var(--gray-border);white-space:nowrap}
+  table.data th{background:var(--gray-light);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);border-bottom:1px solid var(--gray-border);white-space:nowrap;position:sticky;top:0;z-index:8}
   table.data td{padding:9px 12px;border-bottom:1px solid var(--gray-border);vertical-align:middle}
   table.data tr:last-child td{border-bottom:none}
   table.data tr:hover td{background:#fafafa}
@@ -130,7 +132,7 @@
   .fh:hover{background:#f0e8e8}
   .fh.active{background:#fdf0f0;color:var(--red)}
   .fh-ic{font-size:9px;opacity:.6;margin-left:3px}
-  .bulk-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid #ffe082;flex-wrap:wrap;position:sticky;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:opacity .2s}
+  .bulk-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid #ffe082;flex-wrap:wrap;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.06);transition:opacity .2s;flex-shrink:0}
   .date-nav-sticky{position:sticky;z-index:92;background:#fafafa}
   .panel-sticky-head{position:sticky;z-index:93;background:#fff}
 
@@ -362,7 +364,7 @@
       </div>
     </div>
     <!-- DATE NAV BAR -->
-    <div id="dateNavHai" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--gray-border);background:#fafafa;flex-wrap:wrap"></div>
+    <div id="dateNavHai" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--gray-border);background:#fafafa;flex-wrap:wrap;position:sticky;top:0;z-index:10;flex-shrink:0"></div>
     <div id="bulkBarHai" class="bulk-bar bulk-bar-inactive" style="display:flex">
       <span id="bulkCountHai" style="font-weight:500;font-size:13px"></span>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
@@ -458,7 +460,7 @@
       </div>
     </div>
     <!-- DATE NAV BAR -->
-    <div id="dateNavHieu" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--gray-border);background:#fafafa;flex-wrap:wrap"></div>
+    <div id="dateNavHieu" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-bottom:1px solid var(--gray-border);background:#fafafa;flex-wrap:wrap;position:sticky;top:0;z-index:10;flex-shrink:0"></div>
     <div id="bulkBarHieu" class="bulk-bar bulk-bar-inactive" style="display:flex">
       <span id="bulkCountHieu" style="font-weight:500;font-size:13px"></span>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
