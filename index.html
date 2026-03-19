@@ -79,7 +79,7 @@
   .btn-danger{background:#fff;border-color:#e74c3c;color:#e74c3c}
   .btn-danger:hover{background:#fdf2f2}
   
-  .table-wrap{overflow-x:auto;width:100%}
+  .table-wrap{width:100%;overflow-x:auto}
   .data{width:100%;border-collapse:collapse;min-width:900px;font-size:13px}
   table.data th{background:var(--gray-light);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);border-bottom:1px solid var(--gray-border);white-space:nowrap}
   table.data td{padding:9px 12px;border-bottom:1px solid var(--gray-border);vertical-align:middle}
@@ -133,7 +133,7 @@
   .bulk-bar{display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff8e1;border-bottom:1px solid #ffe082;flex-wrap:wrap;position:sticky;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,.08);transition:opacity .2s}
   .date-nav-sticky{position:sticky;z-index:92;background:#fafafa}
   .panel-sticky-head{position:sticky;z-index:93;background:#fff}
-  table.data thead th{position:sticky;z-index:88;background:var(--gray-light)}
+
   .bulk-bar-inactive{opacity:.45;pointer-events:none}
   .bulk-bar-inactive .btn{cursor:default}
   #dateNavHai,#dateNavHieu{position:sticky;z-index:91;background:#fafafa}
@@ -2461,15 +2461,18 @@ function updateStickyTops(sheet){
   const panel = document.querySelector('#page-'+sheet+' .panel-header');
   const dateNav = document.getElementById('dateNav'+S);
   const bulkBar = document.getElementById('bulkBar'+S);
-  const thead = document.querySelector('#table'+S+' thead');
-  if(!panel) return;
-  const hdr = 56; // fixed header height
-  const ph = panel.offsetHeight;
-  const dh = dateNav ? dateNav.offsetHeight : 0;
-  const bh = bulkBar ? bulkBar.offsetHeight : 0;
-  if(dateNav){ dateNav.style.position='sticky'; dateNav.style.top=(hdr+ph)+'px'; dateNav.style.zIndex='92'; dateNav.style.background='#fafafa'; }
-  if(bulkBar){ bulkBar.style.top=(hdr+ph+dh)+'px'; }
-  if(thead){ thead.querySelectorAll('th').forEach(th=>{ th.style.position='sticky'; th.style.zIndex='88'; th.style.background='var(--gray-light)'; th.style.top=(hdr+ph+dh+bh)+'px'; }); }
+  if(!panel || !dateNav || !bulkBar) return;
+  // Measure actual heights after render
+  const hdr = 56;
+  const ph = panel.getBoundingClientRect().height;
+  const dh = dateNav.getBoundingClientRect().height;
+  dateNav.style.position='sticky';
+  dateNav.style.background='#fafafa';
+  dateNav.style.zIndex='91';
+  dateNav.style.top=(hdr+ph)+'px';
+  bulkBar.style.position='sticky';
+  bulkBar.style.zIndex='90';
+  bulkBar.style.top=(hdr+ph+dh)+'px';
 }
 
 function saveAppData(){
@@ -2776,27 +2779,34 @@ function taskMoveBulk(dir){
     const [m]=tasks.splice(cur,1);
     tasks.splice(ni,0,m);
   });
-  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); } catch(e){}
-  saveAppData();
+  _saveTaskOrder();
   renderTasksOverview();
 }
 
 function taskMove(id, dir){
   const idx = tasks.findIndex(t=>t.id===id);
   if(idx<0) return;
-  let newIdx;
-  if(dir==='up') newIdx=Math.max(0,idx-1);
-  else if(dir==='down') newIdx=Math.min(tasks.length-1,idx+1);
-  else if(dir==='top') newIdx=0;
-  else if(dir==='bottom') newIdx=tasks.length-1;
+  let ni;
+  if(dir==='up') ni=Math.max(0,idx-1);
+  else if(dir==='down') ni=Math.min(tasks.length-1,idx+1);
+  else if(dir==='top') ni=0;
+  else if(dir==='bottom') ni=tasks.length-1;
   else return;
-  if(newIdx===idx) return;
-  const [moved]=tasks.splice(idx,1);
-  tasks.splice(newIdx,0,moved);
-  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); } catch(e){}
-  saveAppData();
+  if(ni===idx) return;
+  const [m]=tasks.splice(idx,1);
+  tasks.splice(ni,0,m);
+  _saveTaskOrder();
   renderTasksOverview();
 }
+
+// Save order+tasks to localStorage only — no Firebase push to avoid duplicate bug
+function _saveTaskOrder(){
+  try{
+    localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id)));
+    localStorage.setItem('wt_tasks', JSON.stringify(tasks));
+  }catch(e){}
+}
+
 
 function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 
@@ -2804,9 +2814,16 @@ function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 const _taskRowMap = {};
 
 function openTask(id){
-  const t = tasks.find(x=>x.id===id);
-  if(!t){ console.warn('Task not found:', id, tasks.map(x=>x.id)); return; }
-  openProjectBoard(id);
+  // id comes from HTML as number literal - find by strict equality
+  const numId = parseInt(id);
+  const t = tasks.find(x=>x.id===numId || x.id===id);
+  console.log('openTask called:', id, 'numId:', numId, 'tasks:', tasks.map(x=>({id:x.id,name:x.name})));
+  if(!t){ 
+    // Try finding latest task as fallback debug
+    console.warn('Not found! All task ids:', tasks.map(x=>x.id));
+    return; 
+  }
+  openProjectBoard(t.id);
 }
 
 function renderTasksOverview(){
