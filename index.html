@@ -232,6 +232,52 @@
     <h1>&#128188; Quản lý công việc</h1>
   </div>
   <div class="meta" id="currentDate"></div>
+  <!-- QUICK LINK SEARCH -->
+  <div style="position:relative;display:flex;align-items:center" id="qlSearchWrap">
+    <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,.95);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2)">
+      <span style="padding:0 10px;font-size:14px;color:#aaa">🔗</span>
+      <input id="qlInput" type="text" placeholder="Tìm link / website..." autocomplete="off"
+        style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 4px;width:200px;font-weight:500"
+        oninput="qlSearch()" onfocus="qlSearch()" onblur="setTimeout(qlClose,200)"
+        onkeydown="qlKeydown(event)">
+      <button onclick="qlOpenAdd()" title="Thêm link mới"
+        style="background:none;border:none;padding:0 12px;cursor:pointer;font-size:22px;font-weight:300;height:38px;display:flex;align-items:center;color:#e74c3c;opacity:.8;transition:opacity .15s"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">+</button>
+    </div>
+    <!-- Dropdown results -->
+    <div id="qlDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:360px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:360px;overflow-y:auto"></div>
+  </div>
+  <!-- QUICK ADD MODAL -->
+  <div id="qlAddModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:600;width:380px;padding:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-weight:600;font-size:14px">🔗 Thêm link nhanh</div>
+      <button onclick="qlCloseAdd()" style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-muted)">&times;</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Loại</label>
+        <select id="ql_type" style="width:100%" onchange="qlTypeChange()">
+          <option value="work">🔗 Link công việc</option>
+          <option value="web">🌐 Website</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Tên *</label><input type="text" id="ql_name" style="width:100%" placeholder="Tên hiển thị"></div>
+      <div class="form-group"><label>URL *</label><input type="text" id="ql_url" style="width:100%" placeholder="https://..."></div>
+      <div id="ql_extra_work" style="display:flex;flex-direction:column;gap:8px">
+        <div class="form-group"><label>Nhóm</label><input type="text" id="ql_group" style="width:100%" placeholder="VD: WordPress, SEO..."></div>
+      </div>
+      <div id="ql_extra_web" style="display:none;flex-direction:column;gap:8px">
+        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="/wp-admin"></div>
+        <div class="form-group"><label>Tài khoản</label><input type="text" id="ql_account" style="width:100%"></div>
+        <div class="form-group"><label>Mật khẩu</label><input type="text" id="ql_password" style="width:100%"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="qlSave()" class="btn btn-primary" style="flex:1">✓ Lưu</button>
+        <button onclick="qlCloseAdd()" class="btn btn-outline">Huỷ</button>
+      </div>
+    </div>
+  </div>
+  <div id="qlOverlay" style="display:none;position:fixed;inset:0;z-index:599" onclick="qlCloseAdd()"></div>
+
   <div style="display:flex;align-items:center;gap:8px">
     <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#fff;white-space:nowrap;background:rgba(0,0,0,.2);padding:3px 8px;border-radius:4px">☁ Đã đồng bộ</div>
     <button onclick="forceSyncToCloud()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
@@ -2549,7 +2595,7 @@ function renderSubBoard(task){
     colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column;overflow:hidden`;
     colEl.dataset.colId = col.id;
 
-    const isPending = col.id==='pending';
+    const isPending = col.id==='pending' || col.id==='col_pending';
     colEl.innerHTML=`
       <div class="kb-col-header">
         <span class="kb-col-title" style="color:${col.color}">${col.label}</span>
@@ -2619,7 +2665,7 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
     if(!event.target.checked && curIdx>0) card.colId=cols[curIdx-1].id;
     renderSubBoard(task); renderTasksOverview(); return;
   }
-  if(nextCol.id==='pending'){
+  if(nextCol.id==='pending' || nextCol.id==='col_pending'){
     // Going to pending needs reason
     event.target.checked=false;
     pendingDragCard={cardId,colId:nextCol.id};
@@ -4507,6 +4553,112 @@ function bulkTaskDone(){
   saveAppData();
   renderTasksOverview();
   toast('✓ Đã Done ' + n + ' task!');
+}
+
+// ===== QUICK LINK SEARCH (HEADER) =====
+function qlGetItems(){
+  const workItems = links.filter(l=>l.type==='work'||!l.type).map(l=>({
+    icon:'🔗', label:l.name, sub:l.url, url:l.url,
+    account:l.account, password:l.password
+  }));
+  const webItems = websites.filter(w=> currentMember!=='hai' || w.team!=='Team 02').map(w=>({
+    icon: WS_STATUS_ICON[w.status]||'🌐',
+    label:w.brand, sub:w.url,
+    url: w.url+(w.admin||''),
+    account:w.account, password:w.password
+  }));
+  return [...workItems, ...webItems];
+}
+
+function qlSearch(){
+  const q=(document.getElementById('qlInput')?.value||'').toLowerCase();
+  const all=qlGetItems();
+  const res=q?all.filter(i=>i.label.toLowerCase().includes(q)||(i.sub||'').toLowerCase().includes(q)):all.slice(0,8);
+  const drop=document.getElementById('qlDropdown');
+  if(!drop) return;
+  if(!res.length){drop.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px">Không tìm thấy — nhấn + để thêm</div>';drop.style.display='block';return;}
+  drop.innerHTML=res.map(item=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-border);transition:background .1s"
+      onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''"
+      onclick="window.open('${item.url.replace(/'/g,"\\'")}','_blank');document.getElementById('qlInput').value='';qlClose()">
+      <span style="font-size:16px;flex-shrink:0">${item.icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.label}</div>
+        <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.sub||''}</div>
+      </div>
+      ${item.account?`<div onclick="event.stopPropagation()" style="display:flex;gap:4px">
+        <button class="ws-copy-btn" data-val="${(item.account||'').replace(/"/g,'&quot;')}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>
+        ${item.password?`<button class="ws-copy-btn" data-val="${(item.password||'').replace(/"/g,'&quot;')}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
+      </div>`:''}
+      <a href="${item.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap;color:var(--text)">Mở</a>
+    </div>`).join('');
+  drop.style.display='block';
+}
+
+function qlClose(){
+  const d=document.getElementById('qlDropdown'); if(d) d.style.display='none';
+}
+
+function qlKeydown(e){
+  if(e.key==='Escape'){qlClose();e.target.blur();}
+  if(e.key==='Enter'){
+    const v=e.target.value.trim();
+    if(v.startsWith('http')) window.open(v,'_blank');
+  }
+}
+
+function qlOpenAdd(){
+  qlClose();
+  const q=(document.getElementById('qlInput')?.value||'').trim();
+  document.getElementById('ql_name').value='';
+  document.getElementById('ql_url').value=q.startsWith('http')?q:'';
+  document.getElementById('ql_group').value='';
+  document.getElementById('ql_admin').value='';
+  document.getElementById('ql_account').value='';
+  document.getElementById('ql_password').value='';
+  document.getElementById('ql_type').value='work';
+  qlTypeChange();
+  document.getElementById('qlAddModal').style.display='block';
+  document.getElementById('qlOverlay').style.display='block';
+  setTimeout(()=>document.getElementById('ql_name').focus(),100);
+}
+
+function qlCloseAdd(){
+  document.getElementById('qlAddModal').style.display='none';
+  document.getElementById('qlOverlay').style.display='none';
+}
+
+function qlTypeChange(){
+  const t=document.getElementById('ql_type').value;
+  document.getElementById('ql_extra_work').style.display=t==='work'?'flex':'none';
+  document.getElementById('ql_extra_web').style.display=t==='web'?'flex':'none';
+}
+
+function qlSave(){
+  const type=document.getElementById('ql_type').value;
+  const name=(document.getElementById('ql_name')?.value||'').trim();
+  const url=(document.getElementById('ql_url')?.value||'').trim();
+  if(!name||!url){toast('Nhập tên và URL!','#e74c3c');return;}
+  if(type==='work'){
+    links.unshift({
+      id:linkNextId++, name, url,
+      desc:'', group:(document.getElementById('ql_group')?.value||'').trim()||'Khác',
+      type:'work', owner:'admin', note:'',
+      account:(document.getElementById('ql_account')?.value||'').trim(),
+      password:document.getElementById('ql_password')?.value||'',
+    });
+  } else {
+    websites.unshift({
+      id:wsNextId++, brand:name, url,
+      admin:(document.getElementById('ql_admin')?.value||'').trim(),
+      account:(document.getElementById('ql_account')?.value||'').trim(),
+      password:document.getElementById('ql_password')?.value||'',
+      status:'Tốt', note:'', team:'Team 01', owner:'Công ty', group:'',
+    });
+  }
+  saveAppData();
+  qlCloseAdd();
+  toast('✓ Đã thêm: '+name);
 }
 </script>
 </body></html>
