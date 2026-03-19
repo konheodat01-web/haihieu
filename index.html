@@ -449,6 +449,10 @@
         </select>
         <button class="btn btn-outline btn-sm" onclick="openQuickImport()">&#128196; Nhập từ tin nhắn</button>
         <button class="btn btn-primary btn-sm" onclick="openNewProjectModal()">&#43; Thêm task</button>
+        <button class="btn btn-outline btn-sm" onclick="openTaskTrash()" id="trashBtn" style="position:relative">
+          🗑 Thùng rác
+          <span id="trashCount" style="display:none;position:absolute;top:-6px;right:-6px;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;padding:1px 5px;font-weight:600">0</span>
+        </button>
       </div>
     </div>
 
@@ -1027,6 +1031,22 @@
   </div>
 
 </div>
+<!-- TASK TRASH MODAL -->
+<div class="modal-overlay" id="taskTrashModal" onclick="if(event.target===this)closeTaskTrash()">
+  <div class="modal" style="max-width:600px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🗑 Thùng rác — Task đã xoá</h3>
+      <button class="modal-close" onclick="closeTaskTrash()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:8px;max-height:420px;overflow-y:auto" id="trashBody">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="emptyTrash()">🗑 Xoá tất cả vĩnh viễn</button>
+      <button class="btn btn-outline" onclick="closeTaskTrash()">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <!-- WEBSITE GROUP MANAGER -->
 <div class="modal-overlay" id="wsGroupModal" onclick="if(event.target===this)closeWsGroupManager()">
   <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
@@ -2152,6 +2172,7 @@ function saveAppData(){
     localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
     localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
     localStorage.setItem('wt_tasks', JSON.stringify(tasks));
+    localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
     localStorage.setItem('wt_links', JSON.stringify(links));
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
     localStorage.setItem('wt_websites', JSON.stringify(websites));
@@ -2163,7 +2184,7 @@ function saveAppData(){
     console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
-      tasks, links, linkCategories, websites, wsGroups, _ts: ts, _sid: _sessionId
+      tasks, deletedTasks, links, linkCategories, websites, wsGroups, _ts: ts, _sid: _sessionId
     }).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
@@ -2216,6 +2237,8 @@ function initFirebaseListener(){
       data.hai = Array.isArray(r.hai) ? r.hai : (r.hai != null ? r.hai : []);
       data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
       tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
+      if(Array.isArray(r.deletedTasks)) deletedTasks=r.deletedTasks;
+      localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
       links = Array.isArray(r.links) ? r.links : (r.links != null ? r.links : []);
       linkCategories = r.linkCategories != null ? r.linkCategories : linkCategories;
       if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
@@ -2252,6 +2275,7 @@ function loadAppData(){
     if(hai) data.hai = JSON.parse(hai);
     if(hieu) data.hieu = JSON.parse(hieu);
     if(t) tasks = JSON.parse(t);
+    const dt=localStorage.getItem('wt_deleted_tasks'); if(dt) deletedTasks=JSON.parse(dt);
     if(l) links = JSON.parse(l);
     if(lc) linkCategories = JSON.parse(lc);
     const ws = localStorage.getItem('wt_websites');
@@ -2372,6 +2396,7 @@ let tasks = [
   ]},
 ];
 let taskNextId = 10;
+let deletedTasks = []; // trash bin
 let cardNextId = 100;
 let currentProjectId = null;
 let dragCardId = null;
@@ -2407,6 +2432,7 @@ function daysSince(from){
 
 // ---- OVERVIEW as LIST ----
 function renderTasksOverview(){
+  updateTrashBadge();
   renderPendingSummary();
   const fp=(document.getElementById('tkFilterPerson')||{}).value||'';
   // Member filter: Hải/Hiếu only see their tasks
@@ -4256,6 +4282,74 @@ document.addEventListener('click', e=>{
   if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
 });
 
+// ===== TASK TRASH =====
+function updateTrashBadge(){
+  const el=document.getElementById('trashCount');
+  if(!el) return;
+  if(deletedTasks.length>0){ el.textContent=deletedTasks.length; el.style.display='block'; }
+  else el.style.display='none';
+}
+
+function openTaskTrash(){
+  renderTrash();
+  document.getElementById('taskTrashModal').classList.add('open');
+}
+function closeTaskTrash(){ document.getElementById('taskTrashModal').classList.remove('open'); }
+
+function renderTrash(){
+  const body=document.getElementById('trashBody');
+  if(!deletedTasks.length){
+    body.innerHTML='<div style="padding:32px;text-align:center;color:var(--text-muted)"><div style="font-size:32px;margin-bottom:8px">✅</div>Thùng rác trống</div>';
+    return;
+  }
+  body.innerHTML=deletedTasks.map((t,i)=>{
+    const dt=t._deletedAt?new Date(t._deletedAt).toLocaleDateString('vi-VN'):'';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--gray-border);border-radius:8px;background:#fff">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:13px">${t.name}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:2px">
+          ${t.person?`👤 ${t.person} · `:''}${t.type||''} · Xoá ${dt}
+        </div>
+      </div>
+      <button onclick="restoreTask(${i})" class="btn btn-sm btn-outline" style="font-size:11px;white-space:nowrap">↩ Khôi phục</button>
+      <button onclick="permanentDeleteTask(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px" title="Xoá vĩnh viễn"
+        onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='var(--text-muted)'">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function restoreTask(idx){
+  const t={...deletedTasks[idx]};
+  delete t._deletedAt;
+  deletedTasks.splice(idx,1);
+  tasks.unshift(t);
+  saveAppData();
+  renderTrash();
+  renderTasksOverview();
+  updateTrashBadge();
+  toast('✓ Đã khôi phục: '+t.name);
+}
+
+function permanentDeleteTask(idx){
+  const name=deletedTasks[idx].name;
+  if(!confirm('Xoá vĩnh viễn "'+name+'"? Không thể khôi phục!')) return;
+  deletedTasks.splice(idx,1);
+  saveAppData();
+  renderTrash();
+  updateTrashBadge();
+  toast('Đã xoá vĩnh viễn.');
+}
+
+function emptyTrash(){
+  if(!deletedTasks.length) return;
+  if(!confirm('Xoá vĩnh viễn tất cả '+deletedTasks.length+' task trong thùng rác?')) return;
+  deletedTasks=[];
+  saveAppData();
+  renderTrash();
+  updateTrashBadge();
+  toast('Đã dọn sạch thùng rác.');
+}
+
 function updateOwnerFilters(m){
   const linkOwner=document.getElementById('linkFilterOwner');
   if(linkOwner){
@@ -4366,23 +4460,38 @@ function clearTaskSelection(){
 }
 
 function confirmDeleteTask(id){
-  if(!confirm('Xoá task này?')) return;
+  if(!confirm('Chuyển task này vào thùng rác?')) return;
+  const t = tasks.find(x=>x.id===id);
+  if(t){ deletedTasks.unshift({...t, _deletedAt: Date.now()}); }
   tasks = tasks.filter(t=>t.id!==id);
   selectedTaskIds.delete(id);
   saveAppData();
   renderTasksOverview();
-  toast('Đã xoá task.');
+  toast('Đã chuyển vào thùng rác. <a onclick="undoDeleteTask('+id+')" style="color:#fff;text-decoration:underline;cursor:pointer">Hoàn tác</a>');
+}
+
+function undoDeleteTask(id){
+  const idx=deletedTasks.findIndex(t=>t.id===id);
+  if(idx<0) return;
+  const t={...deletedTasks[idx]};
+  delete t._deletedAt;
+  deletedTasks.splice(idx,1);
+  tasks.unshift(t);
+  saveAppData();
+  renderTasksOverview();
+  toast('✓ Đã khôi phục task!');
 }
 
 function bulkTaskDelete(){
   if(!selectedTaskIds.size) return;
   const n = selectedTaskIds.size;
-  if(!confirm('Xoá ' + n + ' task đã chọn?')) return;
+  if(!confirm('Chuyển ' + n + ' task vào thùng rác?')) return;
+  tasks.forEach(t=>{ if(selectedTaskIds.has(t.id)) deletedTasks.unshift({...t,_deletedAt:Date.now()}); });
   tasks = tasks.filter(t=>!selectedTaskIds.has(t.id));
   selectedTaskIds.clear();
   saveAppData();
   renderTasksOverview();
-  toast('Đã xoá ' + n + ' task.');
+  toast('Đã chuyển ' + n + ' task vào thùng rác.');
 }
 
 function bulkTaskDone(){
