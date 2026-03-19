@@ -4235,6 +4235,9 @@ function checkWebsiteInSheet(url, btn){
   }
 }
 
+const _copyMap = {};
+function _cp(key,btn){ copyText(_copyMap[key]||'',btn); }
+
 function showWebsiteInfo(w, found, url=''){
   const body=document.getElementById('websiteInfoBody');
   if(!found){
@@ -4274,17 +4277,19 @@ function showWebsiteInfo(w, found, url=''){
   } else {
     const safeAcc = (w.account||'').replace(/"/g,'&quot;');
     const safePwd = (w.password||'').replace(/"/g,'&quot;');
+    _copyMap['wi_acc'] = w.account||'';
+    _copyMap['wi_pwd'] = w.password||'';
     const rows=[
       ['Brand', w.brand],
       ['URL', `<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
       ['Quản trị', w.url&&w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" style="color:var(--blue)">${joinAdminUrl(w.url,w.admin)}</a>`:(w.admin||'—')],
       ['Tài khoản', w.account ? `<div style="display:flex;align-items:center;gap:6px">
         <span style="flex:1;user-select:all">${w.account}</span>
-        <button class="ws-copy-btn" data-val="${safeAcc}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
+        <button onclick="_cp('wi_acc',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
       </div>` : '—'],
       ['Mật khẩu', w.password ? `<div style="display:flex;align-items:center;gap:6px">
         <span style="flex:1;user-select:all;font-family:monospace;letter-spacing:1px">${w.password}</span>
-        <button class="ws-copy-btn" data-val="${safePwd}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
+        <button onclick="_cp('wi_pwd',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
       </div>` : '—'],
       ['Trạng thái', `<span style="color:${WS_STATUS_COLOR[w.status]||'#999'};font-weight:600">${WS_STATUS_ICON[w.status]||''} ${w.status}</span>`],
       w.note?['Ghi chú', w.note]:null,
