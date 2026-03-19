@@ -494,7 +494,7 @@
         <button class="btn btn-primary btn-sm" onclick="openAddCardModal(null)">&#43; Thêm thẻ</button>
       </div>
     </div>
-    <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;padding-bottom:16px;min-height:300px;padding-top:4px"></div>
+    <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;overflow-y:hidden;padding-bottom:16px;min-height:300px;padding-top:4px;height:calc(100vh - 160px)"></div>
   </div>
 </div>
 
@@ -2443,7 +2443,7 @@ function renderSubBoard(task){
       return false;
     });
     const colEl = document.createElement('div');
-    colEl.style.cssText=`flex:0 0 240px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px`;
+    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column;overflow:hidden`;
     colEl.dataset.colId = col.id;
 
     const isPending = col.id==='pending';
@@ -2452,7 +2452,7 @@ function renderSubBoard(task){
         <span class="kb-col-title" style="color:${col.color}">${col.label}</span>
         <span class="kb-col-count">${cards.length}</span>
       </div>
-      <div class="kb-cards" id="subcards-${col.id}"></div>
+      <div class="kb-cards" id="subcards-${col.id}" style="overflow-y:auto;flex:1"></div>
       <button class="kb-add-btn" onclick="openAddCardModal('${col.id}')">&#43; Thêm thẻ</button>`;
 
     colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
