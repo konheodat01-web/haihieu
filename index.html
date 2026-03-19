@@ -4155,7 +4155,7 @@ function clearWebsiteForm(){
 }
 
 function normalizeAdmin(v){ v=(v||'').trim(); if(!v) return ''; if(!v.startsWith('/')) v='/'+v; return v; }
-function joinAdminUrl(url, admin){ return (url||'').replace(/\/$/,'') + (admin||''); }
+function joinAdminUrl(url, admin){ let u=(url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; return u + normalizeAdmin(admin); }
 
 function saveWebsite(){
   const brand=(document.getElementById('wf_brand')?.value||'').trim();
