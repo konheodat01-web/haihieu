@@ -791,14 +791,28 @@
       <div id="qi_step1">
         <div class="form-group" style="width:100%">
           <label style="font-size:13px;font-weight:500">Dán nội dung tin nhắn / yêu cầu công việc vào đây</label>
-          <textarea id="qi_input" rows="7" placeholder="VD:&#10;tk888.fit - tk88&#10;man88.fit - man88&#10;&#10;Check lại từ khóa lên thêm key cho tinh gọn nhanh viết giúp anh mấy website này 20 bài mỗi web..." style="width:100%;font-size:13px;line-height:1.6"></textarea>
+          <textarea id="qi_input" rows="5" placeholder="VD:&#10;sv88.jp.net&#10;Thay logo" style="width:100%;font-size:13px;line-height:1.6"></textarea>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%">
+          <div class="form-group">
+            <label>Giao cho</label>
+            <select id="qi_person" style="width:100%">
+              <option value="">-- Chưa chọn --</option>
+              <option>Hải</option><option>Hiếu</option><option>Khác</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tên task (tùy chọn)</label>
+            <input type="text" id="qi_taskname" style="width:100%" placeholder="Để trống = tự phân tích">
+          </div>
+        </div>
+        <!-- BƯỚC THỦ CÔNG -->
         <div class="form-group" style="width:100%">
-          <label>Giao cho</label>
-          <select id="qi_person" style="width:200px">
-            <option value="">-- Chưa chọn --</option>
-            <option>Hải</option><option>Hiếu</option><option>Khác</option>
-          </select>
+          <label style="font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:space-between">
+            <span>Các bước thực hiện <span style="font-weight:400;color:var(--text-muted)">(mỗi dòng 1 bước)</span></span>
+            <button onclick="qi_addDefaultSteps()" style="background:none;border:1px solid var(--gray-border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--text-muted)">+ Bước mặc định</button>
+          </label>
+          <textarea id="qi_steps" rows="4" placeholder="VD:&#10;Viết trang chủ&#10;Thêm ảnh vào docs&#10;Thêm ảnh vào drive&#10;Thêm ảnh vào bài đăng" style="width:100%;font-size:12px;line-height:1.7"></textarea>
         </div>
         <div id="qi_error" style="color:var(--red);font-size:12px;display:none"></div>
       </div>
@@ -919,8 +933,22 @@
   <!-- PANEL 2: WEBSITES -->
   <div id="websitesPanel" style="display:none;background:#fff;border-radius:0 8px 8px 8px;border:1px solid var(--gray-border)">
     <div style="padding:10px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between">
-      <div class="toolbar">
-        <input type="text" id="websiteSearch" placeholder="&#128269; Tìm website..." oninput="renderWebsites()" style="width:200px;height:32px;font-size:12px">
+      <div class="toolbar" style="flex-wrap:wrap;gap:6px">
+        <input type="text" id="websiteSearch" placeholder="&#128269; Tìm website..." oninput="renderWebsites()" style="width:160px;height:32px;font-size:12px">
+        <select id="websiteFilterTeam" onchange="renderWebsites()" style="height:32px;font-size:12px">
+          <option value="">Tất cả team</option>
+          <option value="Team 01">Team 01</option>
+          <option value="Team 02">Team 02</option>
+        </select>
+        <select id="websiteFilterGroup" onchange="renderWebsites()" style="height:32px;font-size:12px;min-width:120px">
+          <option value="">Tất cả nhóm</option>
+        </select>
+        <select id="websiteFilterOwner" onchange="renderWebsites()" style="height:32px;font-size:12px">
+          <option value="">Tất cả người</option>
+          <option value="Hải">Hải</option>
+          <option value="Hiếu">Hiếu</option>
+          <option value="Chung">Chung</option>
+        </select>
         <select id="websiteFilterStatus" onchange="renderWebsites()" style="height:32px;font-size:12px">
           <option value="">Tất cả trạng thái</option>
           <option value="Tốt">&#9989; Tốt</option>
@@ -965,6 +993,27 @@
               <option value="Lỗi web">&#9888; Lỗi web</option>
             </select>
           </div>
+          <div id="wf_team_row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="form-group"><label>Team</label>
+              <select id="wf_team" style="width:100%" onchange="onWfTeamChange()">
+                <option value="Team 01">Team 01</option>
+                <option value="Team 02">Team 02</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Người quản lý</label>
+              <select id="wf_owner" style="width:100%">
+                <option value="Công ty">Công ty</option>
+                <option value="Hải">Hải</option>
+                <option value="Hiếu">Hiếu</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group"><label>Nhóm con <span style="font-size:11px;color:var(--text-muted)">(Team 01)</span></label>
+            <div style="display:flex;gap:4px">
+              <select id="wf_group" style="flex:1"></select>
+              <button onclick="openWsGroupManager()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:14px" title="Quản lý nhóm">⚙</button>
+            </div>
+          </div>
           <div class="form-group"><label>Ghi chú</label><textarea id="wf_note" rows="2" style="width:100%"></textarea></div>
           <div style="display:flex;gap:6px">
             <button class="btn btn-primary" onclick="saveWebsite()" style="flex:1">&#10003; Lưu</button>
@@ -977,6 +1026,27 @@
   </div>
 
 </div>
+<!-- WEBSITE GROUP MANAGER -->
+<div class="modal-overlay" id="wsGroupModal" onclick="if(event.target===this)closeWsGroupManager()">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>⚙ Quản lý nhóm website</h3>
+      <button class="modal-close" onclick="closeWsGroupManager()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:10px">
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px">Nhóm con của <b>Team 01</b> (Team 02 không có nhóm con)</div>
+      <div id="wsGroupList" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto"></div>
+      <div style="display:flex;gap:6px;margin-top:6px">
+        <input type="text" id="wsGroupInput" style="flex:1;height:34px;font-size:13px" placeholder="Tên nhóm mới...">
+        <button class="btn btn-primary btn-sm" onclick="addWsGroup()">+ Thêm</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeWsGroupManager()">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <!-- WEBSITE INFO POPUP -->
 <div class="modal-overlay" id="websiteInfoModal" onclick="if(event.target===this)closeWebsiteInfo()">
   <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
@@ -2084,6 +2154,7 @@ function saveAppData(){
     localStorage.setItem('wt_links', JSON.stringify(links));
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
     localStorage.setItem('wt_websites', JSON.stringify(websites));
+    localStorage.setItem('wt_ws_groups', JSON.stringify(wsGroups));
     localStorage.setItem('wt_ts', String(ts));
   }catch(e){}
 
@@ -2091,7 +2162,7 @@ function saveAppData(){
     console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
-      tasks, links, linkCategories, websites, _ts: ts, _sid: _sessionId
+      tasks, links, linkCategories, websites, wsGroups, _ts: ts, _sid: _sessionId
     }).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
@@ -2148,6 +2219,7 @@ function initFirebaseListener(){
       linkCategories = r.linkCategories != null ? r.linkCategories : linkCategories;
       if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
       else if(r.websites === null) websites=[];
+      if(Array.isArray(r.wsGroups)) wsGroups=r.wsGroups;
 
       localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
@@ -2183,6 +2255,7 @@ function loadAppData(){
     if(lc) linkCategories = JSON.parse(lc);
     const ws = localStorage.getItem('wt_websites');
     if(ws){ websites=JSON.parse(ws); wsNextId=Math.max(1,...websites.map(w=>w.id+1)); }
+    const wsg=localStorage.getItem('wt_ws_groups'); if(wsg) wsGroups=JSON.parse(wsg);
   }catch(e){ console.warn('localStorage load failed', e); }
 }
 
@@ -2798,6 +2871,15 @@ function qi_goBack(){
   document.getElementById('qi_error').style.display='none';
 }
 
+function qi_addDefaultSteps(){
+  const el = document.getElementById('qi_steps');
+  if(!el) return;
+  if(!el.value.trim()){
+    el.value = 'Viết trang chủ\nThêm ảnh vào docs\nThêm ảnh vào drive\nThêm ảnh vào bài đăng';
+  }
+  el.focus();
+}
+
 async function qi_parse(){
   const text=(document.getElementById('qi_input').value||'').trim();
   if(!text){const e=document.getElementById('qi_error');e.textContent='Vui lòng dán nội dung vào!';e.style.display='block';return;}
@@ -2805,6 +2887,8 @@ async function qi_parse(){
   document.getElementById('qi_loading').style.display='block';
   document.getElementById('qi_btn_parse').style.display='none';
   const person=document.getElementById('qi_person').value;
+  const manualTaskName=(document.getElementById('qi_taskname')?.value||'').trim();
+  const manualSteps=(document.getElementById('qi_steps')?.value||'').trim();
   await new Promise(r=>setTimeout(r,400));
 
   const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
@@ -2824,12 +2908,14 @@ async function qi_parse(){
   const type=detectType(fullDesc);
   const soBai=parseInt((fullDesc.match(/(\d+)\s*bài/i)||[])[1])||0;
 
-  // Build columns: from steps if present, else default
-  const cols=stepLines.length>=1?parseSteps(stepLines.join('\n')):null;
-  const firstColId=cols?cols[0].id:'col_new';
+  // Build columns: manual steps first, then auto-detected steps, then null (default)
+  const cols = manualSteps ? parseSteps(manualSteps)
+             : stepLines.length>=1 ? parseSteps(stepLines.join('\n'))
+             : null;
+  const firstColId = cols ? cols[0].id : 'col_new';
 
-  // Build cards: one per domain, or one per desc line if no domain
-  const itemLines=domainLines.length>0?domainLines:descLines;
+  // Build cards: one per domain, or one per line if no domain
+  const itemLines=domainLines.length>0?domainLines:lines.filter(l=>l.length>2);
   const cards=itemLines.map((line,i)=>{
     const parts=line.split(/[\s\-–—|]+/);
     const domain=domainLines.length>0?parts[0].replace(/^https?:\/\//,''):'';
@@ -2841,15 +2927,17 @@ async function qi_parse(){
   });
   cardNextId+=cards.length;
 
-  // Task name = first desc line or domain summary
-  let taskName='';
-  if(descLines.filter(l=>!isStepLine(l)).length>0){
-    taskName=descLines.filter(l=>!isStepLine(l))[0];
-    if(taskName.length>70) taskName=taskName.slice(0,70)+'…';
-  } else if(domainLines.length>0){
-    taskName=`${domainLines.length} website${soBai?' — '+soBai+' bài/web':''}`;
-  } else {
-    taskName=lines[0]||'Task mới';
+  // Task name = manual > first non-step desc line > domain summary
+  let taskName = manualTaskName;
+  if(!taskName){
+    if(descLines.filter(l=>!isStepLine(l)).length>0){
+      taskName=descLines.filter(l=>!isStepLine(l))[0];
+      if(taskName.length>70) taskName=taskName.slice(0,70)+'…';
+    } else if(domainLines.length>0){
+      taskName=`${domainLines.length} website${soBai?' — '+soBai+' bài/web':''}`;
+    } else {
+      taskName=lines[0]||'Task mới';
+    }
   }
 
   qi_parsedTasks=[{
@@ -3735,42 +3823,107 @@ function switchLinksTab(tab){
   const t1=document.getElementById('linksTab1'), t2=document.getElementById('linksTab2');
   if(t1){t1.style.borderBottomColor=tab==='links'?'var(--red)':'transparent';t1.style.color=tab==='links'?'var(--red)':'var(--text-muted)';}
   if(t2){t2.style.borderBottomColor=tab==='websites'?'var(--red)':'transparent';t2.style.color=tab==='websites'?'var(--red)':'var(--text-muted)';}
-  if(tab==='websites') renderWebsites();
+  if(tab==='websites'){
+    // Hide Team 02 filter option for Hải
+    const teamOpt=document.querySelector('#websiteFilterTeam option[value="Team 02"]');
+    if(teamOpt) teamOpt.style.display = currentMember==='hai' ? 'none' : '';
+    // Reset filter if Hải had Team 02 selected
+    const teamSel=document.getElementById('websiteFilterTeam');
+    if(teamSel && currentMember==='hai' && teamSel.value==='Team 02') teamSel.value='Team 01';
+    renderWebsites();
+  }
   if(tab==='links') renderLinks();
 }
 
 // ===== WEBSITES =====
-let editingWsId = null;
+let wsGroups = ['Chính', 'Phụ', 'Khách']; // Team 01 sub-groups
 
 function renderWebsites(){
   const q=(document.getElementById('websiteSearch')||{}).value?.toLowerCase()||'';
   const fs=(document.getElementById('websiteFilterStatus')||{}).value||'';
+  const ft=(document.getElementById('websiteFilterTeam')||{}).value||'';
+  const fg=(document.getElementById('websiteFilterGroup')||{}).value||'';
+  const fo=(document.getElementById('websiteFilterOwner')||{}).value||'';
+
+  // Hide Team field in form for Hải member
+  const teamRow=document.getElementById('wf_team_row');
+  if(teamRow) teamRow.style.display = currentMember==='hai' ? 'none' : 'grid';
+
+  // Update group dropdown based on team filter
+  const groupSel=document.getElementById('websiteFilterGroup');
+  if(groupSel){
+    const cur=groupSel.value;
+    groupSel.innerHTML='<option value="">Tất cả nhóm</option>';
+    if(ft!=='Team 02'){
+      wsGroups.forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; groupSel.appendChild(o); });
+      groupSel.value=cur;
+    }
+  }
+
+  // Update wf_group select
+  const wfGroup=document.getElementById('wf_group');
+  if(wfGroup){
+    const cur2=wfGroup.value;
+    wfGroup.innerHTML='<option value="">-- Không có nhóm --</option>';
+    wsGroups.forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; wfGroup.appendChild(o); });
+    if(cur2) wfGroup.value=cur2;
+  }
+
+  // Also show/hide group field based on wf_team
+  const wfTeam=document.getElementById('wf_team');
+  const groupRow=document.getElementById('wf_group_row');
+  if(wfTeam&&groupRow) groupRow.style.display=wfTeam.value==='Team 02'?'none':'block';
+
   let list=websites.filter(w=>{
     if(q && !w.brand.toLowerCase().includes(q) && !(w.url||'').toLowerCase().includes(q)) return false;
     if(fs && w.status!==fs) return false;
+    if(ft && w.team!==ft) return false;
+    if(fg && w.group!==fg) return false;
+    if(fo && w.owner!==fo) return false;
+    // Member visibility: Team 02 only visible to Hiếu and Admin
+    if(w.team==='Team 02' && currentMember==='hai') return false;
     return true;
   });
+
   const grid=document.getElementById('websitesGrid');
   const empty=document.getElementById('emptyWebsites');
   if(!list.length){if(grid)grid.innerHTML='';if(empty)empty.style.display='block';return;}
   if(empty)empty.style.display='none';
-  grid.innerHTML=list.map(w=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:8px;cursor:pointer;transition:box-shadow .15s;background:#fff"
-      onclick="openWebsiteForm(${w.id})" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
-      <div style="width:36px;height:36px;border-radius:8px;background:${WS_STATUS_COLOR[w.status]||'#999'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${WS_STATUS_ICON[w.status]||'🌐'}</div>
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:600;font-size:13px">${w.brand}</div>
-        <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
-        ${w.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${w.note}</div>`:''}
-      </div>
-      <div>
-        <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">
-          ${w.status}
-        </span>
-      </div>
-      <a href="${(w.url||'')}${w.admin||''}" target="_blank" onclick="event.stopPropagation()"
-        class="btn btn-sm btn-outline" style="font-size:11px;padding:3px 8px;white-space:nowrap">Admin</a>
-    </div>`).join('');
+
+  // Group by team then group
+  const grouped={};
+  list.forEach(w=>{
+    const team=w.team||'Team 01';
+    const grp=team==='Team 01'?(w.group||'Không nhóm'):'Team 02';
+    const key=team+'|||'+grp;
+    if(!grouped[key]) grouped[key]=[];
+    grouped[key].push(w);
+  });
+
+  grid.innerHTML=Object.entries(grouped).map(([key,items])=>{
+    const [team,grp]=key.split('|||');
+    const label=team==='Team 02'?`🔒 Team 02`:`📁 ${grp} <span style="font-size:10px;color:var(--text-muted);font-weight:400">(${team})</span>`;
+    return `<div style="margin-bottom:16px">
+      <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;padding:4px 0;margin-bottom:6px;border-bottom:1px solid var(--gray-border)">${label} — ${items.length}</div>
+      ${items.map(w=>`
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;cursor:pointer;transition:box-shadow .15s;background:#fff"
+          onclick="openWebsiteForm(${w.id})" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+          <div style="width:36px;height:36px;border-radius:8px;background:${WS_STATUS_COLOR[w.status]||'#999'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${WS_STATUS_ICON[w.status]||'🌐'}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-weight:600;font-size:13px">${w.brand}</span>
+              ${w.owner&&w.owner!=='Chung'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:${w.owner==='Hải'?'#fdf2f2':'#f0f7fd'};color:${w.owner==='Hải'?'var(--red)':'var(--blue)'}">${w.owner}</span>`:''}
+            </div>
+            <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
+            ${w.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${w.note}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+            <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
+            ${w.admin?`<a href="${(w.url||'')}${w.admin}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
 }
 
 function openWebsiteForm(id=null){
@@ -3785,6 +3938,21 @@ function openWebsiteForm(id=null){
   document.getElementById('wf_password').value=w?.password||'';
   document.getElementById('wf_status').value=w?.status||'Tốt';
   document.getElementById('wf_note').value=w?.note||'';
+  document.getElementById('wf_team').value=w?.team||'Team 01';
+  // Apply team rules first (populates owner options correctly)
+  onWfTeamChange();
+  // Then set owner value
+  document.getElementById('wf_owner').value=w?.owner||'Công ty';
+  // If Hải member: hide Team field (Hải is always Team 01)
+  const teamRow=document.getElementById('wf_team_row');
+  if(teamRow) teamRow.style.display = currentMember==='hai' ? 'none' : 'grid';
+  // Populate group select
+  const wfGroup=document.getElementById('wf_group');
+  if(wfGroup){
+    wfGroup.innerHTML='<option value="">-- Không có nhóm --</option>';
+    wsGroups.forEach(g=>{ const o=document.createElement('option'); o.value=g; o.textContent=g; wfGroup.appendChild(o); });
+    wfGroup.value=w?.group||'';
+  }
   document.getElementById('wf_delete_btn').style.display=w?'inline-flex':'none';
   document.getElementById('wf_brand').focus();
 }
@@ -3810,6 +3978,9 @@ function saveWebsite(){
     password: document.getElementById('wf_password')?.value||'',
     status: document.getElementById('wf_status')?.value||'Tốt',
     note: (document.getElementById('wf_note')?.value||'').trim(),
+    team: document.getElementById('wf_team')?.value||'Team 01',
+    owner: document.getElementById('wf_owner')?.value||'Công ty',
+    group: document.getElementById('wf_group')?.value||'',
   };
   if(editingWsId){
     const i=websites.findIndex(w=>w.id===editingWsId);
@@ -4066,6 +4237,62 @@ function acClose(listId){
 document.addEventListener('click', e=>{
   if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
 });
+
+function onWfTeamChange(){
+  const team = document.getElementById('wf_team')?.value;
+  const ownerSel = document.getElementById('wf_owner');
+  const groupRow = document.getElementById('wf_group')?.closest('.form-group');
+
+  // Owner options: Team 01 = Công ty/Hải/Hiếu, Team 02 = Công ty/Hiếu only
+  if(ownerSel){
+    const cur = ownerSel.value;
+    ownerSel.innerHTML = team==='Team 02'
+      ? '<option value="Công ty">Công ty</option><option value="Hiếu">Hiếu</option>'
+      : '<option value="Công ty">Công ty</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
+    // If previous value still valid, keep it
+    if([...ownerSel.options].find(o=>o.value===cur)) ownerSel.value=cur;
+    else ownerSel.value='Công ty';
+  }
+  // Group only for Team 01
+  if(groupRow) groupRow.style.display = team==='Team 02' ? 'none' : 'block';
+}
+function openWsGroupManager(){
+  renderWsGroupList();
+  document.getElementById('wsGroupModal').classList.add('open');
+}
+function closeWsGroupManager(){
+  document.getElementById('wsGroupModal').classList.remove('open');
+  renderWebsites();
+}
+function renderWsGroupList(){
+  const el=document.getElementById('wsGroupList');
+  if(!el) return;
+  el.innerHTML=wsGroups.map((g,i)=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:#fff;border:1px solid var(--gray-border);border-radius:6px">
+      <span style="flex:1;font-size:13px">${g}</span>
+      <button onclick="deleteWsGroup(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='var(--text-muted)'">🗑</button>
+    </div>`).join('');
+}
+function addWsGroup(){
+  const inp=document.getElementById('wsGroupInput');
+  const name=(inp?.value||'').trim();
+  if(!name){toast('Nhập tên nhóm!','#e74c3c');return;}
+  if(wsGroups.includes(name)){toast('Nhóm đã tồn tại!','#e67e22');return;}
+  wsGroups.push(name);
+  if(inp) inp.value='';
+  saveAppData();
+  renderWsGroupList();
+  toast('✓ Đã thêm nhóm: '+name);
+}
+function deleteWsGroup(i){
+  const name=wsGroups[i];
+  if(!confirm('Xoá nhóm "'+name+'"? Website trong nhóm này sẽ không có nhóm.')) return;
+  wsGroups.splice(i,1);
+  websites.forEach(w=>{ if(w.group===name) w.group=''; });
+  saveAppData();
+  renderWsGroupList();
+  renderWebsites();
+}
 
 // ===== LINK AUTH TOGGLE =====
 function toggleLfAuth(){
