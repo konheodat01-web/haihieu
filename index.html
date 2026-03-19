@@ -2076,7 +2076,7 @@ function saveAppData(){
     console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
-      tasks, links, linkCategories, websites, _ts: ts
+      tasks, links, linkCategories, websites, _ts: ts, _sid: _sessionId
     }).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
@@ -2102,7 +2102,7 @@ function forceSyncToCloud(){
     links,
     linkCategories,
     websites,
-    _ts: Date.now()
+    _ts: Date.now(), _sid: _sessionId
   }).then(()=>{
     toast('☁ Đã đồng bộ toàn bộ dữ liệu lên đám mây!');
     if(ind){ind.textContent='☁ Đã sync xong';ind.style.color='#27ae60';setTimeout(()=>ind.style.opacity='0',3000);}
@@ -2111,26 +2111,29 @@ function forceSyncToCloud(){
   });
 }
 
+// Unique session ID - avoid receiving own pushes
+const _sessionId = Math.random().toString(36).slice(2);
+
 function initFirebaseListener(){
   if(!window._fbReady || !window._fbDb) return;
 
   window._fbDb.ref('appData').on('value', (snapshot)=>{
     const r = snapshot.val();
     if(!r || !r._ts) return;
-
-    // Skip if this update was pushed by THIS device in last 2 seconds
+    if(r._sid === _sessionId) return; // skip own pushes
     const localTs = parseInt(localStorage.getItem('wt_ts')||'0');
-    if(r._ts <= localTs) return;
+    if(r._ts <= localTs) return; // skip older data
+    // Safety: don't overwrite if local has more rows
+    if((r.hai||[]).length < data.hai.length) return;
+    if((r.hieu||[]).length < data.hieu.length) return;
 
     try{
-      if(r.hai && r.hai.length) data.hai=r.hai;
-      if(r.hieu && r.hieu.length) data.hieu=r.hieu;
+      if(r.hai) data.hai=r.hai;
+      if(r.hieu) data.hieu=r.hieu;
       if(r.tasks) tasks=r.tasks;
       if(r.links) links=r.links;
       if(r.linkCategories) linkCategories=r.linkCategories;
       if(r.websites && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
-
-      // Save to localStorage
       localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
       localStorage.setItem('wt_tasks', JSON.stringify(tasks));
@@ -2138,15 +2141,12 @@ function initFirebaseListener(){
       localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
       localStorage.setItem('wt_websites', JSON.stringify(websites));
       localStorage.setItem('wt_ts', String(r._ts));
-
-      // Re-render
       renderDashboard(); renderHai(); renderHieu();
       const active=document.querySelector('.page.active')?.id?.replace('page-','');
       if(active==='tasks') renderTasksOverview();
       else if(active==='links'){renderLinks();renderWebsites();}
-
       const ind=document.getElementById('syncIndicator');
-      if(ind){ind.textContent='🔄 Đã nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
+      if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
     }catch(e){console.warn('Firebase receive error',e);}
   });
 }
