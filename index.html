@@ -189,6 +189,12 @@
   .date-tab{background:none;border:1px solid var(--gray-border);border-radius:20px;padding:3px 10px;cursor:pointer;color:var(--text-muted);transition:all .15s;white-space:nowrap}
   .date-tab:hover{border-color:var(--red);color:var(--red)}
   .date-tab-active{background:var(--red);border-color:var(--red);color:#fff!important;font-weight:600}
+  .ac-wrap{position:relative}
+  .ac-list{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-border);border-radius:0 0 6px 6px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:300;max-height:180px;overflow-y:auto;display:none}
+  .ac-list.open{display:block}
+  .ac-item{padding:7px 10px;cursor:pointer;font-size:12px;border-bottom:1px solid var(--gray-border)}
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover,.ac-item.active{background:#fdf2f2;color:var(--red)}
   .edit-menu-item{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;padding:9px 14px;font-size:13px;cursor:pointer;color:var(--text);transition:background .1s}
   .edit-menu-item:hover{background:#fdf2f2;color:var(--red)}
   #toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .3s;z-index:999;pointer-events:none}
@@ -610,11 +616,19 @@
         </div>
         <div class="form-group">
           <label>Chuyên mục</label>
-          <input type="text" id="fCategory" placeholder="VD: Trang, Blog...">
+          <div class="ac-wrap">
+            <input type="text" id="fCategory" placeholder="VD: Trang, Blog..." autocomplete="off"
+              oninput="acInput(this,'fCategory_list','chuyenMuc')" onfocus="acInput(this,'fCategory_list','chuyenMuc')" onblur="setTimeout(()=>acClose('fCategory_list'),200)">
+            <div class="ac-list" id="fCategory_list"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Website</label>
-          <input type="text" id="fWebsite" placeholder="https://...">
+          <div class="ac-wrap">
+            <input type="text" id="fWebsite" placeholder="https://..." autocomplete="off"
+              oninput="acInput(this,'fWebsite_list','website')" onfocus="acInput(this,'fWebsite_list','website')" onblur="setTimeout(()=>acClose('fWebsite_list'),200)">
+            <div class="ac-list" id="fWebsite_list"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Anchor</label>
@@ -856,6 +870,29 @@
             </div>
           </div>
           <input type="hidden" id="lf_type" value="work">
+          <!-- Account/Password toggle -->
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="lf_has_auth" onchange="toggleLfAuth()" style="cursor:pointer;accent-color:var(--red)">
+              Có tài khoản / mật khẩu
+            </label>
+          </div>
+          <div id="lf_auth_fields" style="display:none;flex-direction:column;gap:10px">
+            <div class="form-group">
+              <label>Tài khoản</label>
+              <div style="display:flex;gap:4px">
+                <input type="text" id="lf_account" style="flex:1" placeholder="Email hoặc username">
+                <button class="ws-copy-btn" data-field="lf_account" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Copy">📋</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Mật khẩu</label>
+              <div style="display:flex;gap:4px">
+                <input type="text" id="lf_password" style="flex:1" placeholder="Mật khẩu">
+                <button class="ws-copy-btn" data-field="lf_password" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Copy">📋</button>
+              </div>
+            </div>
+          </div>
           <div style="display:flex;gap:6px">
             <button class="btn btn-primary" onclick="saveLink()" style="flex:1">&#10003; Lưu</button>
             <button class="btn btn-danger btn-sm" id="lf_delete_btn" style="display:none" onclick="deleteLink()">&#128465;</button>
@@ -1024,11 +1061,19 @@
         </div>
         <div class="form-group">
           <label>Website</label>
-          <input type="text" id="si_website" style="width:100%" placeholder="https://...">
+          <div class="ac-wrap">
+            <input type="text" id="si_website" style="width:100%" placeholder="https://..." autocomplete="off"
+              oninput="acInput(this,'si_website_list','website')" onfocus="acInput(this,'si_website_list','website')" onblur="setTimeout(()=>acClose('si_website_list'),200)">
+            <div class="ac-list" id="si_website_list"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Chuyên mục</label>
-          <input type="text" id="si_chuyenMuc" style="width:100%" placeholder="Trang, Blog...">
+          <div class="ac-wrap">
+            <input type="text" id="si_chuyenMuc" style="width:100%" placeholder="Trang, Blog..." autocomplete="off"
+              oninput="acInput(this,'si_chuyenMuc_list','chuyenMuc')" onfocus="acInput(this,'si_chuyenMuc_list','chuyenMuc')" onblur="setTimeout(()=>acClose('si_chuyenMuc_list'),200)">
+            <div class="ac-list" id="si_chuyenMuc_list"></div>
+          </div>
         </div>
         <div class="form-group">
           <label>Trạng thái</label>
@@ -1686,7 +1731,13 @@ function setActiveDate(sheet, date){
 document.addEventListener('click', e=>{
   const btn = e.target.closest('.ws-copy-btn');
   if(!btn) return;
-  copyText(btn.dataset.val, btn);
+  // Support data-field (copy from input) or data-val (copy direct value)
+  if(btn.dataset.field){
+    const el = document.getElementById(btn.dataset.field);
+    if(el) copyText(el.value, btn);
+  } else if(btn.dataset.val){
+    copyText(btn.dataset.val, btn);
+  }
 });
 
 // Delegated handler for website lookup buttons (avoids inline onclick escaping issues)
@@ -2900,6 +2951,14 @@ function editLink(id){
   const ownerEl=document.getElementById('lf_owner');
   ownerEl.value=l.owner;
   ownerEl.disabled=(currentMember!=='admin');
+  // Auth fields
+  const hasAuth = !!(l.account||l.password);
+  const chk = document.getElementById('lf_has_auth');
+  if(chk){ chk.checked=hasAuth; toggleLfAuth(); }
+  if(hasAuth){
+    document.getElementById('lf_account').value=l.account||'';
+    document.getElementById('lf_password').value=l.password||'';
+  }
   document.getElementById('lf_name').focus();
   document.getElementById('linkAddPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -2917,6 +2976,10 @@ function clearLinkForm(){
   const ownerEl=document.getElementById('lf_owner');
   ownerEl.value=currentMember==='admin'?'admin':currentMember==='hai'?'Hải':'Hiếu';
   ownerEl.disabled=(currentMember!=='admin');
+  const chk=document.getElementById('lf_has_auth');
+  if(chk){chk.checked=false; toggleLfAuth();}
+  const acc=document.getElementById('lf_account'); if(acc) acc.value='';
+  const pwd=document.getElementById('lf_password'); if(pwd) pwd.value='';
 }
 
 function saveLink(){
@@ -2930,6 +2993,8 @@ function saveLink(){
     group:document.getElementById('lf_group').value.trim()||'Khác',
     type:document.getElementById('lf_type').value||'work',
     owner:document.getElementById('lf_owner').value||'admin',
+    account: document.getElementById('lf_has_auth')?.checked ? (document.getElementById('lf_account')?.value||'').trim() : '',
+    password: document.getElementById('lf_has_auth')?.checked ? (document.getElementById('lf_password')?.value||'') : '',
   };
   if(editingLinkId){
     const idx=links.findIndex(l=>l.id===editingLinkId);
@@ -3790,6 +3855,52 @@ function deleteWebsiteFromModal(id){
   closeWebsiteInfo();
   if(document.getElementById('websitesPanel')?.style.display!=='none') renderWebsites();
   toast('Đã xoá.');
+}
+// ===== AUTOCOMPLETE =====
+function acGetValues(field){
+  const all = new Set();
+  [...data.hai, ...data.hieu].forEach(r=>{
+    const v = (r[field]||'').trim();
+    if(v) all.add(v);
+  });
+  return [...all].sort();
+}
+
+function acInput(input, listId, field){
+  const list = document.getElementById(listId);
+  if(!list) return;
+  const q = (input.value||'').toLowerCase();
+  const vals = acGetValues(field).filter(v=> !q || v.toLowerCase().includes(q));
+  if(!vals.length){ list.classList.remove('open'); return; }
+  list.innerHTML = vals.slice(0,10).map(v=>
+    `<div class="ac-item" onmousedown="acSelect('${input.id}','${listId}','${v.replace(/'/g,"\\'")}')">
+      ${v}
+    </div>`
+  ).join('');
+  list.classList.add('open');
+}
+
+function acSelect(inputId, listId, val){
+  const input = document.getElementById(inputId);
+  if(input) input.value = val;
+  acClose(listId);
+}
+
+function acClose(listId){
+  const list = document.getElementById(listId);
+  if(list) list.classList.remove('open');
+}
+
+// Close all autocomplete on click outside
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
+});
+
+// ===== LINK AUTH TOGGLE =====
+function toggleLfAuth(){
+  const checked = document.getElementById('lf_has_auth').checked;
+  const fields = document.getElementById('lf_auth_fields');
+  if(fields) fields.style.display = checked ? 'flex' : 'none';
 }
 </script>
 </body></html>
