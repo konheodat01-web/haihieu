@@ -266,7 +266,7 @@
         <div class="form-group"><label>Nhóm</label><input type="text" id="ql_group" style="width:100%" placeholder="VD: WordPress, SEO..."></div>
       </div>
       <div id="ql_extra_web" style="display:none;flex-direction:column;gap:8px">
-        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="/wp-admin"></div>
+        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="wp-admin"></div>
         <div class="form-group"><label>Tài khoản</label><input type="text" id="ql_account" style="width:100%"></div>
         <div class="form-group"><label>Mật khẩu</label><input type="text" id="ql_password" style="width:100%"></div>
       </div>
@@ -1023,7 +1023,7 @@
           <input type="hidden" id="wf_id">
           <div class="form-group"><label>Tên brand *</label><input type="text" id="wf_brand" style="width:100%" placeholder="VD: Debet, CafeLegend..."></div>
           <div class="form-group"><label>URL *</label><input type="text" id="wf_url" style="width:100%" placeholder="https://debets.sbs"></div>
-          <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="/wp-admin, /admin..."></div>
+          <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="wp-admin, admin..."></div>
           <div class="form-group"><label>Tài khoản</label>
             <div style="display:flex;gap:4px">
               <input type="text" id="wf_account" style="flex:1">
@@ -1124,6 +1124,7 @@
     <div class="modal-body" id="websiteInfoBody" style="gap:0"></div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeWebsiteInfo()">Đóng</button>
+      <button class="btn btn-outline" id="wiBtnOpen" style="display:none" onclick="wiOpenAdmin()">🔗 Mở quản trị</button>
       <button class="btn btn-primary" id="wiBtnEdit" onclick="goEditWebsite()">&#9998; Sửa</button>
     </div>
   </div>
@@ -1846,13 +1847,15 @@ function addDays(dateStr, n){
   return d.toISOString().split('T')[0];
 }
 
+// Track which sheet's calendar is open
+let _calSheet = null;
+
 function renderDateNav(sheet){
   const nav = document.getElementById('dateNav'+sheet.charAt(0).toUpperCase()+sheet.slice(1));
   if(!nav) return;
   const todayStr = todayVN();
-  const dates = getSheetDates(sheet); // sorted desc
+  const dates = getSheetDates(sheet);
 
-  // Auto-init ONLY if activeDate has never been set (undefined), not if user chose "Tất cả" (null)
   if(activeDate[sheet] === undefined){
     const hour = new Date().getHours();
     if(hour >= 12 && dates.includes(todayStr)) activeDate[sheet] = todayStr;
@@ -1860,18 +1863,14 @@ function renderDateNav(sheet){
     else activeDate[sheet] = todayStr;
   }
 
-  const cur = activeDate[sheet]; // null = Tất cả, string = ngày cụ thể
+  const cur = activeDate[sheet];
   const displayDate = (cur && cur.length===10) ? cur : todayVN();
-  const prevDate = addDays(displayDate, -1);
-  const nextDate = addDays(displayDate, 1);
-
   const isAll = !cur || cur.length!==10;
   const isToday = displayDate === todayStr;
   const isTomorrow = displayDate === addDays(todayStr, 1);
   const isYesterday = displayDate === addDays(todayStr, -1);
   const parts = displayDate.split('-');
-  const fmtLabel = parseInt(parts[2]) + '/' + parseInt(parts[1]) + '/' + parts[0];
-  let label = fmtLabel;
+  let label = parseInt(parts[2]) + '/' + parseInt(parts[1]) + '/' + parts[0];
   if(isAll) label = 'Tất cả';
   else if(isToday) label = '📅 Hôm nay (' + parseInt(parts[2]) + '/' + parseInt(parts[1]) + ')';
   else if(isTomorrow) label = '⏭ Ngày mai (' + parseInt(parts[2]) + '/' + parseInt(parts[1]) + ')';
@@ -1895,8 +1894,108 @@ function renderDateNav(sheet){
     <button onclick="setActiveDate('${sheet}',null)" class="date-tab${isAll?' date-tab-active':''}">
       Tất cả ${isAll?'('+data[sheet].length+')':''}
     </button>
-    <input type="date" value="${isAll?'':displayDate}" onchange="setActiveDate('${sheet}',this.value)"
-      style="height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:8px;padding:0 8px;cursor:pointer">`;
+    <button onclick="openMiniCal('${sheet}',this)" class="date-tab" style="font-size:12px;padding:4px 10px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;cursor:pointer;color:var(--text)">
+      📅 ${isAll ? displayDate.slice(0,7).replace('-','/') : (parseInt(parts[2])+'/'+parseInt(parts[1]))}
+    </button>`;
+}
+
+function openMiniCal(sheet, btn){
+  // Close if same already open
+  const existing = document.getElementById('miniCal');
+  if(existing && _calSheet===sheet){ existing.remove(); _calSheet=null; return; }
+  if(existing) existing.remove();
+  _calSheet = sheet;
+
+  const cur = activeDate[sheet];
+  const refDate = (cur && cur.length===10) ? cur : todayVN();
+  const [ry, rm] = refDate.split('-').map(Number);
+
+  // Build day→count map
+  const dayMap = {};
+  data[sheet].forEach(r=>{ if(r.ngay) dayMap[r.ngay] = (dayMap[r.ngay]||0)+1; });
+
+  const cal = document.createElement('div');
+  cal.id = 'miniCal';
+  cal.style.cssText = 'position:fixed;background:#fff;border:1px solid var(--gray-border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.18);z-index:9999;padding:12px;min-width:260px;user-select:none';
+
+  function buildCal(year, month){
+    const todayStr = todayVN();
+    const firstDay = new Date(year, month-1, 1).getDay(); // 0=Sun
+    const daysInMonth = new Date(year, month, 0).getDate();
+    // shift: Mon=0
+    const offset = (firstDay + 6) % 7;
+    const monthNames = ['','Tháng 1','Tháng 2','Tháng 3','Tháng 4','Tháng 5','Tháng 6','Tháng 7','Tháng 8','Tháng 9','Tháng 10','Tháng 11','Tháng 12'];
+
+    let cells = '';
+    for(let i=0; i<offset; i++) cells += '<div></div>';
+    for(let d=1; d<=daysInMonth; d++){
+      const dateStr = year+'-'+(String(month).padStart(2,'0'))+'-'+(String(d).padStart(2,'0'));
+      const count = dayMap[dateStr]||0;
+      const isToday = dateStr===todayStr;
+      const isActive = dateStr===activeDate[sheet];
+      const hasData = count > 0;
+      cells += `<div onclick="setActiveDate('${sheet}','${dateStr}');closeMiniCal()" style="
+        width:34px;height:34px;border-radius:8px;display:flex;flex-direction:column;align-items:center;
+        justify-content:center;cursor:pointer;position:relative;font-size:12px;font-weight:${hasData?'600':'400'};
+        color:${isActive?'#fff':isToday?'var(--red)':hasData?'var(--text)':'var(--text-muted)'};
+        background:${isActive?'var(--red)':isToday&&!isActive?'#fdf2f2':'transparent'};
+        border:${isToday&&!isActive?'1px solid var(--red)':'1px solid transparent'};
+        transition:background .1s"
+        onmouseover="if(!${isActive}) this.style.background='var(--gray-light)'"
+        onmouseout="if(!${isActive}) this.style.background='${isActive?'var(--red)':isToday&&!isActive?'#fdf2f2':'transparent'}'">
+        <span>${d}</span>
+        ${hasData&&!isActive?`<span style="width:5px;height:5px;background:var(--red);border-radius:50%;position:absolute;bottom:3px"></span>`:''}
+        ${hasData&&isActive?`<span style="font-size:9px;line-height:1;opacity:.9">${count}</span>`:''}
+      </div>`;
+    }
+
+    cal.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <button onclick="calNav(-1)" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px 8px;border-radius:6px;color:var(--text-muted)" onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background='none'">‹</button>
+        <span style="font-weight:600;font-size:13px">${monthNames[month]} ${year}</span>
+        <button onclick="calNav(1)" style="background:none;border:none;cursor:pointer;font-size:16px;padding:2px 8px;border-radius:6px;color:var(--text-muted)" onmouseover="this.style.background='var(--gray-light)'" onmouseout="this.style.background='none'">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,34px);gap:2px;margin-bottom:4px">
+        ${['H','B','T','N','S','B','C'].map(d=>`<div style="text-align:center;font-size:10px;font-weight:600;color:var(--text-muted);padding:4px 0">${d}</div>`).join('')}
+        ${cells}
+      </div>
+      <div style="display:flex;justify-content:space-between;border-top:1px solid var(--gray-border);padding-top:8px;margin-top:4px">
+        <button onclick="setActiveDate('${sheet}',null);closeMiniCal()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-muted)">Tất cả</button>
+        <button onclick="setActiveDate('${sheet}','${todayStr}');closeMiniCal()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--red);font-weight:600">Hôm nay</button>
+      </div>`;
+    cal._year = year; cal._month = month;
+  }
+
+  window.calNav = function(dir){
+    let m = cal._month + dir, y = cal._year;
+    if(m>12){m=1;y++;} if(m<1){m=12;y--;}
+    buildCal(y, m);
+  };
+
+  buildCal(ry, rm);
+
+  // Position below button
+  document.body.appendChild(cal);
+  const rect = btn.getBoundingClientRect();
+  let left = rect.left;
+  if(left + 270 > window.innerWidth) left = window.innerWidth - 278;
+  cal.style.top = (rect.bottom + 4) + 'px';
+  cal.style.left = left + 'px';
+
+  // Close on outside click
+  setTimeout(()=>{
+    document.addEventListener('mousedown', function outsideCal(e){
+      if(!cal.contains(e.target) && e.target !== btn){
+        closeMiniCal(); document.removeEventListener('mousedown', outsideCal);
+      }
+    });
+  }, 50);
+}
+
+function closeMiniCal(){
+  const c = document.getElementById('miniCal');
+  if(c) c.remove();
+  _calSheet = null;
 }
 
 function navDate(sheet, dir){
@@ -2188,8 +2287,8 @@ function showPage(name){
     btn.classList.toggle('active', !!match);
   });
   if(name==='dashboard') renderDashboard();
-  if(name==='hai') renderHai();
-  if(name==='hieu') renderHieu();
+  if(name==='hai'){ activeDate['hai']=todayVN(); renderHai(); }
+  if(name==='hieu'){ activeDate['hieu']=todayVN(); renderHieu(); }
   if(name==='tasks') renderTasksOverview();
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
@@ -4009,7 +4108,7 @@ function renderWebsites(){
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
             <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
-            ${w.admin?`<a href="${(w.url||'')}${w.admin}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
+            ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
           </div>
         </div>`).join('')}
     </div>`;
@@ -4055,6 +4154,9 @@ function clearWebsiteForm(){
   document.getElementById('wfTitle').textContent='+ Thêm website';
 }
 
+function normalizeAdmin(v){ v=(v||'').trim(); if(!v) return ''; if(!v.startsWith('/')) v='/'+v; return v; }
+function joinAdminUrl(url, admin){ return (url||'').replace(/\/$/,'') + (admin||''); }
+
 function saveWebsite(){
   const brand=(document.getElementById('wf_brand')?.value||'').trim();
   const url=(document.getElementById('wf_url')?.value||'').trim();
@@ -4063,7 +4165,7 @@ function saveWebsite(){
   const obj={
     id: newId,
     brand, url,
-    admin: (document.getElementById('wf_admin')?.value||'').trim(),
+    admin: normalizeAdmin(document.getElementById('wf_admin')?.value),
     account: (document.getElementById('wf_account')?.value||'').trim(),
     password: document.getElementById('wf_password')?.value||'',
     status: document.getElementById('wf_status')?.value||'Tốt',
@@ -4082,6 +4184,7 @@ function saveWebsite(){
   clearWebsiteForm();
   saveAppData();
   renderWebsites();
+  updateWsIcons();
   toast('✓ Đã lưu website: '+brand);
 }
 
@@ -4091,6 +4194,7 @@ function deleteWebsite(){
   clearWebsiteForm();
   saveAppData();
   renderWebsites();
+  updateWsIcons();
   toast('Đã xoá.');
 }
 
@@ -4147,7 +4251,7 @@ function showWebsiteInfo(w, found, url=''){
         <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:2px">Thêm vào danh sách Websites:</div>
         <div class="form-group"><label>Tên brand *</label><input type="text" id="wi_brand" style="width:100%" placeholder="VD: CafeLegend"></div>
         <div class="form-group"><label>URL</label><input type="text" id="wi_url" value="${url}" style="width:100%"></div>
-        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wi_admin" style="width:100%" placeholder="/wp-admin"></div>
+        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wi_admin" style="width:100%" placeholder="wp-admin"></div>
         <div class="form-group"><label>Tài khoản</label><input type="text" id="wi_account" style="width:100%"></div>
         <div class="form-group">
           <label>Mật khẩu</label>
@@ -4166,13 +4270,14 @@ function showWebsiteInfo(w, found, url=''){
         <button class="btn btn-primary" onclick="saveWebsiteFromPopup()">&#43; Thêm vào danh sách</button>
       </div>`;
     document.getElementById('wiBtnEdit').style.display='none';
+    const _ob=document.getElementById('wiBtnOpen'); if(_ob) _ob.style.display='none';
   } else {
     const safeAcc = (w.account||'').replace(/"/g,'&quot;');
     const safePwd = (w.password||'').replace(/"/g,'&quot;');
     const rows=[
       ['Brand', w.brand],
       ['URL', `<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
-      ['Quản trị', w.url&&w.admin?`<a href="${w.url}${w.admin}" target="_blank" style="color:var(--blue)">${w.url}${w.admin}</a>`:(w.admin||'—')],
+      ['Quản trị', w.url&&w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" style="color:var(--blue)">${joinAdminUrl(w.url,w.admin)}</a>`:(w.admin||'—')],
       ['Tài khoản', w.account ? `<div style="display:flex;align-items:center;gap:6px">
         <span style="flex:1;user-select:all">${w.account}</span>
         <button class="ws-copy-btn" data-val="${safeAcc}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
@@ -4197,6 +4302,9 @@ function showWebsiteInfo(w, found, url=''){
           </tr>`).join('')}
       </table>`;
     document.getElementById('wiBtnEdit').style.display='inline-flex';
+    const adminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
+    const btnOpen = document.getElementById('wiBtnOpen');
+    if(btnOpen){ btnOpen.style.display = adminUrl ? 'inline-flex' : 'none'; btnOpen._href = adminUrl; }
   }
   document.getElementById('websiteInfoModal').classList.add('open');
 }
@@ -4221,6 +4329,8 @@ function saveWebsiteFromPopup(){
   if(document.getElementById('websitesPanel')?.style.display!=='none') renderWebsites();
   toast('✓ Đã thêm '+brand+' vào danh sách!');
 }
+
+function wiOpenAdmin(){ const btn=document.getElementById('wiBtnOpen'); if(btn&&btn._href) window.open(btn._href,'_blank'); }
 
 function closeWebsiteInfo(){document.getElementById('websiteInfoModal').classList.remove('open');}
 
@@ -4267,7 +4377,7 @@ function saveWebsiteFromModal(id){
     websites[idx]={...websites[idx],
       brand,
       url:(document.getElementById('we_url')?.value||'').trim(),
-      admin:(document.getElementById('we_admin')?.value||'').trim(),
+      admin:normalizeAdmin(document.getElementById('we_admin')?.value),
       account:(document.getElementById('we_account')?.value||'').trim(),
       password:document.getElementById('we_password')?.value||'',
       status:document.getElementById('we_status')?.value||'Tốt',
@@ -4663,13 +4773,14 @@ function qlSave(){
   } else {
     websites.unshift({
       id:wsNextId++, brand:name, url,
-      admin:(document.getElementById('ql_admin')?.value||'').trim(),
+      admin:normalizeAdmin(document.getElementById('ql_admin')?.value),
       account:(document.getElementById('ql_account')?.value||'').trim(),
       password:document.getElementById('ql_password')?.value||'',
       status:'Tốt', note:'', team:'Team 01', owner:'Công ty', group:'',
     });
   }
   saveAppData();
+  updateWsIcons();
   qlCloseAdd();
   toast('✓ Đã thêm: '+name);
 }
