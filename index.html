@@ -2129,8 +2129,9 @@ function initFirebaseListener(){
   window._fbDb.ref('appData').on('value', (snapshot)=>{
     const r = snapshot.val();
     if(!r) return;
+    console.log('Firebase received, _sid=', r._sid, 'mySession=', _sessionId, 'tasks=', (r.tasks||[]).length);
     // Only skip pushes from THIS session (to avoid echo)
-    if(r._sid && r._sid === _sessionId) return;
+    if(r._sid && r._sid === _sessionId){ console.log('Skipped own push'); return; }
 
     try{
       data.hai = r.hai !== undefined ? r.hai : data.hai;
