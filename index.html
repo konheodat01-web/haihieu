@@ -3094,6 +3094,17 @@ function setMember(m){
     else if(activeId==='tasks') renderTasksOverview();
     else if(activeId==='links') renderLinks();
   }
+
+  // Always update website Team 02 filter visibility
+  const teamOpt=document.querySelector('#websiteFilterTeam option[value="Team 02"]');
+  if(teamOpt) teamOpt.style.display = m==='hai' ? 'none' : '';
+  const teamSel=document.getElementById('websiteFilterTeam');
+  if(teamSel && m==='hai' && teamSel.value==='Team 02'){
+    teamSel.value=''; renderWebsites();
+  }
+  // Hide Team field in website form for Hải
+  const teamRow=document.getElementById('wf_team_row');
+  if(teamRow) teamRow.style.display = m==='hai' ? 'none' : 'grid';
 }
 
 // Patch renders to respect member filter
