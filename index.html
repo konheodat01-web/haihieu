@@ -231,8 +231,10 @@
     <h1>&#128188; Quản lý công việc</h1>
   </div>
   <div class="meta" id="currentDate"></div>
-  <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#27ae60;white-space:nowrap">☁ Đã đồng bộ</div>
-  <button onclick="forceSyncToCloud()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#fff;white-space:nowrap;background:rgba(0,0,0,.2);padding:3px 8px;border-radius:4px">☁ Đã đồng bộ</div>
+    <button onclick="forceSyncToCloud()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
+  </div>
 </header>
 
 <nav>
@@ -1158,9 +1160,9 @@
 
 <div id="toast"></div>
 
-<!-- Firebase SDK (compat version) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script>
   try {
     const firebaseConfig = {
@@ -1175,7 +1177,7 @@
     firebase.initializeApp(firebaseConfig);
     window._fbDb = firebase.database();
     window._fbReady = true;
-    console.log('Firebase ready');
+    console.log('Firebase v8 ready');
   } catch(e) {
     console.warn('Firebase init failed:', e);
     window._fbReady = false;
