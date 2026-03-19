@@ -27,7 +27,7 @@
   nav button.active{color:var(--red);border-left-color:var(--red);background:#fdf2f2;font-weight:600}
   nav .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);padding:14px 18px 4px;opacity:.7}
 
-  main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box;overflow-x:hidden}
+  main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box}
   main.board-mode{overflow-x:visible;padding:16px 20px 0}
   
   .page{display:none}
@@ -59,7 +59,7 @@
   .report-table td.money-red{font-weight:500;color:var(--red)}
   td.num{text-align:right}
   
-  .panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-border);overflow:hidden}
+  .panel{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-border)}
   .panel-header{padding:12px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;position:sticky;top:0;z-index:92;background:#fff}
   .panel-title{font-weight:600;font-size:14px}
   .panel-body{padding:16px}
@@ -583,8 +583,14 @@
     <div id="emptyProjects" class="empty" style="display:none"><div class="icon">&#128203;</div>Chưa có task nào.</div>
 
     <!-- BULK BAR TASKS -->
-    <div id="taskBulkBar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2c3e50;color:#fff;border-radius:10px;padding:10px 18px;display:none;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:500;white-space:nowrap">
+    <div id="taskBulkBar" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#2c3e50;color:#fff;border-radius:10px;padding:10px 18px;align-items:center;gap:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);z-index:500;white-space:nowrap">
       <span id="taskBulkCount" style="font-size:13px;font-weight:600">0 task</span>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,.2)"></div>
+      <button onclick="taskMoveBulk('top')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Lên trên cùng">⬆</button>
+      <button onclick="taskMoveBulk('up')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Lên 1 bậc">▲ Lên</button>
+      <button onclick="taskMoveBulk('down')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Xuống 1 bậc">▼ Xuống</button>
+      <button onclick="taskMoveBulk('bottom')" class="btn btn-sm" style="background:rgba(255,255,255,.15);color:#fff;border:none" title="Xuống dưới cùng">⬇</button>
+      <div style="width:1px;height:20px;background:rgba(255,255,255,.2)"></div>
       <button onclick="bulkTaskDone()" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">✓ Done hàng loạt</button>
       <button onclick="bulkTaskDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá hàng loạt</button>
       <button onclick="clearTaskSelection()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;padding:0 4px">×</button>
@@ -2751,50 +2757,47 @@ function daysSince(from){
 }
 
 // ---- OVERVIEW as LIST ----
-function taskDragStart(e, id){
-  e.dataTransfer.effectAllowed = 'move';
-  e.dataTransfer.setData('text/plain', String(id));
-  setTimeout(()=>{ const el=document.querySelector('.task-row[data-tid="'+id+'"]'); if(el) el.classList.add('dragging'); }, 0);
+function taskMoveBulk(dir){
+  if(!selectedTaskIds.size) return;
+  const ids = [...selectedTaskIds];
+  ids.sort((a,b)=>tasks.findIndex(t=>t.id===a)-tasks.findIndex(t=>t.id===b));
+  if(dir==='down'||dir==='bottom') ids.reverse();
+  ids.forEach(id=>{
+    const cur = tasks.findIndex(t=>t.id===id);
+    if(cur<0) return;
+    let ni;
+    if(dir==='up') ni=Math.max(0,cur-1);
+    else if(dir==='down') ni=Math.min(tasks.length-1,cur+1);
+    else if(dir==='top') ni=0;
+    else if(dir==='bottom') ni=tasks.length-1;
+    else return;
+    if(ni===cur) return;
+    const [m]=tasks.splice(cur,1);
+    tasks.splice(ni,0,m);
+  });
+  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); } catch(e){}
+  saveAppData();
+  renderTasksOverview();
 }
 
-function taskDragEnd(e){
-  document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('drag-over','dragging'));
+function taskMove(id, dir){
+  const idx = tasks.findIndex(t=>t.id===id);
+  if(idx<0) return;
+  let newIdx;
+  if(dir==='up') newIdx=Math.max(0,idx-1);
+  else if(dir==='down') newIdx=Math.min(tasks.length-1,idx+1);
+  else if(dir==='top') newIdx=0;
+  else if(dir==='bottom') newIdx=tasks.length-1;
+  else return;
+  if(newIdx===idx) return;
+  const [moved]=tasks.splice(idx,1);
+  tasks.splice(newIdx,0,moved);
+  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); } catch(e){}
+  saveAppData();
+  renderTasksOverview();
 }
 
-// Grid-level drag handlers (set up after render)
-function initTaskGridDrag(){
-  const grid = document.getElementById('projectGrid');
-  if(!grid || grid._dragInit) return;
-  grid._dragInit = true;
-  grid.addEventListener('dragover', e=>{
-    e.preventDefault();
-    const row = e.target.closest('.task-row');
-    document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('drag-over'));
-    if(row) row.classList.add('drag-over');
-  });
-  grid.addEventListener('dragleave', e=>{
-    if(!grid.contains(e.relatedTarget)){
-      document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('drag-over'));
-    }
-  });
-  grid.addEventListener('drop', e=>{
-    e.preventDefault();
-    document.querySelectorAll('.task-row').forEach(r=>r.classList.remove('drag-over','dragging'));
-    const targetRow = e.target.closest('.task-row');
-    if(!targetRow) return;
-    const targetId = parseInt(targetRow.dataset.tid);
-    const fromId = parseInt(e.dataTransfer.getData('text/plain'));
-    if(!fromId || !targetId || fromId===targetId) return;
-    const fromIdx = tasks.findIndex(t=>t.id===fromId);
-    const toIdx = tasks.findIndex(t=>t.id===targetId);
-    if(fromIdx<0 || toIdx<0) return;
-    const [moved] = tasks.splice(fromIdx,1);
-    tasks.splice(toIdx,0,moved);
-    try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); } catch(e2){}
-    saveAppData();
-    renderTasksOverview();
-  });
-}
+function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 
 
 function renderTasksOverview(){
@@ -2827,17 +2830,13 @@ function renderTasksOverview(){
     const doneCards = (t.cards||[]).filter(c=>c.colId===lastCol.id||c.colId==='done').length;
     const totalCards = (t.cards||[]).length;
     const isDone = pct>=100;
-    return `<div class="task-row ${isDone?'task-row-done':''}" style="display:flex;align-items:center;gap:0" data-tid="${t.id}">
-      <div class="drag-handle" title="Kéo để sắp xếp"
-        draggable="true"
-        ondragstart="taskDragStart(event,${t.id})"
-        ondragend="taskDragEnd(event)"
-        onclick="event.stopPropagation()">⠿</div>
+    return `<div class="task-row ${isDone?'task-row-done':''}" style="display:flex;align-items:center;gap:0" data-tid="${t.id}" onclick="event.stopPropagation()">
+
       <div style="padding:0 6px;flex-shrink:0" onclick="event.stopPropagation()">
         <input type="checkbox" class="task-chk" data-tid="${t.id}" onchange="onTaskCheck(${t.id},this)"
           style="width:16px;height:16px;cursor:pointer;accent-color:var(--red)">
       </div>
-      <div style="flex:1;min-width:0;cursor:pointer" onclick="openProjectBoard(${t.id})">
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="event.stopPropagation();openProjectBoard(${t.id})">
         <div class="task-row-main">
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
             <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
@@ -4823,6 +4822,7 @@ let selectedTaskIds = new Set();
 function onTaskCheck(id, chk){
   if(chk.checked) selectedTaskIds.add(id);
   else selectedTaskIds.delete(id);
+
   updateTaskBulkBar();
 }
 
