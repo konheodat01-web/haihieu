@@ -2133,11 +2133,11 @@ function initFirebaseListener(){
     if(r._sid && r._sid === _sessionId) return;
 
     try{
-      data.hai = r.hai || data.hai;
-      data.hieu = r.hieu || data.hieu;
-      tasks = r.tasks || tasks;
-      links = r.links || links;
-      linkCategories = r.linkCategories || linkCategories;
+      data.hai = r.hai !== undefined ? r.hai : data.hai;
+      data.hieu = r.hieu !== undefined ? r.hieu : data.hieu;
+      tasks = r.tasks !== undefined ? r.tasks : tasks;
+      links = r.links !== undefined ? r.links : links;
+      linkCategories = r.linkCategories !== undefined ? r.linkCategories : linkCategories;
       if(r.websites && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
 
       localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
