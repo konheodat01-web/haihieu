@@ -2201,11 +2201,12 @@ function closeModal(e){
   setTimeout(updateWsIcons, 50);
 }
 
-function toast(msg, bg='#27ae60'){
+function toast(msg, bg='#27ae60', duration=2500){
   const t = document.getElementById('toast');
   t.innerHTML = msg; t.style.background = bg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2500);
+  clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(()=>t.classList.remove('show'), duration);
 }
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
@@ -2617,7 +2618,9 @@ function renderSubBoard(task){
       } else {
         const card=(task.cards||[]).find(c=>c.id===dragCardId);
         if(card){card.colId=col.id;delete card.pendingReason;}
+        saveAppData();
         renderSubBoard(task);
+        renderTasksOverview();
         toast('Đã chuyển thẻ');
       }
       dragCardId=null;
@@ -2663,6 +2666,7 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   if(!nextCol){
     // Already last col — uncheck moves back
     if(!event.target.checked && curIdx>0) card.colId=cols[curIdx-1].id;
+    saveAppData();
     renderSubBoard(task); renderTasksOverview(); return;
   }
   if(nextCol.id==='pending' || nextCol.id==='col_pending'){
@@ -2674,6 +2678,7 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   } else {
     card.colId=nextCol.id;
     if(card.pendingReason) delete card.pendingReason;
+    saveAppData();
     renderSubBoard(task);
     renderTasksOverview();
     toast(`→ ${nextCol.label}`);
@@ -4556,6 +4561,8 @@ function bulkTaskDone(){
 }
 
 // ===== QUICK LINK SEARCH (HEADER) =====
+let _qlItems = []; // store for index-based access in qlOpenAdmin
+
 function qlGetItems(){
   const workItems = links.filter(l=>l.type==='work'||!l.type).map(l=>({
     icon:'🔗', label:l.name, sub:l.url, url:l.url,
@@ -4564,20 +4571,29 @@ function qlGetItems(){
   const webItems = websites.filter(w=> currentMember!=='hai' || w.team!=='Team 02').map(w=>({
     icon: WS_STATUS_ICON[w.status]||'🌐',
     label:w.brand, sub:w.url,
-    url: w.url+(w.admin||''),
+    url: (w.url||'').replace(/\/$/,'') + (w.admin||''),
     account:w.account, password:w.password
   }));
   return [...workItems, ...webItems];
+}
+
+function qlOpenAdmin(idx){
+  const item = _qlItems[idx];
+  if(!item) return;
+  window.open(item.url, '_blank');
+  document.getElementById('qlInput').value='';
+  qlClose();
 }
 
 function qlSearch(){
   const q=(document.getElementById('qlInput')?.value||'').toLowerCase();
   const all=qlGetItems();
   const res=q?all.filter(i=>i.label.toLowerCase().includes(q)||(i.sub||'').toLowerCase().includes(q)):all.slice(0,8);
+  _qlItems = res; // store for qlOpenAdmin
   const drop=document.getElementById('qlDropdown');
   if(!drop) return;
   if(!res.length){drop.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px">Không tìm thấy — nhấn + để thêm</div>';drop.style.display='block';return;}
-  drop.innerHTML=res.map(item=>`
+  drop.innerHTML=res.map((item,idx)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-border);transition:background .1s"
       onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''"
       onclick="window.open('${item.url.replace(/'/g,"\\'")}','_blank');document.getElementById('qlInput').value='';qlClose()">
@@ -4590,7 +4606,7 @@ function qlSearch(){
         <button class="ws-copy-btn" data-val="${(item.account||'').replace(/"/g,'&quot;')}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>
         ${item.password?`<button class="ws-copy-btn" data-val="${(item.password||'').replace(/"/g,'&quot;')}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
       </div>`:''}
-      <a href="${item.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap;color:var(--text)">Mở</a>
+      <button onclick="event.stopPropagation();qlOpenAdmin(${idx})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap;color:var(--text)" title="${item.account?'Mở trang quản trị':'Mở link'}">Mở</button>
     </div>`).join('');
   drop.style.display='block';
 }
