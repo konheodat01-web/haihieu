@@ -4687,20 +4687,26 @@ window._websites = websites;
 
 // Restore last active page & sub-board
 (function restorePosition(){
+  // Step 1: restore page — isolated try/catch so errors don't reset to dashboard
+  let restoredPage = 'dashboard';
   try{
-    const savedPage = localStorage.getItem('wt_activePage') || 'dashboard';
+    const saved = localStorage.getItem('wt_activePage');
     const validPages = ['dashboard','hai','hieu','add','import','tasks','links'];
-    const page = validPages.includes(savedPage) ? savedPage : 'dashboard';
-    showPage(page);
-    if(page === 'tasks'){
-      const savedProjectId = localStorage.getItem('wt_activeProject');
-      if(savedProjectId){
-        const pid = parseInt(savedProjectId);
+    if(saved && validPages.includes(saved)) restoredPage = saved;
+  }catch(e){}
+  showPage(restoredPage);
+
+  // Step 2: restore sub-board if on tasks — separate try/catch
+  if(restoredPage === 'tasks'){
+    try{
+      const savedId = localStorage.getItem('wt_activeProject');
+      if(savedId){
+        const pid = parseInt(savedId);
         const t = tasks.find(x=>x.id===pid);
         if(t) openProjectBoard(pid);
       }
-    }
-  }catch(e){ showPage('dashboard'); }
+    }catch(e){ localStorage.removeItem('wt_activeProject'); }
+  }
 })();
 
 // Start Firebase real-time listener
