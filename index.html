@@ -402,8 +402,10 @@
       </div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','link')" title="Copy link bài các dòng đã chọn (hàng dọc)">📋 Link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','spin')" title="Copy spin các dòng đã chọn (hàng dọc)">📋 Spin</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','link')" title="Copy link bài (hàng dọc)">📋 Link bài</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hai','link')" title="Mở hàng loạt link bài">🔗 Mở link bài</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','spin')" title="Copy spin (hàng dọc)">📋 Spin</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hai','spin')" title="Mở hàng loạt link spin">🔗 Mở spin</button>
       <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hai')" title="Copy định dạng Excel">📊 Copy Excel</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm btn-danger" onclick="bulkDelete('hai')">&#128465; Xoá</button>
@@ -496,8 +498,10 @@
       </div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','link')" title="Copy link bài các dòng đã chọn (hàng dọc)">📋 Link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','spin')" title="Copy spin các dòng đã chọn (hàng dọc)">📋 Spin</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','link')" title="Copy link bài (hàng dọc)">📋 Link bài</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hieu','link')" title="Mở hàng loạt link bài">🔗 Mở link bài</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','spin')" title="Copy spin (hàng dọc)">📋 Spin</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hieu','spin')" title="Mở hàng loạt link spin">🔗 Mở spin</button>
       <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hieu')" title="Copy định dạng Excel">📊 Copy Excel</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm btn-danger" onclick="bulkDelete('hieu')">&#128465; Xoá</button>
@@ -2242,6 +2246,19 @@ function updateBulkBar(sheet){
   if(cnt){ cnt.textContent='Đã chọn '+n+' dòng'; }
 }
 
+function bulkOpenLinks(sheet, field){
+  const ids = selected[sheet];
+  if(!ids.size){ toast('Chưa chọn dòng nào!','#e74c3c'); return; }
+  const rows = data[sheet].filter(r=>ids.has(r.id));
+  const urls = rows.map(r=>r[field]).filter(u=>u&&u.startsWith('http'));
+  if(!urls.length){ toast('Không có link nào để mở!','#e67e22'); return; }
+  if(urls.length > 10){
+    if(!confirm('Sắp mở '+urls.length+' tab cùng lúc. Tiếp tục?')) return;
+  }
+  urls.forEach(url=>window.open(url,'_blank'));
+  toast('✓ Đã mở '+urls.length+' link', '#27ae60');
+}
+
 function bulkCopyField(sheet, field){
   const ids = selected[sheet];
   if(!ids.size){ toast('Chưa chọn dòng nào!','#e74c3c'); return; }
@@ -2255,7 +2272,7 @@ function bulkCopyField(sheet, field){
 function rowToExcel(r, sheet){
   const person = sheet==='hai'?'Hải':'Hiếu';
   return [
-    r.ngay||'',       // Deadline
+    (r.ngay ? (()=>{ const p=r.ngay.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; })() : ''),  // Deadline
     r.keyword||'',    // Key chính
     '',               // Key phụ
     r.loai||'',       // Loại bài
@@ -4030,53 +4047,55 @@ let dragSelecting = false;
 let dragSelectValue = true; // true=check, false=uncheck
 let dragSelectSheet = '';
 
+// DragSelect: use single delegated listeners, init once
+let _dragStartTd = null;
+
 function initDragSelect(sheet){
-  const tbody = document.getElementById('tbody'+sheet.charAt(0).toUpperCase()+sheet.slice(1));
-  if(!tbody) return;
+  // no-op: listeners are set up once via initDragSelectGlobal
+}
 
-  let startTd = null;
+function initDragSelectGlobal(){
+  ['hai','hieu'].forEach(sheet=>{
+    const tbody = document.getElementById('tbody'+sheet.charAt(0).toUpperCase()+sheet.slice(1));
+    if(!tbody || tbody._dsInit) return;
+    tbody._dsInit = true;
 
-  tbody.addEventListener('mousedown', e=>{
-    if(e.button!==0) return;
-    const td = e.target.closest('td');
-    if(!td || td !== td.parentElement?.firstElementChild) return;
-    const chk = td.querySelector('input[type=checkbox]');
-    if(!chk) return;
-    // Don't preventDefault here — let normal click handle single click
-    startTd = td;
-    dragSelectSheet = sheet;
-    // dragSelectValue will be set on first mouseover (drag started)
-    dragSelecting = false; // not dragging yet
-  });
+    tbody.addEventListener('mousedown', e=>{
+      if(e.button!==0) return;
+      const td = e.target.closest('td');
+      if(!td || td !== td.parentElement?.firstElementChild) return;
+      if(!td.querySelector('input[type=checkbox]')) return;
+      _dragStartTd = td;
+      dragSelectSheet = sheet;
+      dragSelecting = false;
+    });
 
-  tbody.addEventListener('mouseover', e=>{
-    if(!startTd || dragSelectSheet!==sheet) return;
-    const td = e.target.closest('td');
-    if(!td || td !== td.parentElement?.firstElementChild) return;
-    if(td === startTd) return;
-    // User is actually dragging — activate drag mode
-    if(!dragSelecting){
-      dragSelecting = true;
-      document.body.style.userSelect='none';
-      // Determine select/deselect based on startTd's current state
-      const startChk = startTd.querySelector('input[type=checkbox]');
-      const startId = parseInt(startTd.parentElement?.dataset.id);
-      dragSelectValue = startChk ? !startChk.checked : true;
-      // Apply to start row too
-      if(startChk){ startChk.checked = dragSelectValue; }
-      if(startId) toggleRow(sheet, startId, dragSelectValue);
-    }
-    const chk = td.querySelector('input[type=checkbox]');
-    const id = parseInt(td.parentElement?.dataset.id);
-    if(chk) chk.checked = dragSelectValue;
-    if(id) toggleRow(sheet, id, dragSelectValue);
+    tbody.addEventListener('mouseover', e=>{
+      if(!_dragStartTd || dragSelectSheet!==sheet) return;
+      const td = e.target.closest('td');
+      if(!td || td !== td.parentElement?.firstElementChild) return;
+      if(td === _dragStartTd) return;
+      if(!dragSelecting){
+        dragSelecting = true;
+        document.body.style.userSelect='none';
+        const startChk = _dragStartTd.querySelector('input[type=checkbox]');
+        const startId = parseInt(_dragStartTd.parentElement?.dataset.id);
+        dragSelectValue = startChk ? !startChk.checked : true;
+        if(startChk) startChk.checked = dragSelectValue;
+        if(startId) toggleRow(sheet, startId, dragSelectValue);
+      }
+      const chk = td.querySelector('input[type=checkbox]');
+      const id = parseInt(td.parentElement?.dataset.id);
+      if(chk) chk.checked = dragSelectValue;
+      if(id) toggleRow(sheet, id, dragSelectValue);
+    });
   });
 }
 
 document.addEventListener('mouseup', ()=>{
   if(dragSelecting){ dragSelecting=false; document.body.style.userSelect=''; }
   dragSelecting = false;
-  // Reset startTd via closure — handled per instance
+  _dragStartTd = null;
 });
 // ===== BULK IMPORT FIELD (link / spin) =====
 let bifSheet = '';
@@ -4997,6 +5016,7 @@ renderDashboard();
 renderHai();
 renderHieu();
 window._appLoaded = true;
+initDragSelectGlobal();
 window._appData = data;
 window._tasks = tasks;
 window._links = links;
