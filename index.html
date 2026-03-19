@@ -1448,7 +1448,13 @@ function editCell(sheet, id, field, el){
     activeEditClose=null;
   };
 
-  const save=()=>{cur[field]=inp.value.trim();renderVal();};
+  const save=()=>{
+    const newVal = inp.value.trim();
+    if(newVal !== orig){ cur[field]=newVal; saveAppData(); }
+    else { cur[field]=newVal; }
+    renderVal();
+    updateWsIcons();
+  };
   activeEditClose=save;
   inp.onblur=save;
   inp.onkeydown=e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){cur[field]=orig;inp.value=orig;inp.blur();}};
