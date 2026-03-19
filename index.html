@@ -4603,8 +4603,8 @@ function qlSearch(){
         <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.sub||''}</div>
       </div>
       ${item.account?`<div onclick="event.stopPropagation()" style="display:flex;gap:4px">
-        <button class="ws-copy-btn" data-val="${(item.account||'').replace(/"/g,'&quot;')}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>
-        ${item.password?`<button class="ws-copy-btn" data-val="${(item.password||'').replace(/"/g,'&quot;')}" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
+        <button onclick="event.stopPropagation();copyText('${(item.account||'').replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>
+        ${item.password?`<button onclick="event.stopPropagation();copyText('${(item.password||'').replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
       </div>`:''}
       <button onclick="event.stopPropagation();qlOpenAdmin(${idx})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap;color:var(--text)" title="${item.account?'Mở trang quản trị':'Mở link'}">Mở</button>
     </div>`).join('');
