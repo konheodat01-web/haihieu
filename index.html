@@ -2134,12 +2134,14 @@ function initFirebaseListener(){
     if(r._sid && r._sid === _sessionId){ console.log('Skipped own push'); return; }
 
     try{
-      data.hai = r.hai !== undefined ? r.hai : data.hai;
-      data.hieu = r.hieu !== undefined ? r.hieu : data.hieu;
-      tasks = r.tasks !== undefined ? r.tasks : tasks;
-      links = r.links !== undefined ? r.links : links;
-      linkCategories = r.linkCategories !== undefined ? r.linkCategories : linkCategories;
-      if(r.websites && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+      // Firebase stores empty arrays as null — convert back to []
+      data.hai = Array.isArray(r.hai) ? r.hai : (r.hai != null ? r.hai : []);
+      data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
+      tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
+      links = Array.isArray(r.links) ? r.links : (r.links != null ? r.links : []);
+      linkCategories = r.linkCategories != null ? r.linkCategories : linkCategories;
+      if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+      else if(r.websites === null) websites=[];
 
       localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
@@ -2150,9 +2152,10 @@ function initFirebaseListener(){
       if(r._ts) localStorage.setItem('wt_ts', String(r._ts));
 
       renderDashboard(); renderHai(); renderHieu();
+      // Always re-render tasks overview (don't rely on active class detection)
+      renderTasksOverview();
       const active=document.querySelector('.page.active')?.id?.replace('page-','');
-      if(active==='tasks') renderTasksOverview();
-      else if(active==='links'){renderLinks();renderWebsites();}
+      if(active==='links'){renderLinks();renderWebsites();}
 
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
