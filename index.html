@@ -28,6 +28,7 @@
   nav .nav-section{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-muted);padding:14px 18px 4px;opacity:.7}
 
   main{margin-top:56px;margin-left:200px;padding:20px;width:calc(100vw - 200px);box-sizing:border-box;overflow-x:hidden}
+  main.board-mode{overflow-x:visible;padding:16px 20px 0}
   
   .page{display:none}
   .page.active{display:block}
@@ -494,7 +495,7 @@
         <button class="btn btn-primary btn-sm" onclick="openAddCardModal(null)">&#43; Thêm thẻ</button>
       </div>
     </div>
-    <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;overflow-y:hidden;padding-bottom:16px;min-height:300px;padding-top:4px;height:calc(100vh - 160px)"></div>
+    <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;overflow-y:visible;padding-bottom:16px;min-height:400px;padding-top:4px"></div>
   </div>
 </div>
 
@@ -2415,6 +2416,7 @@ function openProjectBoard(id){
   if(!t) return;
   document.getElementById('tasksOverview').style.display='none';
   document.getElementById('taskSubBoard').style.display='block';
+  document.querySelector('main').classList.add('board-mode');
   document.getElementById('subBoardTitle').textContent = t.name;
   const pEl = document.getElementById('subBoardPerson');
   pEl.innerHTML = t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:12px">${t.person}</span>`:'';
@@ -2425,6 +2427,7 @@ function backToOverview(){
   currentProjectId=null;
   document.getElementById('taskSubBoard').style.display='none';
   document.getElementById('tasksOverview').style.display='block';
+  document.querySelector('main').classList.remove('board-mode');
   renderTasksOverview();
 }
 
