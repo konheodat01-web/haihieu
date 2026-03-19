@@ -1157,65 +1157,28 @@
 
 <div id="toast"></div>
 
-<!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCmSa2SCBqEZ2-1itjClGzr3dyMalKDdg0",
-    authDomain: "haihieu-tracker.firebaseapp.com",
-    databaseURL: "https://haihieu-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "haihieu-tracker",
-    storageBucket: "haihieu-tracker.firebasestorage.app",
-    messagingSenderId: "369472069929",
-    appId: "1:369472069929:web:4fff450161c9ef018b5738",
-    measurementId: "G-KFY3SZWEN6"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // Expose to global scope for use in main script
-  window._fbDb = db;
-  window._fbRef = ref;
-  window._fbSet = set;
-  window._fbOnValue = onValue;
-  window._fbReady = true;
-
-  // Listen for real-time changes from other devices
-  onValue(ref(db, 'appData'), (snapshot) => {
-    const remoteData = snapshot.val();
-    if(!remoteData) return;
-    // Only update if data is newer than local
-    try {
-      if(remoteData.hai) window._appData.hai = remoteData.hai;
-      if(remoteData.hieu) window._appData.hieu = remoteData.hieu;
-      if(remoteData.tasks) window._tasks = remoteData.tasks;
-      if(remoteData.links) window._links = remoteData.links;
-      if(remoteData.linkCategories) window._linkCategories = remoteData.linkCategories;
-      if(remoteData.websites) window._websites = remoteData.websites;
-      // Trigger re-render if app is loaded
-      if(window._appLoaded) {
-        data.hai = window._appData.hai;
-        data.hieu = window._appData.hieu;
-        tasks = window._tasks;
-        links = window._links;
-        linkCategories = window._linkCategories;
-        websites = window._websites;
-        // Re-render current page
-        const active = document.querySelector('.page.active')?.id?.replace('page-','');
-        if(active==='hai') renderHai();
-        else if(active==='hieu') renderHieu();
-        else if(active==='dashboard') renderDashboard();
-        else if(active==='tasks') renderTasksOverview();
-        else if(active==='links') renderLinks();
-        // Show sync indicator
-        const ind = document.getElementById('syncIndicator');
-        if(ind){ ind.style.opacity='1'; setTimeout(()=>ind.style.opacity='0',2000); }
-      }
-    } catch(e){ console.warn('Firebase sync error', e); }
-  });
+<!-- Firebase SDK (compat version) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script>
+  try {
+    const firebaseConfig = {
+      apiKey: "AIzaSyCmSa2SCBqEZ2-1itjClGzr3dyMalKDdg0",
+      authDomain: "haihieu-tracker.firebaseapp.com",
+      databaseURL: "https://haihieu-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "haihieu-tracker",
+      storageBucket: "haihieu-tracker.firebasestorage.app",
+      messagingSenderId: "369472069929",
+      appId: "1:369472069929:web:4fff450161c9ef018b5738"
+    };
+    firebase.initializeApp(firebaseConfig);
+    window._fbDb = firebase.database();
+    window._fbReady = true;
+    console.log('Firebase ready');
+  } catch(e) {
+    console.warn('Firebase init failed:', e);
+    window._fbReady = false;
+  }
 </script>
 
 <script>
@@ -2089,7 +2052,7 @@ document.getElementById('fDate').value = todayVN();
 
 // ===== LOCAL STORAGE PERSISTENCE =====
 function saveAppData(){
-  // Save to localStorage (fast, local)
+  // Save to localStorage (instant, offline)
   try{
     localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
     localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
@@ -2097,25 +2060,54 @@ function saveAppData(){
     localStorage.setItem('wt_links', JSON.stringify(links));
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
     localStorage.setItem('wt_websites', JSON.stringify(websites));
-  }catch(e){ console.warn('localStorage save failed', e); }
+  }catch(e){}
 
-  // Sync to Firebase (real-time across devices)
-  if(window._fbReady){
-    try{
-      window._fbSet(window._fbRef(window._fbDb, 'appData'), {
-        hai: data.hai,
-        hieu: data.hieu,
-        tasks,
-        links,
-        linkCategories,
-        websites,
-        _lastUpdate: Date.now()
-      });
-      // Show sync indicator
-      const ind = document.getElementById('syncIndicator');
-      if(ind){ ind.style.opacity='1'; ind.style.color='#27ae60'; setTimeout(()=>ind.style.opacity='0',1500); }
-    }catch(e){ console.warn('Firebase sync failed', e); }
+  // Sync to Firebase (cross-device)
+  if(window._fbReady && window._fbDb){
+    window._fbDb.ref('appData').set({
+      hai: data.hai,
+      hieu: data.hieu,
+      tasks,
+      links,
+      linkCategories,
+      websites,
+      _ts: Date.now()
+    }).then(()=>{
+      const ind=document.getElementById('syncIndicator');
+      if(ind){ind.textContent='☁ Đã đồng bộ';ind.style.opacity='1';ind.style.color='#27ae60';setTimeout(()=>ind.style.opacity='0',2000);}
+    }).catch(e=>{
+      const ind=document.getElementById('syncIndicator');
+      if(ind){ind.textContent='⚠ Lỗi sync';ind.style.opacity='1';ind.style.color='#e74c3c';setTimeout(()=>ind.style.opacity='0',3000);}
+    });
   }
+}
+
+function initFirebaseListener(){
+  if(!window._fbReady || !window._fbDb) return;
+  let firstLoad = true;
+  window._fbDb.ref('appData').on('value', (snapshot)=>{
+    const remote = snapshot.val();
+    if(!remote) return;
+    if(firstLoad){ firstLoad=false; return; } // skip initial load (already have localStorage)
+    // Update local data from remote
+    try{
+      if(remote.hai) data.hai=remote.hai;
+      if(remote.hieu) data.hieu=remote.hieu;
+      if(remote.tasks) tasks=remote.tasks;
+      if(remote.links) links=remote.links;
+      if(remote.linkCategories) linkCategories=remote.linkCategories;
+      if(remote.websites){ websites=remote.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+      // Re-render current page
+      const active=document.querySelector('.page.active')?.id?.replace('page-','');
+      if(active==='hai') renderHai();
+      else if(active==='hieu') renderHieu();
+      else if(active==='dashboard') renderDashboard();
+      else if(active==='tasks') renderTasksOverview();
+      else if(active==='links'){renderLinks();renderWebsites();}
+      const ind=document.getElementById('syncIndicator');
+      if(ind){ind.textContent='🔄 Đã nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#2980b9';setTimeout(()=>ind.style.opacity='0',2000);}
+    }catch(e){console.warn('Firebase receive error',e);}
+  });
 }
 
 function loadAppData(){
@@ -3114,6 +3106,8 @@ window._tasks = tasks;
 window._links = links;
 window._linkCategories = linkCategories;
 window._websites = websites;
+// Start Firebase real-time listener
+setTimeout(initFirebaseListener, 1000);
 
 function populateGroupSelect(typeVal){
   const type = typeVal || (document.getElementById('lf_type')||{}).value || 'work';
