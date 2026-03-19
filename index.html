@@ -231,6 +231,7 @@
     <h1>&#128188; Quản lý công việc</h1>
   </div>
   <div class="meta" id="currentDate"></div>
+  <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#27ae60;white-space:nowrap">☁ Đã đồng bộ</div>
 </header>
 
 <nav>
@@ -1156,6 +1157,67 @@
 
 <div id="toast"></div>
 
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmSa2SCBqEZ2-1itjClGzr3dyMalKDdg0",
+    authDomain: "haihieu-tracker.firebaseapp.com",
+    databaseURL: "https://haihieu-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "haihieu-tracker",
+    storageBucket: "haihieu-tracker.firebasestorage.app",
+    messagingSenderId: "369472069929",
+    appId: "1:369472069929:web:4fff450161c9ef018b5738",
+    measurementId: "G-KFY3SZWEN6"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  // Expose to global scope for use in main script
+  window._fbDb = db;
+  window._fbRef = ref;
+  window._fbSet = set;
+  window._fbOnValue = onValue;
+  window._fbReady = true;
+
+  // Listen for real-time changes from other devices
+  onValue(ref(db, 'appData'), (snapshot) => {
+    const remoteData = snapshot.val();
+    if(!remoteData) return;
+    // Only update if data is newer than local
+    try {
+      if(remoteData.hai) window._appData.hai = remoteData.hai;
+      if(remoteData.hieu) window._appData.hieu = remoteData.hieu;
+      if(remoteData.tasks) window._tasks = remoteData.tasks;
+      if(remoteData.links) window._links = remoteData.links;
+      if(remoteData.linkCategories) window._linkCategories = remoteData.linkCategories;
+      if(remoteData.websites) window._websites = remoteData.websites;
+      // Trigger re-render if app is loaded
+      if(window._appLoaded) {
+        data.hai = window._appData.hai;
+        data.hieu = window._appData.hieu;
+        tasks = window._tasks;
+        links = window._links;
+        linkCategories = window._linkCategories;
+        websites = window._websites;
+        // Re-render current page
+        const active = document.querySelector('.page.active')?.id?.replace('page-','');
+        if(active==='hai') renderHai();
+        else if(active==='hieu') renderHieu();
+        else if(active==='dashboard') renderDashboard();
+        else if(active==='tasks') renderTasksOverview();
+        else if(active==='links') renderLinks();
+        // Show sync indicator
+        const ind = document.getElementById('syncIndicator');
+        if(ind){ ind.style.opacity='1'; setTimeout(()=>ind.style.opacity='0',2000); }
+      }
+    } catch(e){ console.warn('Firebase sync error', e); }
+  });
+</script>
+
 <script>
 let currentMember = 'admin'; // declared first to avoid TDZ
 let websites = [
@@ -2027,6 +2089,7 @@ document.getElementById('fDate').value = todayVN();
 
 // ===== LOCAL STORAGE PERSISTENCE =====
 function saveAppData(){
+  // Save to localStorage (fast, local)
   try{
     localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
     localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
@@ -2035,6 +2098,24 @@ function saveAppData(){
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
     localStorage.setItem('wt_websites', JSON.stringify(websites));
   }catch(e){ console.warn('localStorage save failed', e); }
+
+  // Sync to Firebase (real-time across devices)
+  if(window._fbReady){
+    try{
+      window._fbSet(window._fbRef(window._fbDb, 'appData'), {
+        hai: data.hai,
+        hieu: data.hieu,
+        tasks,
+        links,
+        linkCategories,
+        websites,
+        _lastUpdate: Date.now()
+      });
+      // Show sync indicator
+      const ind = document.getElementById('syncIndicator');
+      if(ind){ ind.style.opacity='1'; ind.style.color='#27ae60'; setTimeout(()=>ind.style.opacity='0',1500); }
+    }catch(e){ console.warn('Firebase sync failed', e); }
+  }
 }
 
 function loadAppData(){
@@ -3027,6 +3108,12 @@ loadAppData();
 renderDashboard();
 renderHai();
 renderHieu();
+window._appLoaded = true;
+window._appData = data;
+window._tasks = tasks;
+window._links = links;
+window._linkCategories = linkCategories;
+window._websites = websites;
 
 function populateGroupSelect(typeVal){
   const type = typeVal || (document.getElementById('lf_type')||{}).value || 'work';
