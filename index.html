@@ -494,7 +494,7 @@
         <button class="btn btn-primary btn-sm" onclick="openAddCardModal(null)">&#43; Thêm thẻ</button>
       </div>
     </div>
-    <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;padding-bottom:12px;min-height:300px"></div>
+    <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;padding-bottom:16px;min-height:300px;padding-top:4px"></div>
   </div>
 </div>
 
@@ -944,12 +944,17 @@
           <div class="form-group"><label>Tên brand *</label><input type="text" id="wf_brand" style="width:100%" placeholder="VD: Debet, CafeLegend..."></div>
           <div class="form-group"><label>URL *</label><input type="text" id="wf_url" style="width:100%" placeholder="https://debets.sbs"></div>
           <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="/wp-admin, /admin..."></div>
-          <div class="form-group"><label>Tài khoản</label><input type="text" id="wf_account" style="width:100%"></div>
+          <div class="form-group"><label>Tài khoản</label>
+            <div style="display:flex;gap:4px">
+              <input type="text" id="wf_account" style="flex:1">
+              <button class="ws-copy-btn" data-field="wf_account" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Copy">📋</button>
+            </div>
+          </div>
           <div class="form-group">
             <label>Mật khẩu</label>
             <div style="display:flex;gap:4px">
-              <input type="password" id="wf_password" style="flex:1">
-              <button onclick="toggleWfPassword()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:14px">&#128065;</button>
+              <input type="text" id="wf_password" style="flex:1">
+              <button class="ws-copy-btn" data-field="wf_password" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Copy">📋</button>
             </div>
           </div>
           <div class="form-group"><label>Trạng thái</label>
@@ -2429,7 +2434,14 @@ function renderSubBoard(task){
   const cols = getProjectCols(task);
   board.innerHTML='';
   cols.forEach(col=>{
-    const cards = (task.cards||[]).filter(c=>c.colId===col.id);
+    const cards = (task.cards||[]).filter(c=>{
+      if(c.colId===col.id) return true;
+      // Legacy: 'todo' maps to first col
+      if(col.id==='col_new' && c.colId==='todo') return true;
+      // Legacy: 'pending' maps to col_pending
+      if(col.id==='col_pending' && c.colId==='pending') return true;
+      return false;
+    });
     const colEl = document.createElement('div');
     colEl.style.cssText=`flex:0 0 240px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px`;
     colEl.dataset.colId = col.id;
