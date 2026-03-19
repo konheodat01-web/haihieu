@@ -4571,7 +4571,7 @@ function qlGetItems(){
   const webItems = websites.filter(w=> currentMember!=='hai' || w.team!=='Team 02').map(w=>({
     icon: WS_STATUS_ICON[w.status]||'🌐',
     label:w.brand, sub:w.url,
-    url: (w.url||'').replace(/\/$/,'') + (w.admin||''),
+    url: (()=>{ let u=(w.url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; return u+(w.admin||''); })(),
     account:w.account, password:w.password
   }));
   return [...workItems, ...webItems];
