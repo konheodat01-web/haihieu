@@ -401,6 +401,11 @@
         </div>
       </div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
+      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','link')" title="Copy link bài các dòng đã chọn (hàng dọc)">📋 Link bài</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','spin')" title="Copy spin các dòng đã chọn (hàng dọc)">📋 Spin</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hai')" title="Copy định dạng Excel">📊 Copy Excel</button>
+      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm btn-danger" onclick="bulkDelete('hai')">&#128465; Xoá</button>
       <button class="btn btn-sm btn-outline" onclick="clearSelection('hai')">&#10005; Bỏ chọn</button>
     </div>
@@ -489,6 +494,11 @@
           </div>
         </div>
       </div>
+      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
+      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','link')" title="Copy link bài các dòng đã chọn (hàng dọc)">📋 Link bài</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','spin')" title="Copy spin các dòng đã chọn (hàng dọc)">📋 Spin</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hieu')" title="Copy định dạng Excel">📊 Copy Excel</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm btn-danger" onclick="bulkDelete('hieu')">&#128465; Xoá</button>
       <button class="btn btn-sm btn-outline" onclick="clearSelection('hieu')">&#10005; Bỏ chọn</button>
@@ -2148,7 +2158,7 @@ function renderHai(){
       <td class="ec" onclick="editCell('hai',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'link',this)" style="max-width:140px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.link||''}">${r.link||'<span style=color:var(--text-muted)>—</span>'}</span></td>
 
-      <td><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hai',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button></td>
+      <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hai',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hai',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hai',${r.id})">&#128465;</button></td>
     </tr>`;}).join('');
   updateBulkBar('hai');
@@ -2191,7 +2201,7 @@ function renderHieu(){
       <td class="ec" onclick="editCell('hieu',${r.id},'spin',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.spin||''}">${r.spin||'<span style=color:var(--text-muted)>—</span>'}</span></td>
       <td class="ec" onclick="editCell('hieu',${r.id},'index',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.index||''}">${r.index||'<span style=color:var(--text-muted)>—</span>'}</span></td>
 
-      <td><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hieu',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button></td>
+      <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hieu',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hieu',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hieu',${r.id})">&#128465;</button></td>
     </tr>`;}).join('');
   updateBulkBar('hieu');
@@ -2230,6 +2240,51 @@ function updateBulkBar(sheet){
   const n=selected[sheet].size;
   if(bar){ bar.style.display=n>0?'flex':'none'; }
   if(cnt){ cnt.textContent='Đã chọn '+n+' dòng'; }
+}
+
+function bulkCopyField(sheet, field){
+  const ids = selected[sheet];
+  if(!ids.size){ toast('Chưa chọn dòng nào!','#e74c3c'); return; }
+  const rows = data[sheet].filter(r=>ids.has(r.id));
+  const vals = rows.map(r=>r[field]||'').join('\n');
+  copyText(vals, null);
+}
+
+// Excel column mapping:
+// Deadline | Key chính | Key phụ | Loại bài | Người nhận | Website | Anchor | Link 2 | Anchor 2 | Chuyên Mục | Link bài | [3 trống] | Spin | Index
+function rowToExcel(r, sheet){
+  const person = sheet==='hai'?'Hải':'Hiếu';
+  return [
+    r.ngay||'',       // Deadline
+    r.keyword||'',    // Key chính
+    '',               // Key phụ
+    r.loai||'',       // Loại bài
+    person,           // Người nhận
+    r.website||'',    // Website
+    r.anchor||'',     // Anchor
+    '',               // Link 2
+    '',               // Anchor 2
+    r.chuyenMuc||'',  // Chuyên Mục
+    r.link||'',       // Link bài
+    r.spin||'',       // Spin
+    r.index||'',      // Index
+  ].join('\t');
+}
+
+function bulkCopyExcel(sheet){
+  const ids = selected[sheet];
+  if(!ids.size){ toast('Chưa chọn dòng nào!','#e74c3c'); return; }
+  const rows = data[sheet].filter(r=>ids.has(r.id));
+  const text = rows.map(r=>rowToExcel(r,sheet)).join('\n');
+  copyText(text, null);
+  toast('✓ Đã copy '+rows.length+' dòng (định dạng Excel)', '#27ae60', 3000);
+}
+
+function copyExcelSingleRow(sheet, id){
+  const r = data[sheet].find(x=>x.id===id);
+  if(!r) return;
+  copyText(rowToExcel(r,sheet), null);
+  toast('✓ Đã copy dòng (định dạng Excel)', '#27ae60', 2500);
 }
 
 function bulkStatus(sheet, status){
