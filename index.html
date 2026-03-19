@@ -245,7 +245,7 @@
         onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">+</button>
     </div>
     <!-- Dropdown results -->
-    <div id="qlDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:360px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:360px;overflow-y:auto"></div>
+    <div id="qlDropdown" onmousedown="_qlKeepOpen=true" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:360px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:360px;overflow-y:auto"></div>
   </div>
   <!-- QUICK ADD MODAL -->
   <div id="qlAddModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:600;width:380px;padding:20px">
@@ -3886,11 +3886,15 @@ function bulkSetColor(sheet, color){
   // support data-kw attribute
   if(btn && btn.dataset && btn.dataset.kw) text = btn.dataset.kw;
   const doSuccess = () => {
-    const orig = btn.innerHTML;
-    btn.innerHTML = '&#10003;';
-    btn.style.color = 'var(--green)';
-    btn.style.opacity = '1';
-    setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; btn.style.opacity='.45'; }, 1200);
+    if(btn){
+      const orig = btn.innerHTML;
+      btn.innerHTML = '&#10003;';
+      btn.style.color = 'var(--green)';
+      btn.style.opacity = '1';
+      setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; btn.style.opacity='.45'; }, 1200);
+    }
+    const preview = text.length > 30 ? text.slice(0,30)+'…' : text;
+    toast('✓ Đã copy: ' + preview, '#27ae60', 2000);
   };
   // Modern clipboard API
   if(navigator.clipboard && window.isSecureContext){
@@ -4611,7 +4615,9 @@ function qlSearch(){
   drop.style.display='block';
 }
 
+let _qlKeepOpen = false;
 function qlClose(){
+  if(_qlKeepOpen){ _qlKeepOpen=false; return; }
   const d=document.getElementById('qlDropdown'); if(d) d.style.display='none';
 }
 
