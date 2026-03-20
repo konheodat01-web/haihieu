@@ -6038,7 +6038,22 @@ function saveAddIndexTask(){
   }
   const taskId = genIndexTaskId(dateVal, _aimTeam, sttVal);
   if(indexTasks.find(t=>t.taskId===taskId)){
-    toast('Task ID "'+taskId+'" đã tồn tại!','#e74c3c'); return;
+    const msg = `⚠️ Thêm task thất bại!\n\nID "${taskId}" đã tồn tại trong hệ thống.\n\nVui lòng kiểm tra lại STT hoặc ngày ép index.`;
+    alert(msg);
+    return;
+  }
+
+  // Check trùng tháng + STT trong cùng team (khác team = nguồn data riêng, không tính)
+  const mm = taskId.slice(0,2);
+  const paddedStt = taskId.slice(4);
+  const sttDup = indexTasks.find(t=> {
+    if(t.team !== _aimTeam) return false; // khác team → bỏ qua
+    return t.taskId.slice(0,2)===mm && t.taskId.slice(4)===paddedStt;
+  });
+  if(sttDup){
+    const msg = `⚠️ Thêm task thất bại!\n\nTháng ${parseInt(mm)} + ${_aimTeam} đã có STT "${sttVal}" (ID: ${sttDup.taskId}).\n• Tên: ${sttDup.name||'(không tên)'}\n\nVui lòng dùng STT khác.`;
+    alert(msg);
+    return;
   }
   const nameVal = (document.getElementById('aim_name').value||'').trim();
   if(!nameVal){ toast('Vui lòng nhập tên task!','#e74c3c'); return; }
