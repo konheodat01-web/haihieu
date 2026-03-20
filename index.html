@@ -4892,6 +4892,7 @@ function acClose(listId){
 // Close all autocomplete on click outside
 document.addEventListener('click', e=>{
   if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
+});
 function wsBulkDelete(){
   if(!_wsSelected.size) return;
   if(!confirm('Xoá '+_wsSelected.size+' website đã chọn?')) return;
@@ -4986,8 +4987,6 @@ function wsUpdatePillCounts(fullList){
   set('wsCntMK',  cnt('Chờ cấp lại mật khẩu'));
   set('wsCntLoi', cnt('Lỗi web'));
 }
-
-});
 
 function wsVidcoCopy(id, btn){
   const w = websites.find(x=>x.id===id);
