@@ -394,8 +394,8 @@
   <button onclick="showPage('add')">&#43; Thêm bài</button>
   <button onclick="showPage('import')">&#8679; Import</button>
   <div class="nav-section">Quản lý</div>
-  <button onclick="showPage('tasks')">&#128203; Công việc khác</button>
-  <button onclick="showPage('index')">&#128269; Index Tasks</button>
+  <button onclick="showPage('tasks')">&#128203; Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
+  <button onclick="showPage('index')">&#128269; Index Tasks <span id="navBadgeIndex" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
   <button onclick="showPage('links')">&#128279; Link quan trọng</button>
 </nav>
 
@@ -2809,6 +2809,7 @@ function initFirebaseListener(){
       const active=document.querySelector('.page.active')?.id?.replace('page-','');
       if(active==='links'){renderLinks();renderWebsites();}
       if(active==='index') renderIndexTasks();
+      updateNavBadges();
 
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
@@ -3139,6 +3140,7 @@ function renderTasksOverview(){
   }
   grid.innerHTML = html;
   initTaskGridDrag();
+  updateNavBadges();
 }
 
 function openProjectBoard(id){
@@ -3732,6 +3734,7 @@ function closeMemberDropdownOutside(e){
 
 function setMember(m){
   currentMember = m;
+  try{ localStorage.setItem('wt_activeMember', m); }catch(e){}
   const cfg = MEMBER_CONFIG[m];
   document.getElementById('memberDropdown').classList.remove('open');
   // Close any open popups to avoid stale state
@@ -3814,6 +3817,7 @@ function setMember(m){
   updateOwnerFilters(m);
   // Ensure ws icons reflect current websites data after all re-renders
   setTimeout(updateWsIcons, 50);
+  updateNavBadges();
 }
 
 // Patch renders to respect member filter
@@ -3826,7 +3830,19 @@ renderTasksOverview = function(){
   _origRenderTasksOverview();
 };
 
-setMember('admin');
+// Restore member first (before restorePosition so page filter is correct)
+// ===== EARLY DECLARATIONS (needed before setMember/updateNavBadges) =====
+let indexTasks = [];
+let itNextId = 1;
+let selectedTaskIds = new Set();
+
+(function restoreMember(){
+  try{
+    const saved = localStorage.getItem('wt_activeMember');
+    const valid = ['admin','hai','hieu'];
+    setMember(valid.includes(saved) ? saved : 'admin');
+  }catch(e){ setMember('admin'); }
+})();
 // ===== LINK QUAN TRỌNG =====
 let links = [
   {id:1, name:'Admin WordPress Debet', url:'https://debets.sbs/wp-admin', desc:'Đăng nhập quản trị WordPress Debet', group:'WordPress', type:'work', owner:'Hiếu'},
@@ -5283,6 +5299,37 @@ function wsImportRun(){
   toast(msg);
 }
 
+function updateNavBadges(){
+  // Badge Công việc khác: số task chưa done (progress < 100%) theo member filter
+  const memberFilter = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
+  const incompleteTasks = (typeof tasks!=='undefined'?tasks:[]).filter(t=>{
+    if(memberFilter && t.person!==memberFilter) return false;
+    if(currentMember==='hai' && t.team==='Team 02') return false;
+    return calcProjectProgress(t) < 100;
+  });
+  const bTask = document.getElementById('navBadgeTasks');
+  if(bTask){
+    if(incompleteTasks.length){ bTask.textContent=incompleteTasks.length; bTask.style.display='inline'; }
+    else bTask.style.display='none';
+  }
+
+  // Badge Index Tasks: task đến hạn hoặc pending nhắc hôm nay, chưa done
+  const today = todayVN();
+  const duePerson = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
+  const _it = typeof indexTasks!=='undefined' ? indexTasks : [];
+  const dueIndex = _it.filter(t=>{
+    if(t.status==='Done') return false;
+    if(duePerson && t.person!==duePerson) return false;
+    if(t.status==='Pending') return t.pendingNewDue===today;
+    return t.dueDate<=today;
+  });
+  const bIndex = document.getElementById('navBadgeIndex');
+  if(bIndex){
+    if(dueIndex.length){ bIndex.textContent=dueIndex.length; bIndex.style.display='inline'; }
+    else bIndex.style.display='none';
+  }
+}
+
 // ===== TASK TRASH =====
 function updateTrashBadge(){
   const el=document.getElementById('trashCount');
@@ -5434,7 +5481,6 @@ function toggleLfAuth(){
 }
 
 // ===== TASK SELECTION & BULK =====
-let selectedTaskIds = new Set();
 
 function onTaskCheck(id, chk){
   const numId = parseInt(id);
@@ -5693,8 +5739,6 @@ function qlSave(){
   toast('✓ Đã thêm: '+name);
 }
 // ===== TASK INDEX =====
-let indexTasks = [];
-let itNextId = 1;
 let _iamTaskId = null; // current task being actioned
 let _iamAction = 'done';
 let _aimTeam = 'Team 01';
@@ -5760,11 +5804,13 @@ function renderIndexTasks(){
   // Sort: oldest createdDate first, newest last (không phân nhóm theo status nữa)
   list = list.slice().sort((a,b)=> a.createdDate.localeCompare(b.createdDate) || a.taskId.localeCompare(b.taskId));
 
-  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; updateNavBadges(); return; }
   empty.style.display='none';
 
-  const today = todayVN();
-  tbody.innerHTML = list.map(t=>{
+  const activeList = list.filter(t=>t.status!=='Done');
+  const doneList   = list.filter(t=>t.status==='Done');
+
+  const renderRow = t => {
     const isDone = t.status==='Done';
     const isPending = t.status==='Pending';
     const isOverdue = !isDone && t.dueDate < today;
@@ -5789,7 +5835,6 @@ function renderIndexTasks(){
         ? `<span style="color:#e74c3c;font-size:12px;font-weight:600">${fmtDate(t.dueDate)||'—'}</span>`
         : `<span style="font-size:12px">${fmtDate(t.dueDate)||'—'}</span>`;
 
-    // Action button
     let actionBtn = '';
     if(!isDone){
       actionBtn = `<button onclick="openIndexActionModal('${t.taskId}')"
@@ -5797,7 +5842,14 @@ function renderIndexTasks(){
         style="${isPending?'color:#e67e22;border-color:#e67e22':'background:#27ae60;border-color:#27ae60'}">
         ${isPending?'↩ Cập nhật':'✓ Hành động'}
       </button>`;
+    } else {
+      actionBtn = `<button onclick="restoreIndexTask('${t.taskId}')"
+        class="btn btn-sm btn-outline" style="font-size:11px;color:#e67e22;border-color:#e67e22" title="Khôi phục về chưa done">↩ Khôi phục</button>`;
     }
+    const editBtn = `<button onclick="openEditIndexModal('${t.taskId}')" title="Sửa task"
+      style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer;margin-left:4px"
+      onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✎</button>`;
+
     return `<tr class="${isDone?'it-row-done':''}" style="${isDue&&!isDone?'background:#fffde7':isOverdue&&!isDone?'background:#fdf2f2':''}">
       <td style="white-space:nowrap">${renderItId(t.taskId)}</td>
       <td style="font-size:13px;font-weight:500">${t.name||'<span style="color:var(--text-muted)">—</span>'}</td>
@@ -5808,13 +5860,35 @@ function renderIndexTasks(){
       <td>${dueDateLabel}${t.pendingNewDue&&isPending?`<div style="font-size:10px;color:var(--text-muted)">DK: ${fmtDate(t.pendingNewDue)}</div>`:''}</td>
       <td>${statusCell}</td>
       <td>${noteCell}</td>
-      <td style="white-space:nowrap">${actionBtn}
+      <td style="white-space:nowrap">${actionBtn}${editBtn}
         <button onclick="deleteIndexTask('${t.taskId}')" title="Xoá"
           style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;opacity:.4;margin-left:4px"
           onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.4;this.style.color='var(--text-muted)'">🗑</button>
       </td>
     </tr>`;
-  }).join('');
+  };
+
+  let html = activeList.map(renderRow).join('');
+
+  // Done section
+  if(doneList.length){
+    const _itDoneOpen = (localStorage.getItem('it_done_open')||'0')==='1';
+    html += `<tr id="itDoneSectionRow">
+      <td colspan="10" style="padding:0">
+        <div onclick="toggleItDoneSection()" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:#f0faf4;border-top:2px solid #a8deba;border-bottom:1px solid #a8deba;user-select:none"
+          onmouseover="this.style.background='#e6f7ee'" onmouseout="this.style.background='#f0faf4'">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#27ae60">✅ Đã hoàn thành (${doneList.length})</span>
+          <span id="itDoneChevron" style="font-size:11px;color:#27ae60;transition:transform .2s;display:inline-block;transform:${_itDoneOpen?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+        </div>
+      </td>
+    </tr>`;
+    if(_itDoneOpen){
+      html += doneList.map(renderRow).join('');
+    }
+  }
+
+  tbody.innerHTML = html;
+  updateNavBadges();
 }
 
 function renderIndexDueBanner(){
@@ -6034,6 +6108,100 @@ function submitIndexAction(){
   toast(_iamAction==='done'?'✅ Đã đánh dấu Done!':'⏳ Đã đặt Pending — nhắc vào '+fmtDate(t.pendingNewDue));
 }
 
+function toggleItDoneSection(){
+  const cur = (localStorage.getItem('it_done_open')||'0')==='1';
+  localStorage.setItem('it_done_open', cur?'0':'1');
+  renderIndexTasks();
+}
+
+function restoreIndexTask(taskId){
+  const t = indexTasks.find(x=>x.taskId===taskId);
+  if(!t) return;
+  t.status = 'Chờ dán';
+  t.pendingReason = '';
+  t.pendingNewDue = '';
+  // Restore original dueDate from createdDate
+  t.dueDate = indexDueDate(t.createdDate);
+  saveAppData();
+  renderIndexTasks();
+  toast('↩ Đã khôi phục: '+taskId);
+}
+
+let _eimTeam = 'Team 01';
+let _eimPerson = 'Hải';
+
+function openEditIndexModal(taskId){
+  const t = indexTasks.find(x=>x.taskId===taskId);
+  if(!t) return;
+  _eimTeam = t.team||'Team 01';
+  _eimPerson = t.person||'Hải';
+  document.getElementById('eim_taskId').value = taskId;
+  document.getElementById('eim_name').value = t.name||'';
+  document.getElementById('eim_date').value = t.createdDate||todayVN();
+  document.getElementById('eim_stt').value = t.stt||'';
+  // Team
+  const teamRow = document.getElementById('eim_team_row');
+  if(currentMember==='hai'){ if(teamRow) teamRow.style.display='none'; }
+  else { if(teamRow) teamRow.style.display='block'; eimSetTeam(_eimTeam); }
+  // Person
+  const personRow = document.getElementById('eim_person_row');
+  if(currentMember!=='admin'){ if(personRow) personRow.style.display='none'; }
+  else { if(personRow) personRow.style.display='block'; eimSetPerson(_eimPerson); }
+  document.getElementById('editIndexModal').classList.add('open');
+  setTimeout(()=>document.getElementById('eim_name').focus(),100);
+}
+
+function closeEditIndexModal(){
+  document.getElementById('editIndexModal').classList.remove('open');
+}
+
+function eimSetTeam(team){
+  _eimTeam = team;
+  const b1=document.getElementById('eim_team_btn1');
+  const b2=document.getElementById('eim_team_btn2');
+  if(b1){ b1.className='btn '+(team==='Team 01'?'btn-primary':'btn-outline'); b1.style.flex='1'; }
+  if(b2){ b2.className='btn '+(team==='Team 02'?'btn-primary':'btn-outline'); b2.style.flex='1'; }
+}
+
+function eimSetPerson(person){
+  _eimPerson = person;
+  const bh=document.getElementById('eim_person_btn_hai');
+  const bhi=document.getElementById('eim_person_btn_hieu');
+  if(bh){ bh.className='btn '+(person==='Hải'?'btn-primary':'btn-outline'); bh.style.flex='1'; }
+  if(bhi){ bhi.className='btn '+(person==='Hiếu'?'btn-primary':'btn-outline'); bhi.style.flex='1'; }
+}
+
+function saveEditIndexTask(){
+  const taskId = document.getElementById('eim_taskId').value;
+  const t = indexTasks.find(x=>x.taskId===taskId);
+  if(!t) return;
+  const nameVal = (document.getElementById('eim_name').value||'').trim();
+  if(!nameVal){ toast('Vui lòng nhập tên task!','#e74c3c'); return; }
+  const sttVal = (document.getElementById('eim_stt').value||'').trim();
+  if(!sttVal){ toast('Vui lòng nhập STT!','#e74c3c'); return; }
+  const dateVal = document.getElementById('eim_date').value || t.createdDate;
+  t.name = nameVal;
+  t.stt = sttVal;
+  t.createdDate = dateVal;
+  t.team = currentMember==='hai' ? 'Team 01' : _eimTeam;
+  t.person = currentMember==='admin' ? _eimPerson : t.person;
+  // Rebuild taskId + dueDate only if not done/pending (to avoid disrupting active tasks)
+  if(t.status==='Chờ dán'){
+    const newId = genIndexTaskId(dateVal, t.team, sttVal);
+    if(newId !== taskId){
+      if(indexTasks.find(x=>x.taskId===newId && x.taskId!==taskId)){
+        toast('Task ID "'+newId+'" đã tồn tại!','#e74c3c'); return;
+      }
+      t.taskId = newId;
+      t.dueDate = indexDueDate(dateVal);
+    }
+  }
+  saveAppData();
+  closeEditIndexModal();
+  renderIndexTasks();
+  toast('✓ Đã cập nhật task!');
+}
+
 function deleteIndexTask(taskId){
   if(!confirm('Xoá task index "'+taskId+'"?')) return;
   indexTasks = indexTasks.filter(t=>t.taskId!==taskId);
@@ -6062,7 +6230,13 @@ window._websites = websites;
   try{
     const saved = localStorage.getItem('wt_activePage');
     const validPages = ['dashboard','hai','hieu','add','import','tasks','links','index'];
-    if(saved && validPages.includes(saved)) restoredPage = saved;
+    const cfg = MEMBER_CONFIG[currentMember] || MEMBER_CONFIG['admin'];
+    if(saved && validPages.includes(saved) && cfg.pages.includes(saved)){
+      restoredPage = saved;
+    } else if(saved && validPages.includes(saved)){
+      // Page not allowed for this member — fall to their default
+      restoredPage = currentMember==='hai' ? 'hai' : currentMember==='hieu' ? 'hieu' : 'dashboard';
+    }
   }catch(e){}
   showPage(restoredPage);
 
@@ -6083,6 +6257,51 @@ window._websites = websites;
 setTimeout(initFirebaseListener, 1000);
 
 </script>
+<!-- EDIT INDEX TASK MODAL -->
+<div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
+  <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>✎ Sửa task index</h3>
+      <button class="modal-close" onclick="closeEditIndexModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <input type="hidden" id="eim_taskId">
+      <div class="form-group" style="width:100%">
+        <label>Tên task *</label>
+        <input type="text" id="eim_name" style="width:100%">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
+        <div class="form-group">
+          <label>Ngày ép index</label>
+          <input type="date" id="eim_date" style="width:100%">
+        </div>
+        <div class="form-group">
+          <label>STT</label>
+          <input type="text" id="eim_stt" style="width:100%" maxlength="10">
+        </div>
+      </div>
+      <div class="form-group" id="eim_team_row" style="width:100%">
+        <label>Team</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" id="eim_team_btn1" onclick="eimSetTeam('Team 01')" class="btn btn-primary" style="flex:1">Team 01</button>
+          <button type="button" id="eim_team_btn2" onclick="eimSetTeam('Team 02')" class="btn btn-outline" style="flex:1">Team 02</button>
+        </div>
+      </div>
+      <div class="form-group" id="eim_person_row" style="width:100%">
+        <label>Người nhận</label>
+        <div style="display:flex;gap:8px">
+          <button type="button" id="eim_person_btn_hai" onclick="eimSetPerson('Hải')" class="btn btn-primary" style="flex:1">👤 Hải</button>
+          <button type="button" id="eim_person_btn_hieu" onclick="eimSetPerson('Hiếu')" class="btn btn-outline" style="flex:1">👤 Hiếu</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditIndexModal()">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveEditIndexTask()">✓ Lưu</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD INDEX TASK MODAL -->
 <div class="modal-overlay" id="addIndexModal" onclick="if(event.target===this)closeAddIndexModal()">
   <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
