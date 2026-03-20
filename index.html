@@ -5824,6 +5824,8 @@ function renderIndexTasks(){
   const activeList = list.filter(t=>t.status!=='Done');
   const doneList   = list.filter(t=>t.status==='Done');
 
+  const today = todayVN();
+
   const renderRow = t => {
     const isDone = t.status==='Done';
     const isPending = t.status==='Pending';
