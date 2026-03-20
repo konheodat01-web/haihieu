@@ -1051,6 +1051,11 @@
           <option value="Team 01">Team 01</option>
           <option value="Team 02">Team 02</option>
         </select>
+        <select id="itFilterPerson" onchange="renderIndexTasks()" style="height:32px;font-size:12px">
+          <option value="">Tất cả người</option>
+          <option value="Hải">Hải</option>
+          <option value="Hiếu">Hiếu</option>
+        </select>
         <select id="itFilterStatus" onchange="renderIndexTasks()" style="height:32px;font-size:12px">
           <option value="">Tất cả trạng thái</option>
           <option value="Chờ dán">Chờ dán</option>
@@ -1078,7 +1083,8 @@
             <th style="width:140px;position:sticky;top:0;z-index:8">ID Task</th>
             <th style="width:105px;position:sticky;top:0;z-index:8">Ngày ép</th>
             <th style="width:80px;position:sticky;top:0;z-index:8">STT</th>
-            <th style="width:100px;position:sticky;top:0;z-index:8">Team</th>
+            <th style="width:90px;position:sticky;top:0;z-index:8">Team</th>
+            <th style="width:85px;position:sticky;top:0;z-index:8">Người</th>
             <th style="width:105px;position:sticky;top:0;z-index:8">Ngày dán</th>
             <th style="width:130px;position:sticky;top:0;z-index:8">Trạng thái</th>
             <th style="position:sticky;top:0;z-index:8">Ghi chú / Pending</th>
@@ -2394,7 +2400,7 @@ function renderHai(){
         <span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.website||''}">${r.website||'<span style=color:var(--text-muted)>—</span>'}</span>
       </td>
       <td style="width:28px;text-align:center;padding:0 2px">
-        ${r.website?`<button class="ws-lookup-btn" data-url="${r.website}" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px;display:block;margin:auto" title="Kiểm tra website">🔍</button>`:''}
+        ${r.website ? getWsIcon(r.website, r.id) : ''}
       </td>
       <td class="ec" onclick="editCell('hai',${r.id},'anchor',this)" style="color:var(--text-muted);max-width:100px">${r.anchor||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
@@ -2436,7 +2442,7 @@ function renderHieu(){
         <span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.website||''}">${r.website||'<span style=color:var(--text-muted)>—</span>'}</span>
       </td>
       <td style="width:28px;text-align:center;padding:0 2px">
-        ${r.website?`<button class="ws-lookup-btn" data-url="${r.website}" style="background:none;border:none;cursor:pointer;font-size:15px;padding:2px;display:block;margin:auto" title="Kiểm tra website">🔍</button>`:''}
+        ${r.website ? getWsIcon(r.website, r.id) : ''}
       </td>
       <td class="ec" onclick="editCell('hieu',${r.id},'anchor',this)" style="color:var(--text-muted);max-width:100px">${r.anchor||'—'}</td>
       <td class="ec" onclick="editCell('hieu',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
@@ -3723,6 +3729,9 @@ function setMember(m){
   currentMember = m;
   const cfg = MEMBER_CONFIG[m];
   document.getElementById('memberDropdown').classList.remove('open');
+  // Close any open popups to avoid stale state
+  closeWebsiteInfo();
+  if(activeDrop) closeDrop();
 
   // Update avatar + label
   document.getElementById('memberAvatar').textContent = cfg.avatar;
@@ -3798,6 +3807,8 @@ function setMember(m){
   if(teamRow) teamRow.style.display = m==='hai' ? 'none' : 'grid';
   // Update owner filter dropdowns
   updateOwnerFilters(m);
+  // Ensure ws icons reflect current websites data after all re-renders
+  setTimeout(updateWsIcons, 50);
 }
 
 // Patch renders to respect member filter
@@ -5630,6 +5641,7 @@ let itNextId = 1;
 let _iamTaskId = null; // current task being actioned
 let _iamAction = 'done';
 let _aimTeam = 'Team 01';
+let _aimPerson = 'Hải';
 
 // Generate task ID: MM + team_num + stt  e.g. "020101-99"
 function genIndexTaskId(dateStr, team, stt){
@@ -5656,21 +5668,29 @@ function renderIndexTasks(){
   const fTeam = (document.getElementById('itFilterTeam')||{}).value||'';
   const fStatus = (document.getElementById('itFilterStatus')||{}).value||'';
 
-  // Member filter
+  // Member filter: Hải/Hiếu only see their own tasks; admin sees all + can filter
+  const personFilter = document.getElementById('itFilterPerson');
+  const fPerson = currentMember==='admin'
+    ? (personFilter?.value||'')
+    : currentMember==='hai' ? 'Hải' : 'Hiếu';
+
+  // Lock person filter for non-admin
+  if(personFilter){
+    personFilter.disabled = currentMember!=='admin';
+    if(currentMember!=='admin') personFilter.value = fPerson;
+  }
+
   let list = indexTasks.filter(t=>{
+    if(fPerson && t.person!==fPerson) return false;
     if(currentMember==='hai' && t.team!=='Team 01') return false;
     if(fTeam && t.team!==fTeam) return false;
     if(fStatus && t.status!==fStatus) return false;
-    if(q && !t.taskId.toLowerCase().includes(q) && !t.stt.toLowerCase().includes(q)) return false;
+    if(q && !t.taskId.toLowerCase().includes(q) && !t.stt.toLowerCase().includes(q) && !(t.name||'').toLowerCase().includes(q)) return false;
     return true;
   });
 
-  // Sort: Pending first, then Chờ dán sorted by dueDate asc, Done last
-  list = list.slice().sort((a,b)=>{
-    const order = {Pending:0,'Chờ dán':1,Done:2};
-    if(order[a.status] !== order[b.status]) return order[a.status]-order[b.status];
-    return a.dueDate.localeCompare(b.dueDate);
-  });
+  // Sort: oldest createdDate first, newest last (không phân nhóm theo status nữa)
+  list = list.slice().sort((a,b)=> a.createdDate.localeCompare(b.createdDate) || a.taskId.localeCompare(b.taskId));
 
   if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
@@ -5711,10 +5731,13 @@ function renderIndexTasks(){
       </button>`;
     }
     return `<tr class="${isDone?'it-row-done':''}" style="${isDue&&!isDone?'background:#fffde7':isOverdue&&!isDone?'background:#fdf2f2':''}">
-      <td><span class="it-id">${t.taskId}</span></td>
+      <td><span class="it-id">${t.taskId}</span>
+        ${t.name?`<div style="font-size:11px;color:var(--text-muted);margin-top:3px;white-space:normal;line-height:1.3">${t.name}</div>`:''}
+      </td>
       <td style="font-size:12px">${fmtDate(t.createdDate)||'—'}</td>
       <td style="font-size:12px;font-weight:600">${t.stt}</td>
       <td>${teamBadge}</td>
+      <td><span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:11px">${t.person||'—'}</span></td>
       <td>${dueDateLabel}${t.pendingNewDue&&isPending?`<div style="font-size:10px;color:var(--text-muted)">DK: ${fmtDate(t.pendingNewDue)}</div>`:''}</td>
       <td>${statusCell}</td>
       <td>${noteCell}</td>
@@ -5735,10 +5758,12 @@ function renderIndexDueBanner(){
   if(!banner||!list) return;
 
   // Tasks due today (dueDate===today AND not done), OR overdue AND not done, OR pending with pendingNewDue===today
+  const duePerson = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
   const due = indexTasks.filter(t=>{
+    if(duePerson && t.person!==duePerson) return false;
     if(t.status==='Done') return false;
     if(t.status==='Pending') return t.pendingNewDue === today;
-    return t.dueDate <= today; // today or overdue
+    return t.dueDate <= today;
   });
 
   if(!due.length){ banner.style.display='none'; return; }
@@ -5750,7 +5775,9 @@ function renderIndexDueBanner(){
     const isPending = t.status==='Pending';
     return `<div class="it-due-card ${isOverdue?'overdue':isPending?'waiting':''}">
       <span class="it-id">${t.taskId}</span>
+      ${t.name?`<span style="font-size:12px;font-weight:500;color:var(--text)">${t.name}</span>`:''}
       <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team}</span>
+      ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:11px">${t.person}</span>`:''}
       <span style="font-size:12px;color:var(--text-muted)">STT: ${t.stt}</span>
       ${isPending?`<span style="font-size:11px;color:#e67e22;flex:1">📝 ${t.pendingReason||''}</span>`:'<span style="flex:1"></span>'}
       ${isOverdue?`<span style="font-size:11px;color:#e74c3c;font-weight:600">⚠️ Trễ ${Math.ceil((new Date(today)-new Date(t.dueDate))/(864e5))}n</span>`:''}
@@ -5764,24 +5791,39 @@ function renderIndexDueBanner(){
 
 // ---- ADD MODAL ----
 function openAddIndexModal(){
-  _aimTeam = currentMember==='hai' ? 'Team 01' : 'Team 01';
+  _aimTeam = 'Team 01';
+  _aimPerson = currentMember==='hai' ? 'Hải' : currentMember==='hieu' ? 'Hiếu' : 'Hải';
   document.getElementById('aim_date').value = todayVN();
   document.getElementById('aim_stt').value = '';
+  document.getElementById('aim_name').value = '';
+
   // Team buttons
-  const t1 = document.getElementById('aim_team_btn1');
-  const t2 = document.getElementById('aim_team_btn2');
   const teamRow = document.getElementById('aim_team_row');
   if(currentMember==='hai'){
-    // Hải: auto Team 01, hide selector
     _aimTeam='Team 01';
     if(teamRow) teamRow.style.display='none';
   } else {
     if(teamRow) teamRow.style.display='block';
     aimSetTeam('Team 01');
   }
+
+  // Person row
+  const personRow = document.getElementById('aim_person_row');
+  if(currentMember==='hai'){
+    _aimPerson='Hải';
+    if(personRow) personRow.style.display='none';
+  } else if(currentMember==='hieu'){
+    _aimPerson='Hiếu';
+    if(personRow) personRow.style.display='none';
+  } else {
+    // admin: show picker, default Hải
+    if(personRow) personRow.style.display='block';
+    aimSetPerson('Hải');
+  }
+
   updateAimPreview();
   document.getElementById('addIndexModal').classList.add('open');
-  setTimeout(()=>document.getElementById('aim_stt').focus(),100);
+  setTimeout(()=>document.getElementById('aim_name').focus(),100);
 }
 
 function closeAddIndexModal(){
@@ -5795,6 +5837,20 @@ function aimSetTeam(team){
   if(t1){ t1.className='btn '+(team==='Team 01'?'btn-primary':'btn-outline'); t1.style.cssText='flex:1'+(team==='Team 01'?';background:var(--red);border-color:var(--red)':''); }
   if(t2){ t2.className='btn '+(team==='Team 02'?'btn-primary':'btn-outline'); t2.style.cssText='flex:1'+(team==='Team 02'?';background:var(--blue);border-color:var(--blue)':''); }
   updateAimPreview();
+}
+
+function aimSetPerson(person){
+  _aimPerson = person;
+  const bh = document.getElementById('aim_person_btn_hai');
+  const bhi = document.getElementById('aim_person_btn_hieu');
+  if(bh){
+    bh.className='btn '+(person==='Hải'?'btn-primary':'btn-outline');
+    bh.style.cssText='flex:1'+(person==='Hải'?';background:var(--red);border-color:var(--red)':'');
+  }
+  if(bhi){
+    bhi.className='btn '+(person==='Hiếu'?'btn-primary':'btn-outline');
+    bhi.style.cssText='flex:1'+(person==='Hiếu'?';background:var(--blue);border-color:var(--blue)':'');
+  }
 }
 
 function updateAimPreview(){
@@ -5827,9 +5883,13 @@ function saveAddIndexTask(){
   if(indexTasks.find(t=>t.taskId===taskId)){
     toast('Task ID "'+taskId+'" đã tồn tại!','#e74c3c'); return;
   }
+  const nameVal = (document.getElementById('aim_name').value||'').trim();
+  if(!nameVal){ toast('Vui lòng nhập tên task!','#e74c3c'); return; }
   const due = indexDueDate(dateVal);
-  indexTasks.unshift({
+  indexTasks.push({
     taskId, stt:sttVal,
+    name: nameVal,
+    person: _aimPerson,
     team: _aimTeam,
     createdDate: dateVal,
     dueDate: due,
@@ -5849,6 +5909,9 @@ function openIndexActionModal(taskId){
   _iamTaskId = taskId;
   _iamAction = 'done';
   document.getElementById('iamTaskId').textContent = taskId;
+  const _t = indexTasks.find(x=>x.taskId===taskId);
+  const nameEl = document.getElementById('iamTaskName');
+  if(nameEl) nameEl.textContent = _t?.name || '';
   document.getElementById('iamPendingFields').style.display='none';
   document.getElementById('iamReason').value='';
   document.getElementById('iamNewDue').value='';
@@ -5961,6 +6024,10 @@ setTimeout(initFirebaseListener, 1000);
       <button class="modal-close" onclick="closeAddIndexModal()">&times;</button>
     </div>
     <div class="modal-body" style="gap:12px">
+      <div class="form-group" style="width:100%">
+        <label>Tên task *</label>
+        <input type="text" id="aim_name" style="width:100%" placeholder="VD: Index bài tháng 3 - debets.sbs...">
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
         <div class="form-group">
           <label>Ngày ép index</label>
@@ -5978,6 +6045,15 @@ setTimeout(initFirebaseListener, 1000);
             class="btn btn-primary" style="flex:1">Team 01</button>
           <button type="button" id="aim_team_btn2" onclick="aimSetTeam('Team 02')"
             class="btn btn-outline" style="flex:1">Team 02</button>
+        </div>
+      </div>
+      <div class="form-group" id="aim_person_row" style="width:100%">
+        <label>Người nhận</label>
+        <div style="display:flex;gap:8px" id="aim_person_btns">
+          <button type="button" id="aim_person_btn_hai" onclick="aimSetPerson('Hải')"
+            class="btn btn-primary" style="flex:1">👤 Hải</button>
+          <button type="button" id="aim_person_btn_hieu" onclick="aimSetPerson('Hiếu')"
+            class="btn btn-outline" style="flex:1">👤 Hiếu</button>
         </div>
       </div>
       <div style="background:#f8f9fa;border-radius:8px;padding:12px;border:1px solid var(--gray-border)">
@@ -6004,6 +6080,7 @@ setTimeout(initFirebaseListener, 1000);
       <div style="background:#f8f9fa;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border)">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">Task ID</div>
         <div id="iamTaskId" style="font-family:monospace;font-weight:700;font-size:16px;color:var(--red)"></div>
+        <div id="iamTaskName" style="font-size:12px;color:var(--text-muted);margin-top:3px"></div>
       </div>
       <!-- Chọn action -->
       <div style="display:flex;gap:8px">
