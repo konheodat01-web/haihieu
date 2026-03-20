@@ -2501,7 +2501,7 @@ function saveAppData(){
     console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
-      tasks, deletedTasks, links, linkCategories, websites, wsGroups, _ts: ts, _sid: _sessionId
+      tasks, taskOrder: tasks.map(t=>t.id), deletedTasks, links, linkCategories, websites, wsGroups, _ts: ts, _sid: _sessionId
     }).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
@@ -2569,7 +2569,9 @@ function initFirebaseListener(){
           tasks = [...ordered, ...rest];
         }
       } catch(e){}
-      if(Array.isArray(r.deletedTasks)) deletedTasks=r.deletedTasks;
+      // Only accept Firebase deletedTasks if it's newer than our local version
+      const localTs = parseInt(localStorage.getItem('wt_ts')||'0');
+      if(Array.isArray(r.deletedTasks) && (r._ts||0) >= localTs) deletedTasks=r.deletedTasks;
       localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
       links = Array.isArray(r.links) ? r.links : (r.links != null ? r.links : []);
       linkCategories = r.linkCategories != null ? r.linkCategories : linkCategories;
@@ -2794,16 +2796,8 @@ function taskMove(id, dir){
 
 // Save order+tasks to localStorage AND Firebase
 function _saveTaskOrder(){
-  try{
-    localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id)));
-    localStorage.setItem('wt_tasks', JSON.stringify(tasks));
-  }catch(e){}
-  // Push to Firebase (order array included to prevent duplicate on restore)
-  if(window._fbReady && window._fbDb){
-    window._fbDb.ref('appData/tasks').set(tasks).catch(()=>{});
-    window._fbDb.ref('appData/taskOrder').set(tasks.map(t=>t.id)).catch(()=>{});
-    window._fbDb.ref('appData/_sid').set(_sessionId).catch(()=>{});
-  }
+  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); }catch(e){}
+  saveAppData();
 }
 
 
@@ -3080,7 +3074,9 @@ function openEditProjectModal(){
   document.getElementById('npm_from').value=t.from||'';
   document.getElementById('npm_deadline').value=t.deadline||'';
   document.getElementById('npm_desc').value=t.desc||'';
-  document.getElementById('npm_steps').value=t.cols&&t.cols!==DEFAULT_COLS?t.cols.slice(0,-1).map(c=>c.label).join('\n'):'';
+  // Only show mid-steps (skip col_new first and col_pending/done last)
+  const midSteps = t.cols&&t.cols!==DEFAULT_COLS ? t.cols.filter(c=>c.id!=='col_new'&&c.id!=='col_pending'&&c.id!=='done'&&c.id!=='todo') : [];
+  document.getElementById('npm_steps').value=midSteps.map(c=>c.label).join('\n');
   document.getElementById('npm_delete_btn').style.display='inline-flex';
   document.getElementById('newProjectModal').classList.add('open');
 }
@@ -3130,11 +3126,14 @@ function saveProject(){
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
       deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
       cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường'};
-    tasks.unshift(t);
+    tasks.push(t);
   }
   closeNewProjectModal();
-  if(currentProjectId) {const t=tasks.find(x=>x.id===currentProjectId);if(t)renderSubBoard(t);}
-  else renderTasksOverview();
+  if(currentProjectId){
+    const t=tasks.find(x=>x.id===currentProjectId);
+    if(t) renderSubBoard(t);
+  }
+  renderTasksOverview();
   saveAppData();
   toast('&#10003; Đã lưu!');
 }
@@ -3474,7 +3473,7 @@ function qi_parse_repreview(){
 function qi_addAll(){
   if(!qi_parsedTasks.length) return;
   const t=qi_parsedTasks[0];
-  tasks.unshift({...t,id:taskNextId++});
+  tasks.push({...t,id:taskNextId++});
   document.getElementById('quickImportModal').classList.remove('open');
   qi_resetForm();
   renderTasksOverview();
