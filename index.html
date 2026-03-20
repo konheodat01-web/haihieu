@@ -309,7 +309,7 @@
         </div>
       </div>
       <div id="ql_extra_web" style="display:none;flex-direction:column;gap:8px">
-        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="wp-admin"></div>
+        <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="wp-admin" onblur="this.value=this.value.trim().replace(/^\/+|\/+$/g,'')"></div>
         <div class="form-group"><label>Tài khoản</label><input type="text" id="ql_account" style="width:100%"></div>
         <div class="form-group"><label>Mật khẩu</label>
           <div style="display:flex;gap:4px">
@@ -1228,7 +1228,7 @@
           <input type="hidden" id="wf_id">
           <div class="form-group"><label>Tên brand *</label><input type="text" id="wf_brand" style="width:100%" placeholder="VD: Debet, CafeLegend..."></div>
           <div class="form-group"><label>URL *</label><input type="text" id="wf_url" style="width:100%" placeholder="https://debets.sbs"></div>
-          <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="wp-admin, admin..."></div>
+          <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="wp-admin, admin..." onblur="this.value=this.value.trim().replace(/^\/+|\/+$/g,'')"></div>
           <div class="form-group"><label>Tài khoản</label>
             <div style="display:flex;gap:4px">
               <input type="text" id="wf_account" style="flex:1">
@@ -4584,8 +4584,8 @@ function clearWebsiteForm(){
   document.getElementById('wfTitle').textContent='+ Thêm website';
 }
 
-function normalizeAdmin(v){ v=(v||'').trim(); if(!v) return ''; if(!v.startsWith('/')) v='/'+v; return v; }
-function joinAdminUrl(url, admin){ let u=(url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; return u + normalizeAdmin(admin); }
+function normalizeAdmin(v){ return (v||'').trim().replace(/^\/+|\/+$/g,''); }
+function joinAdminUrl(url, admin){ let u=(url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; const a=normalizeAdmin(admin); return a ? u+'/'+a : u; }
 
 function saveWebsite(){
   const brand=(document.getElementById('wf_brand')?.value||'').trim();
@@ -5014,8 +5014,8 @@ function wsVidcoCopyBulk(btn){
     if(!w) return null;
     const domain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
     const owner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
-    const adminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
-    return domain+' | '+adminUrl+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
+    const admin = (w.admin||'').trim();
+    return domain+' | '+admin+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
   }).filter(Boolean);
   copyText(lines.join('\n'), btn);
 }
