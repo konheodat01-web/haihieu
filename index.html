@@ -227,7 +227,11 @@
   .it-due-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
   .it-due-card.overdue{background:#fdf2f2;border-color:#f5c6c6}
   .it-due-card.waiting{background:#f0f7fd;border-color:#b8d4ea}
-  .it-id{font-family:monospace;font-size:12px;font-weight:700;color:#2c3e50;background:#f0f0f0;padding:3px 8px;border-radius:4px;letter-spacing:.5px}
+  .it-id{font-family:monospace;font-size:12px;font-weight:700;background:#f0f0f0;padding:3px 8px;border-radius:4px;letter-spacing:.5px;display:inline-flex;align-items:center;gap:0}
+  .it-id-mm{color:#c0392b}
+  .it-id-sep{color:#aaa;font-weight:400}
+  .it-id-team{color:#2980b9}
+  .it-id-stt{color:#27ae60}
   .it-badge-team{display:inline-flex;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:#e8f5e9;color:#27ae60;border:1px solid #a8deba}
   .it-badge-team.t2{background:#f0f7fd;color:#2980b9;border-color:#b8d4ea}
   .it-status-done{color:#27ae60;font-size:12px;font-weight:600}
@@ -1081,6 +1085,7 @@
         <thead>
           <tr>
             <th style="width:140px;position:sticky;top:0;z-index:8">ID Task</th>
+            <th style="position:sticky;top:0;z-index:8">Tên task</th>
             <th style="width:105px;position:sticky;top:0;z-index:8">Ngày ép</th>
             <th style="width:80px;position:sticky;top:0;z-index:8">STT</th>
             <th style="width:90px;position:sticky;top:0;z-index:8">Team</th>
@@ -4890,10 +4895,11 @@ function wiOpenAdmin(){ const btn=document.getElementById('wiBtnOpen'); if(btn&&
 function closeWebsiteInfo(){document.getElementById('websiteInfoModal').classList.remove('open');}
 
 function goEditWebsite(){
-  // Edit inline in the modal — show edit form in the same popup
   if(!websiteInfoTarget) return;
   const w=websiteInfoTarget;
   const body=document.getElementById('websiteInfoBody');
+  const groupOpts = ['<option value="">-- Không có --</option>', ...wsGroups.map(g=>`<option value="${g}" ${w.group===g?'selected':''}>${g}</option>`)].join('');
+  const isTeam2 = w.team==='Team 02';
   body.innerHTML=`
     <div style="padding:10px 16px;background:#f8f9fa;border-bottom:1px solid var(--gray-border);font-weight:600;font-size:13px">✎ Sửa: ${w.brand}</div>
     <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px">
@@ -4907,6 +4913,27 @@ function goEditWebsite(){
           <input type="password" id="we_password" value="${(w.password||'').replace(/"/g,'&quot;')}" style="flex:1">
           <button onclick="const i=document.getElementById('we_password');i.type=i.type==='password'?'text':'password'" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer">👁</button>
         </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="form-group">
+          <label>Team</label>
+          <select id="we_team" style="width:100%" onchange="weOnTeamChange()" ${currentMember==='hai'?'disabled':''}>
+            <option value="Team 01" ${w.team!=='Team 02'?'selected':''}>Team 01</option>
+            <option value="Team 02" ${w.team==='Team 02'?'selected':''}>Team 02</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Người quản lý</label>
+          <select id="we_owner" style="width:100%">
+            <option value="Công ty" ${w.owner==='Công ty'||!w.owner?'selected':''}>Công ty</option>
+            <option value="Hải" ${w.owner==='Hải'?'selected':''}>Hải</option>
+            <option value="Hiếu" ${w.owner==='Hiếu'?'selected':''}>Hiếu</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" id="we_group_row" style="${isTeam2?'display:none':''}">
+        <label>Nhóm con <span style="font-size:11px;color:var(--text-muted)">(Team 01)</span></label>
+        <select id="we_group" style="width:100%">${groupOpts}</select>
       </div>
       <div class="form-group"><label>Trạng thái</label>
         <select id="we_status" style="width:100%">
@@ -4924,6 +4951,20 @@ function goEditWebsite(){
   document.getElementById('wiBtnEdit').style.display='none';
 }
 
+function weOnTeamChange(){
+  const t = document.getElementById('we_team')?.value;
+  const gr = document.getElementById('we_group_row');
+  const ow = document.getElementById('we_owner');
+  if(gr) gr.style.display = t==='Team 02'?'none':'';
+  if(ow){
+    const cur=ow.value;
+    ow.innerHTML = t==='Team 02'
+      ? '<option value="Công ty">Công ty</option><option value="Hiếu">Hiếu</option>'
+      : '<option value="Công ty">Công ty</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
+    if([...ow.options].find(o=>o.value===cur)) ow.value=cur; else ow.value='Công ty';
+  }
+}
+
 function saveWebsiteFromModal(id){
   const brand=(document.getElementById('we_brand')?.value||'').trim();
   if(!brand){toast('Nhập tên brand!','#e74c3c');return;}
@@ -4935,6 +4976,9 @@ function saveWebsiteFromModal(id){
       admin:normalizeAdmin(document.getElementById('we_admin')?.value),
       account:(document.getElementById('we_account')?.value||'').trim(),
       password:document.getElementById('we_password')?.value||'',
+      team:document.getElementById('we_team')?.value||websites[idx].team||'Team 01',
+      owner:document.getElementById('we_owner')?.value||'Công ty',
+      group:document.getElementById('we_group')?.value||'',
       status:document.getElementById('we_status')?.value||'Tốt',
       note:document.getElementById('we_note')?.value||'',
     };
@@ -5496,6 +5540,18 @@ function qlOpenAdmin(idx){
   qlClose();
 }
 
+function qlEditWebsite(wsId){
+  const w = websites.find(x=>x.id===wsId);
+  if(!w) return;
+  qlClose();
+  document.getElementById('qlInput').value='';
+  // Open websiteInfoModal directly in edit mode
+  websiteInfoTarget = w;
+  showWebsiteInfo(w, true);
+  // Switch immediately to edit form
+  setTimeout(goEditWebsite, 50);
+}
+
 function qlSearch(){
   const q=(document.getElementById('qlInput')?.value||'').toLowerCase();
   const all=qlGetItems();
@@ -5518,6 +5574,7 @@ function qlSearch(){
         ${item.password?`<button onclick="event.stopPropagation();copyText('${(item.password||'').replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
       </div>`:''}
       ${item.wsId?`<button onclick="event.stopPropagation();wsVidcoCopy(${item.wsId},this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy VIDCO">📋</button>`:''}
+      ${item.wsId?`<button onclick="event.stopPropagation();qlEditWebsite(${item.wsId})" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer;color:#e67e22" title="Sửa website">✏️</button>`:''}
       <button onclick="event.stopPropagation();qlOpenAdmin(${idx})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap;color:var(--text)" title="${item.account?'Mở trang quản trị':'Mở link'}">Mở</button>
     </div>`).join('');
   drop.style.display='block';
@@ -5651,6 +5708,17 @@ function genIndexTaskId(dateStr, team, stt){
   return mm + tNum + stt;
 }
 
+// Render colorized ID: MM(đỏ) | TeamNum(xanh dương) | STT(xanh lá)
+// Format: MMTT<stt>  e.g. 020101-99 → MM=02, TT=01, STT=01-99
+function renderItId(taskId){
+  if(!taskId) return `<span class="it-id">—</span>`;
+  // Extract: first 2 = MM, next 2 = team, rest = stt
+  const mm   = taskId.slice(0,2);
+  const team = taskId.slice(2,4);
+  const stt  = taskId.slice(4);
+  return `<span class="it-id"><span class="it-id-mm">${mm}</span><span class="it-id-sep">·</span><span class="it-id-team">${team}</span><span class="it-id-sep">·</span><span class="it-id-stt">${stt}</span></span>`;
+}
+
 // Date +4 days
 function indexDueDate(dateStr){
   return addDays(dateStr, 4);
@@ -5731,9 +5799,8 @@ function renderIndexTasks(){
       </button>`;
     }
     return `<tr class="${isDone?'it-row-done':''}" style="${isDue&&!isDone?'background:#fffde7':isOverdue&&!isDone?'background:#fdf2f2':''}">
-      <td><span class="it-id">${t.taskId}</span>
-        ${t.name?`<div style="font-size:11px;color:var(--text-muted);margin-top:3px;white-space:normal;line-height:1.3">${t.name}</div>`:''}
-      </td>
+      <td>${renderItId(t.taskId)}</td>
+      <td style="font-size:13px;font-weight:500">${t.name||'<span style="color:var(--text-muted)">—</span>'}</td>
       <td style="font-size:12px">${fmtDate(t.createdDate)||'—'}</td>
       <td style="font-size:12px;font-weight:600">${t.stt}</td>
       <td>${teamBadge}</td>
@@ -5774,7 +5841,7 @@ function renderIndexDueBanner(){
     const isOverdue = t.dueDate < today && t.status!=='Pending';
     const isPending = t.status==='Pending';
     return `<div class="it-due-card ${isOverdue?'overdue':isPending?'waiting':''}">
-      <span class="it-id">${t.taskId}</span>
+      ${renderItId(t.taskId)}
       ${t.name?`<span style="font-size:12px;font-weight:500;color:var(--text)">${t.name}</span>`:''}
       <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team}</span>
       ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:11px">${t.person}</span>`:''}
@@ -5862,7 +5929,7 @@ function updateAimPreview(){
   const id = genIndexTaskId(dateVal, _aimTeam, sttVal);
   const due = indexDueDate(dateVal);
   const dp = due.split('-');
-  if(prev) prev.textContent = id;
+  if(prev) prev.innerHTML = renderItId(id);
   if(prevDue) prevDue.textContent = `${parseInt(dp[2])}/${parseInt(dp[1])}/${dp[0]}`;
 }
 
@@ -5908,7 +5975,7 @@ function saveAddIndexTask(){
 function openIndexActionModal(taskId){
   _iamTaskId = taskId;
   _iamAction = 'done';
-  document.getElementById('iamTaskId').textContent = taskId;
+  document.getElementById('iamTaskId').innerHTML = renderItId(taskId);
   const _t = indexTasks.find(x=>x.taskId===taskId);
   const nameEl = document.getElementById('iamTaskName');
   if(nameEl) nameEl.textContent = _t?.name || '';
@@ -6058,7 +6125,12 @@ setTimeout(initFirebaseListener, 1000);
       </div>
       <div style="background:#f8f9fa;border-radius:8px;padding:12px;border:1px solid var(--gray-border)">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">ID TASK SẼ ĐƯỢC TẠO:</div>
-        <div id="aim_preview_id" style="font-family:monospace;font-size:20px;font-weight:700;color:var(--red);letter-spacing:1px">—</div>
+        <div id="aim_preview_id" style="font-size:20px;font-weight:700;line-height:1.4">—</div>
+        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;display:flex;gap:10px">
+          <span><span style="color:#c0392b;font-weight:600">MM</span> = tháng</span>
+          <span><span style="color:#2980b9;font-weight:600">TT</span> = team</span>
+          <span><span style="color:#27ae60;font-weight:600">STT</span> = số thứ tự</span>
+        </div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Ngày dán index dự kiến: <span id="aim_preview_due" style="font-weight:600;color:#e67e22">—</span></div>
       </div>
     </div>
