@@ -4992,9 +4992,9 @@ function wsVidcoCopy(id, btn){
   const w = websites.find(x=>x.id===id);
   if(!w) return;
   const domain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
-  const adminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
+  const admin = (w.admin||'').trim();
   const owner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
-  const txt = domain+' | '+adminUrl+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
+  const txt = domain+' | '+admin+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
   copyText(txt, btn);
 }
 
