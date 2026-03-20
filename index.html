@@ -278,7 +278,35 @@
       <div class="form-group"><label>Tên *</label><input type="text" id="ql_name" style="width:100%" placeholder="Tên hiển thị"></div>
       <div class="form-group"><label>URL *</label><input type="text" id="ql_url" style="width:100%" placeholder="https://..."></div>
       <div id="ql_extra_work" style="display:flex;flex-direction:column;gap:8px">
-        <div class="form-group"><label>Nhóm</label><input type="text" id="ql_group" style="width:100%" placeholder="VD: WordPress, SEO..."></div>
+        <div class="form-group">
+          <label>Nhóm</label>
+          <div style="display:flex;gap:4px">
+            <select id="ql_group" style="flex:1"></select>
+            <input type="text" id="ql_group_new" placeholder="Nhóm mới..." style="flex:1;display:none">
+            <button type="button" id="ql_group_add_btn" onclick="qlToggleNewGroup()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Thêm nhóm mới">+</button>
+          </div>
+        </div>
+        <div class="form-group"><label>Tác dụng</label><textarea id="ql_desc" rows="2" style="width:100%"></textarea></div>
+        <div class="form-group"><label>Ghi chú</label><input type="text" id="ql_note_work" style="width:100%"></div>
+        <div class="form-group"><label>Hiển thị cho</label>
+          <select id="ql_owner_work" style="width:100%">
+            <option value="admin">Chung</option>
+            <option value="Hải">Hải</option>
+            <option value="Hiếu">Hiếu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Tài khoản</label>
+          <div style="display:flex;gap:4px">
+            <input type="text" id="ql_account_work" style="flex:1">
+          </div>
+        </div>
+        <div class="form-group"><label>Mật khẩu</label>
+          <div style="display:flex;gap:4px">
+            <input type="password" id="ql_password_work" style="flex:1">
+            <button type="button" onclick="const i=document.getElementById('ql_password_work');i.type=i.type==='password'?'text':'password'" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer">👁</button>
+          </div>
+        </div>
       </div>
       <div id="ql_extra_web" style="display:none;flex-direction:column;gap:8px">
         <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="ql_admin" style="width:100%" placeholder="wp-admin"></div>
@@ -650,6 +678,13 @@
           <label>Deadline</label>
           <input type="date" id="npm_deadline" style="width:100%">
         </div>
+        <div class="form-group" id="npm_team_row">
+          <label>Team</label>
+          <select id="npm_team" style="width:100%">
+            <option value="Team 01">Team 01</option>
+            <option value="Team 02">Team 02</option>
+          </select>
+        </div>
       </div>
       <div class="form-group" style="width:100%">
         <label>Mô tả</label>
@@ -939,6 +974,13 @@
               <option value="Thấp">🟢 Thấp</option>
             </select>
           </div>
+          <div class="form-group" id="qi_team_row">
+            <label>Team</label>
+            <select id="qi_team" style="width:100%">
+              <option value="Team 01">Team 01</option>
+              <option value="Team 02">Team 02</option>
+            </select>
+          </div>
         </div>
         <!-- BƯỚC THỦ CÔNG -->
         <div class="form-group" style="width:100%">
@@ -1091,11 +1133,17 @@
           <option value="Lỗi web">&#9888; Lỗi web</option>
         </select>
       </div>
+      <button class="btn btn-outline btn-sm" onclick="openWsImportModal()" style="font-size:12px">⬆ Import</button>
       <button class="btn btn-primary btn-sm" onclick="openWebsiteForm()">&#43; Thêm website</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 320px;gap:0;align-items:stretch;flex:1;overflow:hidden">
-      <div style="padding:14px;border-right:1px solid var(--gray-border);overflow-y:auto;height:100%">
-        <div id="websitesGrid"></div>
+      <div style="padding:0;border-right:1px solid var(--gray-border);overflow-y:auto;height:100%;display:flex;flex-direction:column">
+        <div id="wsBulkBar" style="display:none;align-items:center;gap:8px;padding:8px 14px;background:#fff8e1;border-bottom:1px solid #ffe082;flex-shrink:0">
+          <span id="wsBulkCount" style="font-size:13px;font-weight:600">0 web đã chọn</span>
+          <button onclick="wsVidcoCopyBulk(this)" class="btn btn-sm" style="background:#2c3e50;color:#fff;border:none">📋 Copy VIDCO</button>
+          <button onclick="wsClearSelect()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;margin-left:auto">×</button>
+        </div>
+        <div style="padding:14px;flex:1" id="websitesGrid"></div>
         <div id="emptyWebsites" style="display:none;padding:32px;text-align:center;color:var(--text-muted)">
           <div style="font-size:32px;margin-bottom:8px">&#127760;</div>Chưa có website nào
         </div>
@@ -1209,6 +1257,7 @@
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeWebsiteInfo()">Đóng</button>
       <button class="btn btn-outline" id="wiBtnOpen" style="display:none" onclick="wiOpenAdmin()">🔗 Mở quản trị</button>
+      <button class="btn btn-outline" id="wiBtnVidco" style="display:none" onclick="_cp('wi_vidco',this)">📋 VIDCO</button>
       <button class="btn btn-primary" id="wiBtnEdit" onclick="goEditWebsite()">&#9998; Sửa</button>
     </div>
   </div>
@@ -2795,9 +2844,15 @@ function taskMove(id, dir){
 }
 
 // Save order+tasks to localStorage AND Firebase
+let _taskSyncTimer = null;
 function _saveTaskOrder(){
-  try{ localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id))); }catch(e){}
-  saveAppData();
+  try{
+    localStorage.setItem('wt_task_order', JSON.stringify(tasks.map(t=>t.id)));
+    localStorage.setItem('wt_tasks', JSON.stringify(tasks));
+  }catch(e){}
+  // Debounce Firebase push to avoid echo-loop duplicate
+  clearTimeout(_taskSyncTimer);
+  _taskSyncTimer = setTimeout(()=>{ saveAppData(); }, 1500);
 }
 
 
@@ -2832,6 +2887,7 @@ function renderTasksOverview(){
   let list = tasks.filter(t=>{
     if(memberFilter && t.person!==memberFilter) return false;
     if(fp && t.person!==fp) return false;
+    if(currentMember==='hai' && t.team==='Team 02') return false;
     return true;
   });
   const grid = document.getElementById('projectGrid');
@@ -2871,6 +2927,7 @@ function renderTasksOverview(){
             <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
             ${priBadge}
             ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:10px">${t.person}</span>`:''}
+            ${t.team==='Team 02'?'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#555">Team 2</span>':''}
             <span style="font-weight:600;font-size:13px${isDone?';text-decoration:line-through;color:var(--text-muted)':''}">${t.name}</span>
             ${isDone?'<span style="font-size:10px;background:#27ae6022;color:#27ae60;border-radius:10px;padding:1px 7px;font-weight:600">Done</span>':''}
           </div>
@@ -3056,8 +3113,12 @@ function openNewProjectModal(){
   document.getElementById('npm_deadline').value='';
   document.getElementById('npm_desc').value='';
   const _pri=document.getElementById('npm_priority'); if(_pri) _pri.value=t.priority||'Bình thường';
+  const _team=document.getElementById('npm_team'); if(_team) _team.value=t.team||'Team 01';
+  const _teamRowE=document.getElementById('npm_team_row'); if(_teamRowE) _teamRowE.style.display=currentMember==='hai'?'none':'block';
   document.getElementById('npm_steps').value='';
   const _pr2=document.getElementById('npm_priority'); if(_pr2) _pr2.value='Bình thường';
+  const _teamRow=document.getElementById('npm_team_row'); if(_teamRow) _teamRow.style.display=currentMember==='hai'?'none':'block';
+  const _teamSel=document.getElementById('npm_team'); if(_teamSel) _teamSel.value='Team 01';
   document.getElementById('npm_delete_btn').style.display='none';
   document.getElementById('newProjectModal').classList.add('open');
   setTimeout(()=>document.getElementById('npm_name').focus(),100);
@@ -3116,6 +3177,7 @@ function saveProject(){
       t.deadline=document.getElementById('npm_deadline').value;
       t.desc=document.getElementById('npm_desc').value.trim();
       t.cols=cols;
+      t.team=document.getElementById('npm_team')?.value||t.team||'Team 01';
       if(currentProjectId===editingProjectId){
         document.getElementById('subBoardTitle').textContent=t.name;
         renderSubBoard(t);
@@ -3125,7 +3187,7 @@ function saveProject(){
     const t={id:taskNextId++,name,person:document.getElementById('npm_person').value,
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
       deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
-      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường'};
+      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',team:document.getElementById('npm_team')?.value||'Team 01'};
     tasks.push(t);
   }
   closeNewProjectModal();
@@ -3301,6 +3363,7 @@ function openQuickImport(){
   document.getElementById('quickImportModal').classList.add('open');
   qi_goBack();
   setTimeout(()=>document.getElementById('qi_input').focus(),100);
+  const _qiTeamRow=document.getElementById('qi_team_row'); if(_qiTeamRow) _qiTeamRow.style.display=currentMember==='hai'?'none':'block';
 }
 function qi_resetForm(){
   document.getElementById('qi_input').value='';
@@ -3414,6 +3477,7 @@ async function qi_parse(){
     from:document.getElementById('qi_from')?.value||todayVN(),
     deadline:document.getElementById('qi_deadline')?.value||'',
     priority:document.getElementById('qi_priority')?.value||'Bình thường',
+    team:currentMember==='hai'?'Team 01':(document.getElementById('qi_team')?.value||'Team 01'),
     cols,cards,
     _loaiBai:loai,_soBai:soBai,
   }];
@@ -4375,8 +4439,9 @@ function renderWebsites(){
   grid.innerHTML=list.map(w=>{
     _copyMap['ws_acc_'+w.id]=w.account||'';
     _copyMap['ws_pwd_'+w.id]=w.password||'';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;cursor:pointer;transition:box-shadow .15s;background:#fff"
-      onclick="openWebsiteForm(${w.id})" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;transition:box-shadow .15s;background:#fff" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+      <input type="checkbox" class="ws-chk" onclick="event.stopPropagation()" onchange="wsToggleSelect(${w.id},this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red);flex-shrink:0">
+      <div style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0" onclick="openWebsiteForm(${w.id})">
       <div style="width:34px;height:34px;border-radius:8px;background:${WS_STATUS_COLOR[w.status]||'#999'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${WS_STATUS_ICON[w.status]||'🌐'}</div>
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
@@ -4388,9 +4453,11 @@ function renderWebsites(){
         <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${w.url||''}</div>
         ${w.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${w.note}</div>`:''}
       </div>
-      <div style="display:flex;align-items:center;gap:4px">
+      </div><!-- end clickable -->
+      <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
         ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
+        <button onclick="event.stopPropagation();wsVidcoCopy(${w.id},this)" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px" title="Copy VIDCO">📋</button>
       </div>
     </div>`;
   }).join('');
@@ -4457,9 +4524,23 @@ function saveWebsite(){
   };
   if(editingWsId){
     const i=websites.findIndex(w=>w.id===editingWsId);
-    if(i>=0) websites[i]=obj; else websites.unshift(obj);
+    if(i>=0) websites[i]=obj; else websites.push(obj);
   } else {
-    websites.unshift(obj);
+    // Check for duplicate URL
+    const dupUrl = url && websites.find(w=>w.url&&w.url.replace(/\/$/,'')===url.replace(/\/$/,''));
+    const dupBrand = websites.find(w=>w.brand.toLowerCase()===brand.toLowerCase());
+    const dup = dupUrl || dupBrand;
+    if(dup){
+      const msg = 'Website "'+dup.brand+'" ('+dup.url+') đã tồn tại!\n\nChọn:\n• OK = Thay thế thông tin cũ bằng dữ liệu vừa nhập\n• Huỷ = Bỏ, giữ nguyên dữ liệu cũ';
+      if(confirm(msg)){
+        const i=websites.findIndex(w=>w.id===dup.id);
+        if(i>=0) websites[i]={...obj, id:dup.id};
+      } else {
+        return; // Cancel - keep old data, discard new
+      }
+    } else {
+      websites.push(obj);
+    }
   }
   editingWsId=null;
   clearWebsiteForm();
@@ -4556,11 +4637,15 @@ function showWebsiteInfo(w, found, url=''){
       </div>`;
     document.getElementById('wiBtnEdit').style.display='none';
     const _ob=document.getElementById('wiBtnOpen'); if(_ob) _ob.style.display='none';
+    const _vb=document.getElementById('wiBtnVidco'); if(_vb) _vb.style.display='none';
   } else {
     const safeAcc = (w.account||'').replace(/"/g,'&quot;');
     const safePwd = (w.password||'').replace(/"/g,'&quot;');
     _copyMap['wi_acc'] = w.account||'';
     _copyMap['wi_pwd'] = w.password||'';
+    const _vidcoDomain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+    const _vidcoOwner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
+    _copyMap['wi_vidco'] = _vidcoDomain+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+_vidcoOwner;
     const rows=[
       ['Brand', w.brand],
       ['URL', `<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
@@ -4589,6 +4674,7 @@ function showWebsiteInfo(w, found, url=''){
           </tr>`).join('')}
       </table>`;
     document.getElementById('wiBtnEdit').style.display='inline-flex';
+    const _vBtn=document.getElementById('wiBtnVidco'); if(_vBtn) _vBtn.style.display='inline-flex';
     const adminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
     const btnOpen = document.getElementById('wiBtnOpen');
     if(btnOpen){ btnOpen.style.display = adminUrl ? 'inline-flex' : 'none'; btnOpen._href = adminUrl; }
@@ -4724,6 +4810,144 @@ function acClose(listId){
 document.addEventListener('click', e=>{
   if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
 });
+
+function wsVidcoCopy(id, btn){
+  const w = websites.find(x=>x.id===id);
+  if(!w) return;
+  const domain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+  const owner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
+  const txt = domain+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
+  copyText(txt, btn);
+}
+
+// Website list checkbox selection for bulk VIDCO copy
+let _wsSelected = new Set();
+function wsToggleSelect(id, chk){
+  if(chk.checked) _wsSelected.add(id);
+  else _wsSelected.delete(id);
+  const bar = document.getElementById('wsBulkBar');
+  if(bar) bar.style.display = _wsSelected.size ? 'flex' : 'none';
+  if(bar) bar.querySelector('#wsBulkCount').textContent = _wsSelected.size+' web đã chọn';
+}
+function wsVidcoCopyBulk(btn){
+  if(!_wsSelected.size) return;
+  const lines = [..._wsSelected].map(id=>{
+    const w = websites.find(x=>x.id===id);
+    if(!w) return null;
+    const domain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+    const owner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
+    return domain+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
+  }).filter(Boolean);
+  copyText(lines.join('\n'), btn);
+}
+function wsClearSelect(){
+  _wsSelected.clear();
+  document.querySelectorAll('.ws-chk').forEach(c=>c.checked=false);
+  const bar=document.getElementById('wsBulkBar');
+  if(bar) bar.style.display='none';
+}
+
+// ===== WEBSITE IMPORT =====
+function openWsImportModal(){
+  document.getElementById('wsImportModal').style.display='flex';
+  document.getElementById('wsImportText').value='';
+  document.getElementById('wsImportPreview').style.display='none';
+  document.getElementById('wsImportFileName').textContent='';
+}
+function closeWsImportModal(){
+  document.getElementById('wsImportModal').style.display='none';
+}
+
+function wsImportReadFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  document.getElementById('wsImportFileName').textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('wsImportText').value = e.target.result;
+    wsImportPreview();
+  };
+  reader.readAsText(file);
+}
+
+function wsImportParseLines(){
+  const raw = document.getElementById('wsImportText').value.trim();
+  if(!raw) return [];
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  const team = document.getElementById('wsImportTeam').value;
+  const owner = document.getElementById('wsImportOwner').value;
+  const status = document.getElementById('wsImportStatus').value;
+  return lines.map(line=>{
+    const parts = line.split(',').map(p=>p.trim());
+    if(parts.length>=2){
+      // CSV row
+      return {
+        brand: parts[0]||'', url: parts[1]||'',
+        admin: normalizeAdmin(parts[2]||''), account: parts[3]||'',
+        password: parts[4]||'', status: parts[5]||status,
+        team: parts[6]||team, owner: parts[7]||owner,
+        group: parts[8]||'', note: parts[9]||''
+      };
+    } else {
+      // Plain URL - derive brand from domain
+      const url = parts[0];
+      let brand = url.replace(/https?:\/\//,'').replace(/^www\./,'').split('/')[0].split('.')[0];
+      brand = brand.charAt(0).toUpperCase()+brand.slice(1);
+      return { brand, url, admin:'/wp-admin', account:'', password:'', status, team, owner, group:'', note:'' };
+    }
+  });
+}
+
+function wsImportPreview(){
+  const items = wsImportParseLines();
+  const el = document.getElementById('wsImportPreview');
+  if(!items.length){ el.style.display='none'; return; }
+  el.style.display='block';
+  el.innerHTML = '<div style="font-weight:600;margin-bottom:6px">'+items.length+' website sẽ được import:</div>'
+    + items.map(w=>`<div style="padding:3px 0;border-bottom:1px solid #f0f0f0;display:flex;gap:8px"><span style="font-weight:600;min-width:100px">${w.brand}</span><span style="color:var(--blue)">${w.url}</span></div>`).join('');
+}
+
+function wsImportRun(){
+  const items = wsImportParseLines();
+  if(!items.length){ toast('Không có dữ liệu để import!','#e74c3c'); return; }
+
+  // Separate new vs duplicate
+  const toAdd = [];
+  const toDup = []; // {item, dup}
+  items.forEach(w=>{
+    if(!w.url && !w.brand) return;
+    const dup = websites.find(x=>
+      (w.url && x.url && x.url.replace(/\/$/,'')===w.url.replace(/\/$/,'')) ||
+      (x.brand.toLowerCase()===w.brand.toLowerCase())
+    );
+    if(dup) toDup.push({item:w, dup});
+    else toAdd.push(w);
+  });
+
+  // If duplicates exist, ask once for all
+  let replaceAll = false;
+  if(toDup.length){
+    const names = toDup.map(d=>'• '+d.dup.brand+' ('+d.dup.url+')').join('\n');
+    const msg = toDup.length+' website đã tồn tại:\n'+names+'\n\nOK = Thay thế tất cả bằng dữ liệu mới\nHuỷ = Bỏ qua, chỉ thêm website mới';
+    replaceAll = confirm(msg);
+  }
+
+  let added=0, replaced=0, skipped=0;
+  toAdd.forEach(w=>{ websites.push({...w, id:wsNextId++}); added++; });
+  toDup.forEach(({item:w, dup})=>{
+    if(replaceAll){
+      const i=websites.findIndex(x=>x.id===dup.id);
+      if(i>=0){ websites[i]={...w, id:dup.id}; replaced++; }
+    } else { skipped++; }
+  });
+
+  saveAppData(); renderWebsites(); autoFillAnchors(); updateWsIcons();
+  closeWsImportModal();
+  let msg = '✓ Import xong: '+added+' thêm mới';
+  if(replaced) msg += ', '+replaced+' cập nhật';
+  if(skipped) msg += ', '+skipped+' bỏ qua';
+  toast(msg);
+}
 
 // ===== TASK TRASH =====
 function updateTrashBadge(){
@@ -5034,6 +5258,10 @@ function qlOpenAdd(){
   const _qlTeam=document.getElementById('ql_team'); if(_qlTeam) _qlTeam.value='Team 01';
   const _qlOwner=document.getElementById('ql_owner'); if(_qlOwner) _qlOwner.value='Công ty';
   const _qlStatus=document.getElementById('ql_status'); if(_qlStatus) _qlStatus.value='Tốt';
+  const _qlDesc=document.getElementById('ql_desc'); if(_qlDesc) _qlDesc.value='';
+  const _qlNoteW=document.getElementById('ql_note_work'); if(_qlNoteW) _qlNoteW.value='';
+  const _qlAccW=document.getElementById('ql_account_work'); if(_qlAccW) _qlAccW.value='';
+  const _qlPwdW=document.getElementById('ql_password_work'); if(_qlPwdW) _qlPwdW.value='';
   document.getElementById('ql_type').value='work';
   qlTypeChange();
   document.getElementById('qlAddModal').style.display='block';
@@ -5050,9 +5278,34 @@ function qlTypeChange(){
   const t=document.getElementById('ql_type').value;
   document.getElementById('ql_extra_work').style.display=t==='work'?'flex':'none';
   document.getElementById('ql_extra_web').style.display=t==='web'?'flex':'none';
+  if(t==='work'){
+    const sel=document.getElementById('ql_group');
+    if(sel){ sel.innerHTML=linkCategories.work.map(g=>`<option value="${g}">${g}</option>`).join(''); }
+  }
   if(t==='web'){
     const sel=document.getElementById('ql_group_ws');
     if(sel){ sel.innerHTML='<option value="">-- Không có --</option>'+wsGroups.map(g=>`<option value="${g}">${g}</option>`).join(''); }
+  }
+}
+
+function qlToggleNewGroup(){
+  const inp=document.getElementById('ql_group_new');
+  const sel=document.getElementById('ql_group');
+  const btn=document.getElementById('ql_group_add_btn');
+  if(inp.style.display==='none'){
+    inp.style.display='block'; sel.style.display='none'; btn.textContent='✓';
+    inp.focus();
+  } else {
+    const name=inp.value.trim();
+    if(name && !linkCategories.work.includes(name)){
+      linkCategories.work.push(name);
+      saveAppData();
+    }
+    inp.style.display='none'; sel.style.display='block'; btn.textContent='+';
+    // Reload options and select new
+    sel.innerHTML=linkCategories.work.map(g=>`<option value="${g}">${g}</option>`).join('');
+    if(name) sel.value=name;
+    inp.value='';
   }
 }
 
@@ -5062,12 +5315,15 @@ function qlSave(){
   const url=(document.getElementById('ql_url')?.value||'').trim();
   if(!name||!url){toast('Nhập tên và URL!','#e74c3c');return;}
   if(type==='work'){
-    links.unshift({
+    links.push({
       id:linkNextId++, name, url,
-      desc:'', group:(document.getElementById('ql_group')?.value||'').trim()||'Khác',
-      type:'work', owner:'admin', note:'',
-      account:(document.getElementById('ql_account')?.value||'').trim(),
-      password:document.getElementById('ql_password')?.value||'',
+      desc:(document.getElementById('ql_desc')?.value||'').trim(),
+      group:document.getElementById('ql_group')?.value||'Khác',
+      type:'work',
+      owner:document.getElementById('ql_owner_work')?.value||'admin',
+      note:(document.getElementById('ql_note_work')?.value||'').trim(),
+      account:(document.getElementById('ql_account_work')?.value||'').trim(),
+      password:document.getElementById('ql_password_work')?.value||'',
     });
   } else {
     websites.unshift({
@@ -5128,5 +5384,57 @@ window._websites = websites;
 setTimeout(initFirebaseListener, 1000);
 
 </script>
+<!-- WEBSITE IMPORT MODAL -->
+<div id="wsImportModal" class="modal-overlay" onclick="if(event.target===this)closeWsImportModal()" style="display:none">
+  <div class="modal" style="max-width:540px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>⬆ Import website nhanh</h3>
+      <button class="modal-close" onclick="closeWsImportModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <div style="font-size:12px;color:var(--text-muted);background:#f8f9fa;padding:10px 12px;border-radius:6px;line-height:1.7">
+        <b>Dán danh sách URL</b> (mỗi dòng 1 URL) hoặc <b>upload file CSV</b><br>
+        CSV format: <code>brand, url, admin, account, password, status, team, owner, group, note</code>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Dán danh sách URL / CSV</label>
+        <textarea id="wsImportText" rows="8" style="width:100%;font-size:12px;font-family:monospace" placeholder="https://debets.sbs&#10;https://ggwin.llc&#10;..."></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="file" id="wsImportFile" accept=".csv,.txt" style="display:none" onchange="wsImportReadFile(this)">
+        <button class="btn btn-outline btn-sm" onclick="document.getElementById('wsImportFile').click()">📂 Upload CSV</button>
+        <span id="wsImportFileName" style="font-size:12px;color:var(--text-muted)"></span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div class="form-group">
+          <label>Team mặc định</label>
+          <select id="wsImportTeam" style="width:100%"><option>Team 01</option><option>Team 02</option></select>
+        </div>
+        <div class="form-group">
+          <label>Người quản lý</label>
+          <select id="wsImportOwner" style="width:100%">
+            <option value="Công ty">Công ty</option>
+            <option value="Hải">Hải</option>
+            <option value="Hiếu">Hiếu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Trạng thái</label>
+          <select id="wsImportStatus" style="width:100%">
+            <option>Tốt</option>
+            <option>Lỗi web</option>
+            <option>Chờ cấp lại mật khẩu</option>
+          </select>
+        </div>
+      </div>
+      <div id="wsImportPreview" style="max-height:160px;overflow-y:auto;font-size:12px;display:none;border:1px solid var(--gray-border);border-radius:6px;padding:8px"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeWsImportModal()">Huỷ</button>
+      <button class="btn btn-primary" onclick="wsImportRun()">⬆ Import tất cả</button>
+    </div>
+  </div>
+</div>
+
 </body></html>
 
