@@ -5311,7 +5311,8 @@ function qlGetItems(){
     icon: WS_STATUS_ICON[w.status]||'🌐',
     label:w.brand, sub:w.url,
     url: joinAdminUrl(w.url, w.admin),
-    account:w.account, password:w.password
+    account:w.account, password:w.password,
+    wsId: w.id
   }));
   return [...workItems, ...webItems];
 }
@@ -5345,6 +5346,7 @@ function qlSearch(){
         <button onclick="event.stopPropagation();copyText('${(item.account||'').replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>
         ${item.password?`<button onclick="event.stopPropagation();copyText('${(item.password||'').replace(/'/g,"\\'")}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}
       </div>`:''}
+      ${item.wsId?`<button onclick="event.stopPropagation();wsVidcoCopy(${item.wsId},this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy VIDCO">📋</button>`:''}
       <button onclick="event.stopPropagation();qlOpenAdmin(${idx})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap;color:var(--text)" title="${item.account?'Mở trang quản trị':'Mở link'}">Mở</button>
     </div>`).join('');
   drop.style.display='block';
