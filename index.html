@@ -2738,9 +2738,13 @@ function forceSyncToCloud(){
     hai: data.hai,
     hieu: data.hieu,
     tasks,
+    taskOrder: tasks.map(t=>t.id),
+    deletedTasks,
     links,
     linkCategories,
     websites,
+    wsGroups,
+    indexTasks,
     _ts: Date.now(), _sid: _sessionId
   }).then(()=>{
     toast('☁ Đã đồng bộ toàn bộ dữ liệu lên đám mây!');
@@ -3278,18 +3282,22 @@ function openNewProjectModal(){
   editingProjectId=null;
   document.getElementById('npmTitle').textContent='+ Thêm task mới';
   document.getElementById('npm_name').value='';
-  document.getElementById('npm_person').value='';
+  // Person: auto-fill from member
+  const npmPerson=document.getElementById('npm_person');
+  if(npmPerson){
+    npmPerson.value = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
+    npmPerson.disabled = currentMember!=='admin';
+  }
   document.getElementById('npm_type').value='Nội dung';
+  const pri=document.getElementById('npm_priority'); if(pri) pri.value='Bình thường';
   document.getElementById('npm_from').value=todayVN();
   document.getElementById('npm_deadline').value='';
   document.getElementById('npm_desc').value='';
-  const _pri=document.getElementById('npm_priority'); if(_pri) _pri.value=t.priority||'Bình thường';
-  const _team=document.getElementById('npm_team'); if(_team) _team.value=t.team||'Team 01';
-  const _teamRowE=document.getElementById('npm_team_row'); if(_teamRowE) _teamRowE.style.display=currentMember==='hai'?'none':'block';
   document.getElementById('npm_steps').value='';
-  const _pr2=document.getElementById('npm_priority'); if(_pr2) _pr2.value='Bình thường';
-  const _teamRow=document.getElementById('npm_team_row'); if(_teamRow) _teamRow.style.display=currentMember==='hai'?'none':'block';
-  const _teamSel=document.getElementById('npm_team'); if(_teamSel) _teamSel.value='Team 01';
+  // Team
+  const teamSel=document.getElementById('npm_team'); if(teamSel) teamSel.value='Team 01';
+  const teamRow=document.getElementById('npm_team_row');
+  if(teamRow) teamRow.style.display = currentMember==='hai'?'none':'block';
   document.getElementById('npm_delete_btn').style.display='none';
   document.getElementById('newProjectModal').classList.add('open');
   setTimeout(()=>document.getElementById('npm_name').focus(),100);
@@ -3301,16 +3309,20 @@ function openEditProjectModal(){
   editingProjectId=t.id;
   document.getElementById('npmTitle').textContent='✎ Sửa task';
   document.getElementById('npm_name').value=t.name;
-  document.getElementById('npm_person').value=t.person||'';
+  const npmPerson=document.getElementById('npm_person');
+  if(npmPerson){ npmPerson.value=t.person||''; npmPerson.disabled=(currentMember!=='admin'); }
   document.getElementById('npm_type').value=t.type||'Nội dung';
+  const pri=document.getElementById('npm_priority'); if(pri) pri.value=t.priority||'Bình thường';
   document.getElementById('npm_from').value=t.from||'';
   document.getElementById('npm_deadline').value=t.deadline||'';
   document.getElementById('npm_desc').value=t.desc||'';
-  // Only show mid-steps (skip col_new first and col_pending/done last)
+  const teamSel=document.getElementById('npm_team'); if(teamSel) teamSel.value=t.team||'Team 01';
+  const teamRow=document.getElementById('npm_team_row'); if(teamRow) teamRow.style.display=currentMember==='hai'?'none':'block';
   const midSteps = t.cols&&t.cols!==DEFAULT_COLS ? t.cols.filter(c=>c.id!=='col_new'&&c.id!=='col_pending'&&c.id!=='done'&&c.id!=='todo') : [];
   document.getElementById('npm_steps').value=midSteps.map(c=>c.label).join('\n');
   document.getElementById('npm_delete_btn').style.display='inline-flex';
   document.getElementById('newProjectModal').classList.add('open');
+  setTimeout(()=>document.getElementById('npm_name').focus(),100);
 }
 
 function closeNewProjectModal(){document.getElementById('newProjectModal').classList.remove('open');}
@@ -5749,7 +5761,9 @@ function genIndexTaskId(dateStr, team, stt){
   const d = dateStr || todayVN();
   const mm = d.split('-')[1] || String(new Date().getMonth()+1).padStart(2,'0');
   const tNum = team === 'Team 02' ? '02' : '01';
-  return mm + tNum + stt;
+  // Pad each number in stt to 4 digits: "1-99" → "0001-0099"
+  const paddedStt = stt.replace(/\d+/g, n => String(n).padStart(4,'0'));
+  return mm + tNum + paddedStt;
 }
 
 // Render colorized ID: MM(đỏ) | TeamNum(xanh dương) | STT(xanh lá)
@@ -5774,7 +5788,7 @@ function renderIndexTasks(){
 
   const tbody = document.getElementById('tbodyIndexTasks');
   const empty = document.getElementById('emptyIndexTasks');
-  if(!tbody) return;
+  if(!tbody || !empty) return;
 
   const q = (document.getElementById('itSearch')||{}).value?.toLowerCase()||'';
   const fTeam = (document.getElementById('itFilterTeam')||{}).value||'';
@@ -6321,7 +6335,7 @@ setTimeout(initFirebaseListener, 1000);
         </div>
         <div class="form-group">
           <label>STT <span style="font-size:11px;color:var(--text-muted)">(dạng 1-99)</span></label>
-          <input type="text" id="aim_stt" style="width:100%" placeholder="VD: 1-99" maxlength="10" oninput="updateAimPreview()">
+          <input type="text" id="aim_stt" style="width:100%" placeholder="VD: 1-99" maxlength="20" oninput="updateAimPreview()">
         </div>
       </div>
       <div class="form-group" id="aim_team_row" style="width:100%">
@@ -6348,7 +6362,7 @@ setTimeout(initFirebaseListener, 1000);
         <div style="font-size:10px;color:var(--text-muted);margin-top:4px;display:flex;gap:10px">
           <span><span style="color:#c0392b;font-weight:600">MM</span> = tháng</span>
           <span><span style="color:#2980b9;font-weight:600">TT</span> = team</span>
-          <span><span style="color:#27ae60;font-weight:600">STT</span> = số thứ tự</span>
+          <span><span style="color:#27ae60;font-weight:600">STT</span> = số thứ tự (tự pad 4 chữ số)</span>
         </div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Ngày dán index dự kiến: <span id="aim_preview_due" style="font-weight:600;color:#e67e22">—</span></div>
       </div>
