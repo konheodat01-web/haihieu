@@ -1019,18 +1019,18 @@
 
   <!-- TABS -->
   <div style="display:flex;gap:0;background:#fff;border-radius:8px 8px 0 0;border:1px solid var(--gray-border);border-bottom:none;overflow:hidden;margin-bottom:0;width:fit-content">
-    <button id="linksTab1" onclick="switchLinksTab('links')"
-      style="padding:11px 20px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-bottom:3px solid var(--red);color:var(--red);background:#fff">
-      &#128279; Link công việc
-    </button>
     <button id="linksTab2" onclick="switchLinksTab('websites')"
-      style="padding:11px 20px;font-size:13px;font-weight:500;border:none;cursor:pointer;border-bottom:3px solid transparent;color:var(--text-muted);background:#fff">
+      style="padding:11px 20px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-bottom:3px solid var(--red);color:var(--red);background:#fff">
       &#127760; Websites
+    </button>
+    <button id="linksTab1" onclick="switchLinksTab('links')"
+      style="padding:11px 20px;font-size:13px;font-weight:500;border:none;cursor:pointer;border-bottom:3px solid transparent;color:var(--text-muted);background:#fff">
+      &#128279; Link công việc
     </button>
   </div>
 
   <!-- PANEL 1: LINKS -->
-  <div id="linksPanel" style="background:#fff;border-radius:0 8px 8px 8px;border:1px solid var(--gray-border);padding:0;display:flex;flex-direction:column;height:calc(100vh - 130px)">
+  <div id="linksPanel" style="background:#fff;border-radius:0 8px 8px 8px;border:1px solid var(--gray-border);padding:0;display:none;flex-direction:column;height:calc(100vh - 130px)">
     <div style="padding:10px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
       <div class="toolbar" style="flex:1">
         <input type="text" id="linkSearch" placeholder="&#128269; Tìm link..." oninput="renderLinks()" style="width:180px;height:32px;font-size:12px">
@@ -1108,7 +1108,7 @@
   </div>
 
   <!-- PANEL 2: WEBSITES -->
-  <div id="websitesPanel" style="display:none;background:#fff;border-radius:0 8px 8px 8px;border:1px solid var(--gray-border);flex-direction:column;height:calc(100vh - 130px)">
+  <div id="websitesPanel" style="display:flex;background:#fff;border-radius:0 8px 8px 8px;border:1px solid var(--gray-border);flex-direction:column;height:calc(100vh - 130px)">
     <div style="padding:10px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
       <div class="toolbar" style="flex-wrap:wrap;gap:6px">
         <input type="text" id="websiteSearch" placeholder="&#128269; Tìm website..." oninput="renderWebsites()" style="width:160px;height:32px;font-size:12px">
@@ -1138,12 +1138,71 @@
     </div>
     <div style="display:grid;grid-template-columns:1fr 320px;gap:0;align-items:stretch;flex:1;overflow:hidden">
       <div style="padding:0;border-right:1px solid var(--gray-border);overflow-y:auto;height:100%;display:flex;flex-direction:column">
-        <div id="wsBulkBar" style="display:none;align-items:center;gap:8px;padding:8px 14px;background:#fff8e1;border-bottom:1px solid #ffe082;flex-shrink:0">
-          <span id="wsBulkCount" style="font-size:13px;font-weight:600">0 web đã chọn</span>
-          <button onclick="wsVidcoCopyBulk(this)" class="btn btn-sm" style="background:#2c3e50;color:#fff;border:none">📋 Copy VIDCO</button>
-          <button onclick="wsClearSelect()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;margin-left:auto">×</button>
+        <div id="wsBulkBar" style="display:none;flex-direction:column;flex-shrink:0;border-bottom:1px solid #ffe082">
+          <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#fff8e1">
+            <input type="checkbox" id="wsSelectAll" onclick="wsToggleSelectAll(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red)" title="Chọn tất cả">
+            <span id="wsBulkCount" style="font-size:13px;font-weight:600">0 web đã chọn</span>
+            <button onclick="wsVidcoCopyBulk(this)" class="btn btn-sm" style="background:#2c3e50;color:#fff;border:none">📋 Copy VIDCO</button>
+            <button onclick="wsBulkEditToggle()" class="btn btn-sm btn-outline" id="wsBulkEditBtn">✏ Sửa hàng loạt</button>
+            <button onclick="wsBulkDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá</button>
+            <button onclick="wsClearSelect()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;margin-left:auto;line-height:1">×</button>
+          </div>
+          <div id="wsBulkEditPanel" style="display:none;padding:10px 14px;background:#fffdf0;border-top:1px solid #ffe082;display:none">
+            <div style="font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">Sửa hàng loạt — chỉ điền trường muốn thay đổi</div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:end">
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Đuôi quản trị</label>
+                <input type="text" id="wbe_admin" placeholder="wp-admin" style="width:100%;height:30px;font-size:12px">
+              </div>
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Trạng thái</label>
+                <select id="wbe_status" style="width:100%;height:30px;font-size:12px">
+                  <option value="">— Giữ nguyên —</option>
+                  <option value="Tốt">✅ Tốt</option>
+                  <option value="Lỗi web">⚠️ Lỗi web</option>
+                  <option value="Chờ cấp lại mật khẩu">🔒 Chờ cấp lại MK</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Team</label>
+                <select id="wbe_team" style="width:100%;height:30px;font-size:12px">
+                  <option value="">— Giữ nguyên —</option>
+                  <option value="Team 01">Team 01</option>
+                  <option value="Team 02">Team 02</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Người quản lý</label>
+                <select id="wbe_owner" style="width:100%;height:30px;font-size:12px">
+                  <option value="">— Giữ nguyên —</option>
+                  <option value="Công ty">Công ty</option>
+                  <option value="Hải">Hải</option>
+                  <option value="Hiếu">Hiếu</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Nhóm con</label>
+                <input type="text" id="wbe_group" placeholder="Để trống = giữ nguyên" style="width:100%;height:30px;font-size:12px">
+              </div>
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Tài khoản</label>
+                <input type="text" id="wbe_account" placeholder="Để trống = giữ nguyên" style="width:100%;height:30px;font-size:12px">
+              </div>
+              <div class="form-group" style="margin:0">
+                <label style="font-size:11px">Mật khẩu</label>
+                <input type="text" id="wbe_password" placeholder="Để trống = giữ nguyên" style="width:100%;height:30px;font-size:12px">
+              </div>
+              <div style="display:flex;align-items:flex-end">
+                <button onclick="wsBulkApplyEdit()" class="btn btn-primary btn-sm" style="width:100%;height:30px">✓ Áp dụng</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div style="padding:14px;flex:1" id="websitesGrid"></div>
+        <div style="padding:10px 14px 4px;display:flex;align-items:center;gap:6px;flex-shrink:0;border-bottom:1px solid var(--gray-border)">
+          <input type="checkbox" id="wsSelectAllTop" onclick="wsToggleSelectAll(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red)">
+          <span style="font-size:11px;color:var(--text-muted)">Chọn tất cả</span>
+        </div>
+        <div style="padding:14px;flex:1;overflow-y:auto" id="websitesGrid"></div>
         <div id="emptyWebsites" style="display:none;padding:32px;text-align:center;color:var(--text-muted)">
           <div style="font-size:32px;margin-bottom:8px">&#127760;</div>Chưa có website nào
         </div>
@@ -2507,7 +2566,7 @@ function showPage(name){
   if(name==='hieu'){ activeDate['hieu']=todayVN(); renderHieu(); }
   if(name==='tasks') renderTasksOverview();
   if(name!=='tasks') clearTaskSelection();
-  if(name==='links'){ renderLinks(); renderWebsites(); }
+  if(name==='links'){ renderWebsites(); renderLinks(); renderWebsites(); }
   try{ localStorage.setItem('wt_activePage', name); } catch(e){}
 }
 
@@ -4366,8 +4425,8 @@ function switchLinksTab(tab){
   document.getElementById('linksPanel').style.display  = tab==='links'?'flex':'none';
   document.getElementById('websitesPanel').style.display = tab==='websites'?'flex':'none';
   const t1=document.getElementById('linksTab1'), t2=document.getElementById('linksTab2');
-  if(t1){t1.style.borderBottomColor=tab==='links'?'var(--red)':'transparent';t1.style.color=tab==='links'?'var(--red)':'var(--text-muted)';}
-  if(t2){t2.style.borderBottomColor=tab==='websites'?'var(--red)':'transparent';t2.style.color=tab==='websites'?'var(--red)':'var(--text-muted)';}
+  if(t1){t1.style.borderBottomColor=tab==='links'?'var(--red)':'transparent';t1.style.color=tab==='links'?'var(--red)':'var(--text-muted)';t1.style.fontWeight=tab==='links'?'600':'500';}
+  if(t2){t2.style.borderBottomColor=tab==='websites'?'var(--red)':'transparent';t2.style.color=tab==='websites'?'var(--red)':'var(--text-muted)';t2.style.fontWeight=tab==='websites'?'600':'500';}
   if(tab==='websites'){
     // Hide Team 02 filter option for Hải
     const teamOpt=document.querySelector('#websiteFilterTeam option[value="Team 02"]');
@@ -4439,7 +4498,7 @@ function renderWebsites(){
   grid.innerHTML=list.map(w=>{
     _copyMap['ws_acc_'+w.id]=w.account||'';
     _copyMap['ws_pwd_'+w.id]=w.password||'';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;transition:box-shadow .15s;background:#fff" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
+    return `<div data-wsid="${w.id}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid var(--gray-border);margin-bottom:6px;transition:box-shadow .15s;background:#fff" onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow=''">
       <input type="checkbox" class="ws-chk" onclick="event.stopPropagation()" onchange="wsToggleSelect(${w.id},this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red);flex-shrink:0">
       <div style="flex:1;display:flex;align-items:center;gap:10px;cursor:pointer;min-width:0" onclick="openWebsiteForm(${w.id})">
       <div style="width:34px;height:34px;border-radius:8px;background:${WS_STATUS_COLOR[w.status]||'#999'}22;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${WS_STATUS_ICON[w.status]||'🌐'}</div>
@@ -4644,8 +4703,9 @@ function showWebsiteInfo(w, found, url=''){
     _copyMap['wi_acc'] = w.account||'';
     _copyMap['wi_pwd'] = w.password||'';
     const _vidcoDomain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+    const _vidcoAdminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
     const _vidcoOwner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
-    _copyMap['wi_vidco'] = _vidcoDomain+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+_vidcoOwner;
+    _copyMap['wi_vidco'] = _vidcoDomain+' | '+_vidcoAdminUrl+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+_vidcoOwner;
     const rows=[
       ['Brand', w.brand],
       ['URL', `<a href="${w.url}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
@@ -4809,14 +4869,71 @@ function acClose(listId){
 // Close all autocomplete on click outside
 document.addEventListener('click', e=>{
   if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
+function wsBulkDelete(){
+  if(!_wsSelected.size) return;
+  if(!confirm('Xoá '+_wsSelected.size+' website đã chọn?')) return;
+  websites = websites.filter(w=>!_wsSelected.has(w.id));
+  _wsSelected.clear();
+  saveAppData(); renderWebsites(); updateWsIcons();
+  toast('✓ Đã xoá '+_wsSelected.size+' website.');
+}
+
+function wsBulkEditToggle(){
+  const panel = document.getElementById('wsBulkEditPanel');
+  const btn = document.getElementById('wsBulkEditBtn');
+  const isOpen = panel.style.display !== 'none';
+  panel.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '✏ Sửa hàng loạt' : '✕ Đóng';
+}
+
+function wsBulkApplyEdit(){
+  if(!_wsSelected.size) return;
+  const admin   = document.getElementById('wbe_admin')?.value.trim();
+  const status  = document.getElementById('wbe_status')?.value;
+  const team    = document.getElementById('wbe_team')?.value;
+  const owner   = document.getElementById('wbe_owner')?.value;
+  const group   = document.getElementById('wbe_group')?.value.trim();
+  const account = document.getElementById('wbe_account')?.value.trim();
+  const password= document.getElementById('wbe_password')?.value.trim();
+  let count = 0;
+  websites.forEach(w=>{
+    if(!_wsSelected.has(w.id)) return;
+    if(admin)    w.admin    = normalizeAdmin(admin);
+    if(status)   w.status   = status;
+    if(team)     w.team     = team;
+    if(owner)    w.owner    = owner;
+    if(group)    w.group    = group;
+    if(account)  w.account  = account;
+    if(password) w.password = password;
+    count++;
+  });
+  saveAppData(); renderWebsites(); autoFillAnchors(); updateWsIcons();
+  // Reset fields
+  ['wbe_admin','wbe_group','wbe_account','wbe_password'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  ['wbe_status','wbe_team','wbe_owner'].forEach(id=>{ const e=document.getElementById(id); if(e) e.value=''; });
+  toast('✓ Đã cập nhật '+count+' website.');
+}
+
+function wsToggleSelectAll(chk){
+  // Sync both checkboxes
+  const other = chk.id==='wsSelectAll' ? document.getElementById('wsSelectAllTop') : document.getElementById('wsSelectAll');
+  if(other) other.checked = chk.checked;
+  // Get all visible website ids from current render
+  const allChk = document.querySelectorAll('.ws-chk');
+  allChk.forEach(c=>{ c.checked=chk.checked; const id=parseInt(c.closest('[data-wsid]')?.dataset.wsid); if(id){ if(chk.checked) _wsSelected.add(id); else _wsSelected.delete(id); } });
+  const bar = document.getElementById('wsBulkBar');
+  if(bar){ bar.style.display=_wsSelected.size?'flex':'none'; const cnt=bar.querySelector('#wsBulkCount'); if(cnt) cnt.textContent=_wsSelected.size+' web đã chọn'; }
+}
+
 });
 
 function wsVidcoCopy(id, btn){
   const w = websites.find(x=>x.id===id);
   if(!w) return;
   const domain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+  const adminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
   const owner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
-  const txt = domain+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
+  const txt = domain+' | '+adminUrl+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
   copyText(txt, btn);
 }
 
@@ -4836,13 +4953,15 @@ function wsVidcoCopyBulk(btn){
     if(!w) return null;
     const domain = (w.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
     const owner = (w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung') ? w.owner : '';
-    return domain+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
+    const adminUrl = (w.url&&w.admin) ? joinAdminUrl(w.url,w.admin) : '';
+    return domain+' | '+adminUrl+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
   }).filter(Boolean);
   copyText(lines.join('\n'), btn);
 }
 function wsClearSelect(){
   _wsSelected.clear();
   document.querySelectorAll('.ws-chk').forEach(c=>c.checked=false);
+  ['wsSelectAll','wsSelectAllTop'].forEach(id=>{ const e=document.getElementById(id); if(e) e.checked=false; });
   const bar=document.getElementById('wsBulkBar');
   if(bar) bar.style.display='none';
 }
