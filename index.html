@@ -4540,6 +4540,8 @@ function renderWebsites(){
         <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
         ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
         <button onclick="event.stopPropagation();wsVidcoCopy(${w.id},this)" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px" title="Copy VIDCO">📋</button>
+        <button onclick="event.stopPropagation();wsCopyAccount(${w.id},this)" class="btn btn-sm btn-outline" style="font-size:11px;padding:3px 7px" title="Copy tài khoản / mật khẩu">👤</button>
+        <button onclick="event.stopPropagation();openWebsiteForm(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:3px 7px" title="Sửa website">✏️</button>
       </div>
     </div>`;
   }).join('');
@@ -4997,6 +4999,13 @@ function wsVidcoCopy(id, btn){
   const txt = domain+' | '+admin+' | '+(w.account||'')+' | '+(w.password||'')+' | '+(w.group||'')+' | '+owner;
   copyText(txt, btn);
 }
+function wsCopyAccount(id, btn){
+  const w = websites.find(x=>x.id===id);
+  if(!w) return;
+  const txt = (w.account||'') + ' | ' + (w.password||'');
+  copyText(txt, btn);
+}
+
 
 // Website list checkbox selection for bulk VIDCO copy
 let _wsSelected = new Set();
