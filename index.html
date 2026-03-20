@@ -227,7 +227,7 @@
   .it-due-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
   .it-due-card.overdue{background:#fdf2f2;border-color:#f5c6c6}
   .it-due-card.waiting{background:#f0f7fd;border-color:#b8d4ea}
-  .it-id{font-family:monospace;font-size:12px;font-weight:700;background:#f0f0f0;padding:3px 8px;border-radius:4px;letter-spacing:.5px;display:inline-flex;align-items:center;gap:0}
+  .it-id{font-family:monospace;font-size:12px;font-weight:700;background:#f0f0f0;padding:3px 8px;border-radius:4px;letter-spacing:.5px;display:inline-flex;align-items:center;gap:0;white-space:nowrap}
   .it-id-mm{color:#c0392b}
   .it-id-sep{color:#aaa;font-weight:400}
   .it-id-team{color:#2980b9}
@@ -1084,7 +1084,7 @@
       <table class="data" id="tableIndexTasks" style="min-width:820px;width:100%">
         <thead>
           <tr>
-            <th style="width:140px;position:sticky;top:0;z-index:8">ID Task</th>
+            <th style="width:160px;white-space:nowrap;position:sticky;top:0;z-index:8">ID Task</th>
             <th style="position:sticky;top:0;z-index:8">Tên task</th>
             <th style="width:105px;position:sticky;top:0;z-index:8">Ngày ép</th>
             <th style="width:80px;position:sticky;top:0;z-index:8">STT</th>
@@ -5716,7 +5716,7 @@ function renderItId(taskId){
   const mm   = taskId.slice(0,2);
   const team = taskId.slice(2,4);
   const stt  = taskId.slice(4);
-  return `<span class="it-id"><span class="it-id-mm">${mm}</span><span class="it-id-sep">·</span><span class="it-id-team">${team}</span><span class="it-id-sep">·</span><span class="it-id-stt">${stt}</span></span>`;
+  return `<span class="it-id"><span class="it-id-mm">${mm}</span><span class="it-id-team">${team}</span><span class="it-id-stt">${stt}</span></span>`;
 }
 
 // Date +4 days
@@ -5799,7 +5799,7 @@ function renderIndexTasks(){
       </button>`;
     }
     return `<tr class="${isDone?'it-row-done':''}" style="${isDue&&!isDone?'background:#fffde7':isOverdue&&!isDone?'background:#fdf2f2':''}">
-      <td>${renderItId(t.taskId)}</td>
+      <td style="white-space:nowrap">${renderItId(t.taskId)}</td>
       <td style="font-size:13px;font-weight:500">${t.name||'<span style="color:var(--text-muted)">—</span>'}</td>
       <td style="font-size:12px">${fmtDate(t.createdDate)||'—'}</td>
       <td style="font-size:12px;font-weight:600">${t.stt}</td>
