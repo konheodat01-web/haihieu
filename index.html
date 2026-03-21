@@ -3018,7 +3018,6 @@ function fbPayload(ts){
     indexTasks, giaoViecList, assignees, prompts,
     passwords: getProfilePasswords(),
     settings: _settings,
-    settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
     _ts: ts, _sid: _sessionId
   };
@@ -3053,6 +3052,17 @@ const _pageLoadTime = Date.now();
 
 function initFirebaseListener(){
   if(!window._fbReady || !window._fbDb) return;
+
+  // Fetch settings immediately on connect (for login screen bg/avatars on fresh devices)
+  window._fbDb.ref('appData/settings').once('value').then(snap=>{
+    const s = snap.val();
+    if(s && typeof s==='object'){
+      _settings = s;
+      applyLoginBg(_settings.loginBg);
+      applyAllAvatars();
+      localStorage.setItem('wt_settings', JSON.stringify(_settings));
+    }
+  }).catch(()=>{});
 
   window._fbDb.ref('appData').on('value', (snapshot)=>{
     const r = snapshot.val();
@@ -3111,7 +3121,12 @@ function initFirebaseListener(){
       if(Array.isArray(r.prompts)){      prompts=r.prompts;           promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
       if(r.passwords && typeof r.passwords==='object') localStorage.setItem('wt_passwords', JSON.stringify(r.passwords));
       if(r.avatars && typeof r.avatars==='object'){
-        if(r.settings && typeof r.settings==='object'){ _settings=r.settings; applyLoginBg(_settings.loginBg); applyAllAvatars(); localStorage.setItem('wt_settings', JSON.stringify(_settings)); }
+        if(r.settings && typeof r.settings==='object'){
+        _settings = r.settings;
+        applyLoginBg(_settings.loginBg);
+        applyAllAvatars();
+        localStorage.setItem('wt_settings', JSON.stringify(_settings));
+      }
         applyLoginAvatars();
       }
 
