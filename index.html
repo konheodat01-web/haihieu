@@ -6697,14 +6697,11 @@ function renderGiaoViec(){
     const doneCards = (g.taskCards||[]).filter(c=>doneCols.has(c.colId)).length;
 
     // Phân quyền đổi trạng thái:
-    // - Hải được giao → chỉ Hải đổi (assignee==='Hải' && currentMember==='hai')
+    // - Hải được giao → chỉ Hải đổi
     // - Người khác được giao → người giao (admin/hieu) đổi
+    // - Khi Chờ nghiệm thu: không ai đổi được qua select, phải bấm nút Nghiệm thu
     const isHaiTask = g.assignee==='Hải';
-    const canChangeStatus = isHaiTask ? currentMember==='hai' : currentMember!=='hai';
-    // Khi Hoàn thành, Hải không tự set nữa, phải qua nghiệm thu
-    const statusOptions = isHaiTask && canChangeStatus
-      ? ['Chờ làm','Đang làm','Hoàn thành']  // Hải chọn, khi chọn Hoàn thành → tự chuyển thành Chờ nghiệm thu
-      : ['Chờ làm','Đang làm','Hoàn thành'];
+    const canChangeStatus = !isWaitingAccept && (isHaiTask ? currentMember==='hai' : currentMember!=='hai');
 
     return `<div class="gv-card" style="${cardStyle}">
       <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
@@ -6722,8 +6719,8 @@ function renderGiaoViec(){
           ${g.note?`<div style="font-size:12px;color:var(--text-muted)">📝 ${g.note}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;flex-wrap:wrap">
-          ${canChangeStatus && !isWaitingAccept ? `<select onchange="updateGvStatus(${g.id},this.value)" style="height:28px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
-            ${statusOptions.map(s=>`<option ${g.status===s?'selected':''}>${s}</option>`).join('')}
+          ${canChangeStatus ? `<select onchange="updateGvStatus(${g.id},this.value)" style="height:28px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
+            ${['Chờ làm','Đang làm','Hoàn thành'].map(s=>`<option ${g.status===s?'selected':''}>${s}</option>`).join('')}
           </select>` : ''}
           ${isWaitingAccept && currentMember!=='hai' ? `<button onclick="confirmNghiemThu(${g.id})"
             style="background:#27ae60;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:#fff;font-weight:600;white-space:nowrap">✓ Nghiệm thu</button>` : ''}
@@ -7095,15 +7092,19 @@ function saveGiaoViec(){
 function updateGvStatus(id, status){
   const g = giaoViecList.find(x=>x.id===id);
   if(!g) return;
-  // Nếu Hải chọn Hoàn thành → chuyển sang Chờ nghiệm thu (cần người giao xác nhận)
-  if(g.assignee==='Hải' && currentMember==='hai' && status==='Hoàn thành'){
+  if(status==='Hoàn thành'){
+    // Mọi task khi chuyển Hoàn thành → Chờ nghiệm thu (cần xác nhận nghiệm thu)
     g.status='Chờ nghiệm thu';
     g.completedAt=todayVN();
+    saveAppData();
+    renderGiaoViec();
+    toast(`🔔 "${g.taskName}" — đang chờ nghiệm thu`,'#27ae60');
   } else {
     g.status = status;
+    saveAppData();
+    renderGiaoViec();
+    toast(`✓ Cập nhật trạng thái: ${status}`);
   }
-  saveAppData();
-  renderGiaoViec();
 }
 
 function confirmNghiemThu(id){
@@ -7592,7 +7593,7 @@ function pqSearch(){
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--gray-border);transition:background .1s"
       onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
       <div style="flex:1;min-width:0;cursor:pointer" onclick="pqCopy(${p.id},this)">
-        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+        <div style="font-size:13px;font-weight:700;color:#212529;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
         <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${p.cat||''}${p.note?` · ${p.note.slice(0,40)}`:''}</div>
         <div style="font-size:11px;color:#888;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;font-family:monospace">${(p.content||'').slice(0,60)}…</div>
       </div>
