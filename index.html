@@ -4436,15 +4436,13 @@ function handleAvatarUpload(event){
   reader.onload = e => {
     const imgEl = new Image();
     imgEl.onload = () => {
-      const SIZE = 200;
+      // Center-crop to square, no resize
+      const SIZE = Math.min(imgEl.width, imgEl.height);
       const canvas = document.createElement('canvas');
       canvas.width=SIZE; canvas.height=SIZE;
-      const ctx = canvas.getContext('2d');
-      // Center-crop to square
-      const s = Math.min(imgEl.width, imgEl.height);
-      const ox = (imgEl.width-s)/2, oy = (imgEl.height-s)/2;
-      ctx.drawImage(imgEl, ox, oy, s, s, 0, 0, SIZE, SIZE);
-      _pendingAvatar = canvas.toDataURL('image/jpeg', 0.85);
+      const ox = (imgEl.width-SIZE)/2, oy = (imgEl.height-SIZE)/2;
+      canvas.getContext('2d').drawImage(imgEl, ox, oy, SIZE, SIZE, 0, 0, SIZE, SIZE);
+      _pendingAvatar = canvas.toDataURL('image/jpeg', 1.0);
       const preview = document.getElementById('avModalPreview');
       preview.innerHTML=`<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover">`;
     };
@@ -4522,25 +4520,11 @@ function handleBgUpload(event){
   err.style.display='none';
   const reader = new FileReader();
   reader.onload = e => {
-    // Resize/compress to max 800px wide before storing
-    const dataUrl = e.target.result;
-    const imgEl = new Image();
-    imgEl.onload = () => {
-      const MAX = 1920;
-      let w = imgEl.width, h = imgEl.height;
-      if(w > MAX){ h = Math.round(h * MAX/w); w = MAX; }
-      const canvas = document.createElement('canvas');
-      canvas.width=w; canvas.height=h;
-      canvas.getContext('2d').drawImage(imgEl,0,0,w,h);
-      const compressed = canvas.toDataURL('image/jpeg', 0.92);
-      _pendingBg = compressed;
-      // Show preview
-      const imgPrev = document.getElementById('settingsBgImg');
-      imgPrev.src = compressed; imgPrev.style.display='block';
-      document.getElementById('settingsBgPlaceholder').style.display='none';
-      document.getElementById('settingsBgOverlay').style.display='flex';
-    };
-    imgEl.src = dataUrl;
+    _pendingBg = e.target.result;
+    const imgPrev = document.getElementById('settingsBgImg');
+    imgPrev.src = _pendingBg; imgPrev.style.display='block';
+    document.getElementById('settingsBgPlaceholder').style.display='none';
+    document.getElementById('settingsBgOverlay').style.display='flex';
   };
   reader.readAsDataURL(file);
   event.target.value=''; // reset so same file can be re-selected
