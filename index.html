@@ -4409,7 +4409,6 @@ function openAvatarModal(){
   const preview = document.getElementById('avModalPreview');
   _renderAvPreview(preview, m, cur);
   document.getElementById('avErr').style.display='none';
-  document.getElementById('avFileInput').value='';
   document.getElementById('avatarModal').classList.add('open');
 }
 function closeAvatarModal(){ document.getElementById('avatarModal').classList.remove('open'); }
@@ -9181,7 +9180,7 @@ setTimeout(initFirebaseListener, 1000);
     <div class="modal-body" style="gap:14px;align-items:center">
       <!-- Current avatar preview -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
-        <div id="avModalPreview" style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer;border:3px solid var(--gray-border)" onclick="document.getElementById('avFileInput').click()"></div>
+        <label for="avFileInput" style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer;border:3px solid var(--gray-border)" id="avModalPreview"></label>
       <div style="font-size:12px;color:var(--text-muted);text-align:center">
         Click vào ảnh để thay đổi<br>
         <span style="color:#2980b9;font-weight:500">Kích thước chuẩn: 200 × 200 px</span> (vuông). Tối đa 3MB.<br>
@@ -9190,7 +9189,7 @@ setTimeout(initFirebaseListener, 1000);
       </div>
       <input type="file" id="avFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
       <div style="display:flex;gap:8px;width:100%">
-        <button onclick="document.getElementById('avFileInput').click()" class="btn btn-outline btn-sm" style="flex:1">📁 Chọn ảnh</button>
+        <label for="avFileInput" class="btn btn-outline btn-sm" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">📁 Chọn ảnh</label>
         <button onclick="removeAvatar()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6">🗑 Xoá ảnh</button>
       </div>
       <div id="avErr" style="display:none;color:#e74c3c;font-size:12px;width:100%"></div>
