@@ -21,6 +21,8 @@
   header h1{font-size:16px;font-weight:600;letter-spacing:.3px}
   header .meta{font-size:12px;opacity:.8}
 
+  .nb-btn{width:100%;padding:11px 16px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(192,57,43,.12);cursor:pointer;font-size:12px;color:#c0392b;display:flex;align-items:center;gap:8px;font-weight:600;box-sizing:border-box}
+  .nb-btn:hover{background:rgba(192,57,43,.12)}
   nav{position:fixed;top:56px;left:0;bottom:0;width:200px;background:#fff;border-right:1px solid var(--gray-border);z-index:99;display:flex;flex-direction:column;padding:10px 0;overflow-y:auto}
   nav button{background:none;border:none;border-left:3px solid transparent;padding:11px 18px;font-size:13px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:all .15s;white-space:nowrap;text-align:left;display:flex;align-items:center;gap:8px;width:100%}
   nav button:hover{color:var(--text);background:var(--gray-light)}
@@ -281,21 +283,21 @@
     <div onclick="selectProfile('admin')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(231,76,60,.2)';this.style.borderColor='rgba(231,76,60,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div style="width:64px;height:64px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(0,0,0,.4)">⚙</div>
+      <div id="loginAv_admin" style="width:64px;height:64px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(0,0,0,.4);overflow:hidden">⚙</div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Admin</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Toàn quyền truy cập</div>
     </div>
     <div onclick="selectProfile('hieu')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(41,128,185,.2)';this.style.borderColor='rgba(41,128,185,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div style="width:64px;height:64px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(41,128,185,.35)">H</div>
+      <div id="loginAv_hieu" style="width:64px;height:64px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(41,128,185,.35);overflow:hidden">H</div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Hiếu</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Sheet Hiếu · Tasks</div>
     </div>
     <div onclick="selectProfile('hai')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(231,76,60,.2)';this.style.borderColor='rgba(231,76,60,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div style="width:64px;height:64px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(192,57,43,.35)">H</div>
+      <div id="loginAv_hai" style="width:64px;height:64px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(192,57,43,.35);overflow:hidden">H</div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Hải</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Sheet Hải · Tasks</div>
     </div>
@@ -339,17 +341,17 @@
       <div class="member-dropdown" id="memberDropdown">
         <div class="md-header">Xem với tư cách</div>
         <div class="md-item active" id="mdi-admin" onclick="setMember('admin')">
-          <div class="md-avatar" style="background:#2c3e50;color:#fff">⚙</div>
+          <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;color:#fff">⚙</div>
           <div><div class="md-name">Admin</div><div class="md-role">Xem toàn bộ</div></div>
           <span class="md-check" id="mdc-admin">&#10003;</span>
         </div>
         <div class="md-item" id="mdi-hieu" onclick="setMember('hieu')">
-          <div class="md-avatar" style="background:#eaf4fd;color:#2980b9">H</div>
+          <div class="md-avatar" id="md-avatar-hieu" style="background:#eaf4fd;color:#2980b9">H</div>
           <div><div class="md-name">Hiếu</div><div class="md-role">Sheet Hiếu + Tasks</div></div>
           <span class="md-check" id="mdc-hieu" style="display:none">&#10003;</span>
         </div>
         <div class="md-item" id="mdi-hai" onclick="setMember('hai')">
-          <div class="md-avatar" style="background:#fdf2f2;color:#c0392b">H</div>
+          <div class="md-avatar" id="md-avatar-hai" style="background:#fdf2f2;color:#c0392b">H</div>
           <div><div class="md-name">Hải</div><div class="md-role">Sheet Hải + Tasks</div></div>
           <span class="md-check" id="mdc-hai" style="display:none">&#10003;</span>
         </div>
@@ -508,22 +510,16 @@
   <!-- Bottom actions: hover to expand -->
   <div id="navBottomMenu" style="position:relative;border-top:1px solid rgba(255,255,255,.08)"
     onmouseleave="document.getElementById('navBottomPopup').style.display='none'">
-    <!-- Hover popup (appears above) -->
     <div id="navBottomPopup" style="display:none;position:absolute;bottom:100%;left:0;right:0;background:rgba(192,57,43,.1);backdrop-filter:blur(12px);border-radius:8px 8px 0 0;overflow:hidden;border:1px solid rgba(192,57,43,.2);border-bottom:none">
-      <button id="navResetPwBtn" onclick="openResetPwModal()" style="display:none;width:100%;padding:11px 16px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(192,57,43,.12);cursor:pointer;font-size:12px;color:#c0392b;align-items:center;gap:8px;font-weight:600"
-        onmouseover="this.style.background='rgba(192,57,43,.12)'" onmouseout="this.style.background=''">
-        🔒 Cấp lại mật khẩu
-      </button>
-      <button onclick="openChangePassword()" style="width:100%;padding:11px 16px;text-align:left;background:none;border:none;border-bottom:1px solid rgba(192,57,43,.12);cursor:pointer;font-size:12px;color:#c0392b;display:flex;align-items:center;gap:8px;font-weight:600"
-        onmouseover="this.style.background='rgba(192,57,43,.12)'" onmouseout="this.style.background=''">
-        🔑 Đổi mật khẩu
-      </button>
+      <button id="navSettingsBtn"  onclick="openSettings()"       class="nb-btn" style="display:none"><span style="width:18px;text-align:center">⚙</span> Cài đặt giao diện</button>
+      <button id="navAvatarBtn"    onclick="openAvatarModal()"    class="nb-btn"><span style="width:18px;text-align:center">🖼</span> Đổi ảnh đại diện</button>
+      <button id="navResetPwBtn"   onclick="openResetPwModal()"   class="nb-btn" style="display:none"><span style="width:18px;text-align:center">🔒</span> Cấp lại mật khẩu</button>
+      <button                      onclick="openChangePassword()"  class="nb-btn"><span style="width:18px;text-align:center">🔑</span> Đổi mật khẩu</button>
     </div>
-    <!-- Logout trigger button -->
-    <button onclick="logout()" style="width:100%;padding:12px 16px;text-align:left;background:none;border:none;cursor:pointer;font-size:13px;color:#e74c3c;display:flex;align-items:center;gap:8px;opacity:.8;transition:opacity .15s"
+    <button onclick="logout()" style="width:100%;padding:12px 16px;text-align:left;background:none;border:none;cursor:pointer;font-size:12px;color:#e74c3c;display:flex;align-items:center;gap:8px;font-weight:600;opacity:.8;transition:opacity .15s"
       onmouseover="document.getElementById('navBottomPopup').style.display='block';this.style.opacity='1';this.style.background='rgba(231,76,60,.08)'"
       onmouseout="this.style.opacity='.8';this.style.background=''">
-      ⏻ Đăng xuất
+      <span style="width:18px;text-align:center">⏻</span> Đăng xuất
     </button>
   </div>
 </nav>
@@ -2997,68 +2993,56 @@ document.getElementById('fDate').value = todayVN();
 function updateStickyTops(sheet){} // no-op: sticky handled by CSS
 
 function saveAppData(){
-  const ts = Date.now();
-  try{
-    localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
-    localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
-    localStorage.setItem('wt_tasks', JSON.stringify(tasks));
-    localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
-    localStorage.setItem('wt_links', JSON.stringify(links));
-    localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
-    localStorage.setItem('wt_websites', JSON.stringify(websites));
-    localStorage.setItem('wt_ws_groups', JSON.stringify(wsGroups));
-    localStorage.setItem('wt_index_tasks', JSON.stringify(indexTasks));
-    localStorage.setItem('wt_giaoviec', JSON.stringify(giaoViecList));
-    localStorage.setItem('wt_assignees', JSON.stringify(assignees));
-    localStorage.setItem('wt_prompts', JSON.stringify(prompts));
-    localStorage.setItem('wt_ts', String(ts));
-  }catch(e){}
-
+  const ts = saveToLocalStorage();
   if(window._fbReady && window._fbDb){
     console.log('Pushing to Firebase, ts=', ts);
-    window._fbDb.ref('appData').set({
-      hai: data.hai, hieu: data.hieu,
-      tasks, taskOrder: tasks.map(t=>t.id), deletedTasks, links, linkCategories, websites, wsGroups, indexTasks, giaoViecList, assignees, prompts, _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'), _ts: ts, _sid: _sessionId
-    }).then(()=>{
+    window._fbDb.ref('appData').set(fbPayload(ts)).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='☁ Đã đồng bộ';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',1500);}
-    }).catch(e=>{
-      console.error('Firebase push FAILED:', e);
-    });
+    }).catch(e=>{ console.error('Firebase push FAILED:', e); });
   } else {
     console.warn('Firebase not ready, _fbReady=', window._fbReady);
   }
 }
 
-function forceSyncToCloud(){
-  if(!window._fbReady || !window._fbDb){
-    toast('Firebase chưa kết nối!','#e74c3c'); return;
-  }
-  const ind=document.getElementById('syncIndicator');
-  if(ind){ind.textContent='☁ Đang sync...';ind.style.opacity='1';ind.style.color='#e67e22';}
-  window._fbDb.ref('appData').set({
-    hai: data.hai,
-    hieu: data.hieu,
-    tasks,
-    taskOrder: tasks.map(t=>t.id),
-    deletedTasks,
-    links,
-    linkCategories,
-    websites,
-    wsGroups,
-    indexTasks,
-    giaoViecList,
-    assignees,
-    prompts,
-    _ts: Date.now(), _sid: _sessionId
-  }).then(()=>{
-    toast('☁ Đã đồng bộ toàn bộ dữ liệu lên đám mây!');
-    if(ind){ind.textContent='☁ Đã sync xong';ind.style.color='#27ae60';setTimeout(()=>ind.style.opacity='0',3000);}
-  }).catch(e=>{
-    toast('Lỗi sync: '+e.message,'#e74c3c');
-  });
+function fbPayload(ts){
+  return {
+    hai: data.hai, hieu: data.hieu,
+    tasks, taskOrder: tasks.map(t=>t.id),
+    deletedTasks, links, linkCategories,
+    websites, wsGroups,
+    indexTasks, giaoViecList, assignees, prompts,
+    passwords: getProfilePasswords(),
+    settings: _settings,
+    settings: _settings,
+    _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
+    _ts: ts, _sid: _sessionId
+  };
 }
+
+function saveToLocalStorage(){
+  const ts = Date.now();
+  try{
+    localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
+    localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
+    localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
+    localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
+    localStorage.setItem('wt_links',           JSON.stringify(links));
+    localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
+    localStorage.setItem('wt_websites',        JSON.stringify(websites));
+    localStorage.setItem('wt_ws_groups',       JSON.stringify(wsGroups));
+    localStorage.setItem('wt_index_tasks',     JSON.stringify(indexTasks));
+    localStorage.setItem('wt_giaoviec',        JSON.stringify(giaoViecList));
+    localStorage.setItem('wt_assignees',       JSON.stringify(assignees));
+    localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
+    localStorage.setItem('wt_passwords',       JSON.stringify(getProfilePasswords()));
+    localStorage.setItem('wt_settings', JSON.stringify(_settings));
+    localStorage.setItem('wt_ts',              String(ts));
+  }catch(e){}
+  return ts;
+}
+
 
 // Unique session ID - avoid receiving own pushes
 const _sessionId = Math.random().toString(36).slice(2);
@@ -3084,16 +3068,19 @@ function initFirebaseListener(){
     }
 
     try{
-      // Firebase stores empty arrays as null — convert back to []
-      data.hai = Array.isArray(r.hai) ? r.hai : (r.hai != null ? r.hai : []);
-      data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
-      tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
+      // Helper: Firebase stores empty arrays as null
+      const arr = (v, fallback=[]) => Array.isArray(v) ? v : (v != null ? Object.values(v) : fallback);
+
+      data.hai  = arr(r.hai,  data.hai);
+      data.hieu = arr(r.hieu, data.hieu);
+      tasks = arr(r.tasks, tasks);
       deduplicateTasks();
       if(tasks.length) taskNextId = Math.max(taskNextId, ...tasks.map(x=>x.id||0)) + 1;
       tasks.forEach(task=>{ (task.cards||[]).forEach(c=>{ const n=parseInt((c.id||'').replace(/\D/g,''))||0; if(n>=cardNextId) cardNextId=n+1; }); });
-      // Restore manual sort order if saved (no duplicates)
+      tasks.forEach(normalizeTaskCards);
+
+      // Task order
       try{
-        // Prefer Firebase taskOrder over localStorage
         const fbOrder = Array.isArray(r.taskOrder) ? r.taskOrder : null;
         const lsOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
         const savedOrder = fbOrder || lsOrder;
@@ -3101,42 +3088,44 @@ function initFirebaseListener(){
           const taskMap = {}; tasks.forEach(t=>{ taskMap[t.id]=t; });
           const ordered = savedOrder.map(id=>taskMap[id]).filter(Boolean);
           const orderedIds = new Set(savedOrder);
-          const rest = tasks.filter(t=>!orderedIds.has(t.id));
-          tasks = [...ordered, ...rest];
+          tasks = [...ordered, ...tasks.filter(t=>!orderedIds.has(t.id))];
         }
       } catch(e){}
-      // Accept Firebase deletedTasks only if not overriding a more recent local permanent-delete
-      const trashTs = Math.max(
-        parseInt(localStorage.getItem('wt_trash_ts')||'0'),
-        r._trash_ts||0
-      );
-      if(Array.isArray(r.deletedTasks) && (r._ts||0) >= trashTs) deletedTasks=r.deletedTasks;
-      // Sync trash_ts
-      if((r._trash_ts||0) > parseInt(localStorage.getItem('wt_trash_ts')||'0')){
-        localStorage.setItem('wt_trash_ts', String(r._trash_ts));
-      }
-      localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
-      links = Array.isArray(r.links) ? r.links : (r.links != null ? r.links : []);
-      linkCategories = r.linkCategories != null ? r.linkCategories : linkCategories;
+
+      // deletedTasks — respect trash timestamp
+      const trashTs = Math.max(parseInt(localStorage.getItem('wt_trash_ts')||'0'), r._trash_ts||0);
+      if(Array.isArray(r.deletedTasks) && (r._ts||0) >= trashTs) deletedTasks = r.deletedTasks;
+      if((r._trash_ts||0) > parseInt(localStorage.getItem('wt_trash_ts')||'0')) localStorage.setItem('wt_trash_ts', String(r._trash_ts));
+
+      links         = arr(r.links, links);
+      linkCategories= r.linkCategories != null ? r.linkCategories : linkCategories;
       if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
-      else if(r.websites === null) websites=[];
-      if(Array.isArray(r.wsGroups)) wsGroups=r.wsGroups;
-      if(Array.isArray(r.indexTasks)){ indexTasks=r.indexTasks; itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
+      else if(r.websites===null) websites=[];
+      wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
+      if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
-      if(Array.isArray(r.prompts)){ prompts=r.prompts; promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
+      if(Array.isArray(r.prompts)){      prompts=r.prompts;           promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
+      if(r.passwords && typeof r.passwords==='object') localStorage.setItem('wt_passwords', JSON.stringify(r.passwords));
+      if(r.avatars && typeof r.avatars==='object'){
+        if(r.settings && typeof r.settings==='object'){ _settings=r.settings; applyLoginBg(_settings.loginBg); applyAllAvatars(); localStorage.setItem('wt_settings', JSON.stringify(_settings)); }
+        applyLoginAvatars();
+      }
 
-      localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
-      localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
-      localStorage.setItem('wt_tasks', JSON.stringify(tasks));
-      localStorage.setItem('wt_links', JSON.stringify(links));
+      // Mirror everything to localStorage
+      localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
+      localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
+      localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
+      localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
+      localStorage.setItem('wt_links',           JSON.stringify(links));
       localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
-      localStorage.setItem('wt_websites', JSON.stringify(websites));
-      localStorage.setItem('wt_index_tasks', JSON.stringify(indexTasks));
-      localStorage.setItem('wt_giaoviec', JSON.stringify(giaoViecList));
-      localStorage.setItem('wt_assignees', JSON.stringify(assignees));
-      localStorage.setItem('wt_prompts', JSON.stringify(prompts));
-      if(r._ts) localStorage.setItem('wt_ts', String(r._ts));
+      localStorage.setItem('wt_websites',        JSON.stringify(websites));
+      localStorage.setItem('wt_ws_groups',       JSON.stringify(wsGroups));
+      localStorage.setItem('wt_index_tasks',     JSON.stringify(indexTasks));
+      localStorage.setItem('wt_giaoviec',        JSON.stringify(giaoViecList));
+      localStorage.setItem('wt_assignees',       JSON.stringify(assignees));
+      localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
+      if(r._ts) localStorage.setItem('wt_ts',    String(r._ts));
 
       renderDashboard(); renderHai(); renderHieu();
       renderTasksOverview();
@@ -3199,6 +3188,7 @@ function loadAppData(){
     const gv=localStorage.getItem('wt_giaoviec'); if(gv){ giaoViecList=JSON.parse(gv); giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
     const ga=localStorage.getItem('wt_assignees'); if(ga) assignees=JSON.parse(ga);
     const pr=localStorage.getItem('wt_prompts'); if(pr){ prompts=JSON.parse(pr); promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
+    const st=localStorage.getItem('wt_settings'); if(st){ try{ _settings=JSON.parse(st); applyLoginBg(_settings.loginBg); applyAllAvatars(); }catch(e){} }
   }catch(e){ console.warn('localStorage load failed', e); }
 }
 
@@ -4365,6 +4355,9 @@ function setMember(m){
   setTimeout(updateWsIcons, 50);
   const resetBtn=document.getElementById('navResetPwBtn');
   if(resetBtn) resetBtn.style.display=m==='admin'?'flex':'none';
+  const settingsBtn=document.getElementById('navSettingsBtn');
+  if(settingsBtn) settingsBtn.style.display=m==='admin'?'flex':'none';
+  applyAllAvatars();
   updateNavBadges();
 }
 
@@ -4388,6 +4381,185 @@ function hideLoginScreen(){
   const ls = document.getElementById('loginScreen');
   if(ls) ls.style.display='none';
   document.body.classList.remove('login-mode');
+}
+
+// ===== AVATAR =====
+let _pendingAvatar = undefined; // undefined=no change, null=remove, string=base64
+
+function openAvatarModal(){
+  _pendingAvatar = undefined;
+  const m = currentMember;
+  const cur = _settings.avatars?.[m] || null;
+  const preview = document.getElementById('avModalPreview');
+  _renderAvPreview(preview, m, cur);
+  document.getElementById('avErr').style.display='none';
+  document.getElementById('avFileInput').value='';
+  document.getElementById('avatarModal').classList.add('open');
+}
+function closeAvatarModal(){ document.getElementById('avatarModal').classList.remove('open'); }
+
+function _renderAvPreview(el, member, src){
+  if(!el) return;
+  if(src){
+    el.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
+    el.style.background='#f0f0f0';
+  } else {
+    const styles = { admin:'background:#2c3e50;color:#fff', hieu:'background:#eaf4fd;color:#2980b9', hai:'background:#fdf2f2;color:#c0392b' };
+    el.setAttribute('style', el.getAttribute('style').replace(/background:[^;]+;color:[^;]+/,'') + ';' + (styles[member]||'background:#eee;color:#333'));
+    el.innerHTML = member==='admin'?'⚙':'H';
+  }
+}
+
+function handleAvatarUpload(event){
+  const file = event.target.files[0]; if(!file) return;
+  const err = document.getElementById('avErr');
+  if(file.size > 3*1024*1024){ err.textContent='Ảnh quá lớn (tối đa 3MB)'; err.style.display='block'; return; }
+  err.style.display='none';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const SIZE = 200;
+      const canvas = document.createElement('canvas');
+      canvas.width=SIZE; canvas.height=SIZE;
+      const ctx = canvas.getContext('2d');
+      // Center-crop to square
+      const s = Math.min(imgEl.width, imgEl.height);
+      const ox = (imgEl.width-s)/2, oy = (imgEl.height-s)/2;
+      ctx.drawImage(imgEl, ox, oy, s, s, 0, 0, SIZE, SIZE);
+      _pendingAvatar = canvas.toDataURL('image/jpeg', 0.85);
+      const preview = document.getElementById('avModalPreview');
+      preview.innerHTML=`<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover">`;
+    };
+    imgEl.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value='';
+}
+
+function removeAvatar(){
+  _pendingAvatar = null;
+  _renderAvPreview(document.getElementById('avModalPreview'), currentMember, null);
+}
+
+function saveAvatar(){
+  if(_pendingAvatar === undefined){ closeAvatarModal(); return; }
+  if(!_settings.avatars) _settings.avatars = {};
+  if(_pendingAvatar === null) delete _settings.avatars[currentMember];
+  else _settings.avatars[currentMember] = _pendingAvatar;
+  applyAllAvatars();
+  saveAppData();
+  closeAvatarModal();
+  toast('✓ Đã cập nhật ảnh đại diện');
+}
+
+function applyAllAvatars(){
+  const avs = _settings.avatars || {};
+  ['admin','hai','hieu'].forEach(m=>{
+    const src = avs[m] || null;
+    // Login screen card
+    const loginEl = document.getElementById('loginAv_'+m);
+    if(loginEl){
+      if(src){ loginEl.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
+      else { loginEl.innerHTML = m==='admin'?'⚙':'H'; }
+    }
+    // Member picker dropdown
+    const mdEl = document.getElementById('md-avatar-'+m);
+    if(mdEl){
+      if(src){ mdEl.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; }
+      else { mdEl.innerHTML = m==='admin'?'⚙':'H'; }
+    }
+  });
+  // Header avatar (current member)
+  const src = avs[currentMember] || null;
+  const hdrEl = document.getElementById('memberAvatar');
+  if(hdrEl){
+    if(src){ hdrEl.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`; hdrEl.style.padding='0'; }
+    else { hdrEl.textContent = MEMBER_CONFIG[currentMember]?.avatar||'⚙'; }
+  }
+}
+
+// ===== SETTINGS =====
+let _settings = { loginBg: null }; // loginBg: base64 string or null
+let _pendingBg = undefined; // undefined = no change, null = remove, string = new image
+
+function openSettings(){
+  _pendingBg = undefined;
+  // Show current bg
+  const cur = _settings.loginBg;
+  const img = document.getElementById('settingsBgImg');
+  const ph  = document.getElementById('settingsBgPlaceholder');
+  const ov  = document.getElementById('settingsBgOverlay');
+  if(cur){ img.src=cur; img.style.display='block'; ph.style.display='none'; ov.style.display='flex'; }
+  else   { img.style.display='none'; ph.style.display='block'; ov.style.display='none'; }
+  document.getElementById('settingsBgErr').style.display='none';
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('open'); }
+
+function handleBgUpload(event){
+  const file = event.target.files[0];
+  if(!file) return;
+  const err = document.getElementById('settingsBgErr');
+  if(file.size > 2*1024*1024){ err.textContent='Ảnh quá lớn (tối đa 2MB). Vui lòng chọn ảnh nhỏ hơn.'; err.style.display='block'; return; }
+  err.style.display='none';
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Resize/compress to max 800px wide before storing
+    const dataUrl = e.target.result;
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const MAX = 900;
+      let w = imgEl.width, h = imgEl.height;
+      if(w > MAX){ h = Math.round(h * MAX/w); w = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(imgEl,0,0,w,h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      _pendingBg = compressed;
+      // Show preview
+      const imgPrev = document.getElementById('settingsBgImg');
+      imgPrev.src = compressed; imgPrev.style.display='block';
+      document.getElementById('settingsBgPlaceholder').style.display='none';
+      document.getElementById('settingsBgOverlay').style.display='flex';
+    };
+    imgEl.src = dataUrl;
+  };
+  reader.readAsDataURL(file);
+  event.target.value=''; // reset so same file can be re-selected
+}
+
+function removeBg(){
+  _pendingBg = null;
+  document.getElementById('settingsBgImg').style.display='none';
+  document.getElementById('settingsBgOverlay').style.display='none';
+  document.getElementById('settingsBgPlaceholder').style.display='block';
+}
+
+function saveSettings(){
+  if(_pendingBg === undefined){ closeSettings(); return; } // no change
+  const btn = document.getElementById('settingsSaveBtn');
+  btn.textContent='Đang lưu...'; btn.disabled=true;
+  _settings.loginBg = _pendingBg;
+  applyLoginBg(_settings.loginBg);
+  // Save via Firebase
+  saveAppData();
+  setTimeout(()=>{ btn.textContent='✓ Lưu'; btn.disabled=false; closeSettings(); toast('✓ Đã lưu cài đặt giao diện'); }, 500);
+}
+
+function applyLoginBg(src){
+  const ls = document.getElementById('loginScreen');
+  if(!ls) return;
+  if(src){
+    ls.style.backgroundImage = `url('${src}')`;
+    ls.style.backgroundSize = 'cover';
+    ls.style.backgroundPosition = 'center';
+    ls.style.backgroundRepeat = 'no-repeat';
+  } else {
+    ls.style.backgroundImage = '';
+    ls.style.backgroundSize = '';
+    ls.style.backgroundPosition = '';
+  }
 }
 
 // ===== UNIFIED SEARCH =====
@@ -4430,6 +4602,91 @@ function uniKeydown(e){
 // Patch ql/pq to read from uniInput
 function qlGetInput(){ return document.getElementById('uniInput')?.value||''; }
 function pqGetInput(){ return document.getElementById('uniInput')?.value||''; }
+
+// ===== PROFILE AVATARS =====
+function getProfileAvatars(){
+  try{ return JSON.parse(localStorage.getItem('wt_avatars')||'{}'); }catch(e){ return {}; }
+}
+
+function openAvatarSettings(){
+  document.getElementById('navBottomPopup').style.display='none';
+  // Populate previews with current avatars
+  ['admin','hai','hieu'].forEach(m => refreshAvPreview(m));
+  document.getElementById('avatarSettingsModal').classList.add('open');
+}
+function closeAvatarSettings(){ document.getElementById('avatarSettingsModal').classList.remove('open'); }
+
+function refreshAvPreview(member){
+  const el = document.getElementById('avPreview_'+member);
+  if(!el) return;
+  const avatars = getProfileAvatars();
+  if(avatars[member]){
+    el.innerHTML=`<img src="${avatars[member]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  } else {
+    const defaults = {admin:'⚙', hieu:'H', hai:'H'};
+    el.innerHTML = defaults[member]||'?';
+  }
+}
+
+function handleAvatarUpload(event, member){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    // Compress to ~200x200 via canvas
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const size = 200;
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      // Crop to square from center
+      const s = Math.min(img.width, img.height);
+      const sx = (img.width-s)/2, sy = (img.height-s)/2;
+      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
+      const base64 = canvas.toDataURL('image/jpeg', 0.8);
+      const avatars = getProfileAvatars();
+      avatars[member] = base64;
+      localStorage.setItem('wt_avatars', JSON.stringify(avatars));
+      refreshAvPreview(member);
+      applyLoginAvatars();
+      saveAppData();
+      toast('✓ Đã cập nhật ảnh đại diện');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value=''; // allow re-upload same file
+}
+
+function removeAvatar(member){
+  const avatars = getProfileAvatars();
+  delete avatars[member];
+  localStorage.setItem('wt_avatars', JSON.stringify(avatars));
+  refreshAvPreview(member);
+  applyLoginAvatars();
+  saveAppData();
+}
+
+function applyLoginAvatars(){
+  const avatars = getProfileAvatars();
+  const MAP = {
+    admin: { fallbackHtml:'⚙', fallbackStyle:'background:#2c3e50;color:#fff' },
+    hieu:  { fallbackHtml:'H', fallbackStyle:'background:#eaf4fd;color:#2980b9' },
+    hai:   { fallbackHtml:'H', fallbackStyle:'background:#fdf2f2;color:#c0392b' },
+  };
+  ['admin','hai','hieu'].forEach(m=>{
+    const el = document.getElementById('loginAv_'+m);
+    if(!el) return;
+    if(avatars[m]){
+      el.style.cssText = el.style.cssText.replace(/background:[^;]+;|color:[^;]+;/g,'');
+      el.innerHTML = `<img src="${avatars[m]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      el.style.background = MAP[m].fallbackStyle.split(';')[0].split(':')[1].trim();
+      el.innerHTML = MAP[m].fallbackHtml;
+    }
+  });
+}
 
 // ===== GLOBAL KB CARD TOOLTIP =====
 function showKbTooltip(e, name, desc){
@@ -8549,6 +8806,7 @@ function pqOpenAdd(){
 
 // ===== INIT — load after all variables declared =====
 loadAppData();
+applyLoginAvatars();
 renderDashboard();
 renderHai();
 renderHieu();
@@ -8906,6 +9164,124 @@ setTimeout(initFirebaseListener, 1000);
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeManageAssignees()">Đóng</button>
+    </div>
+  </div>
+</div>
+
+<!-- AVATAR MODAL -->
+<div class="modal-overlay" id="avatarModal" onclick="if(event.target===this)closeAvatarModal()">
+  <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🖼 Đổi ảnh đại diện</h3>
+      <button class="modal-close" onclick="closeAvatarModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:14px;align-items:center">
+      <!-- Current avatar preview -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
+        <div id="avModalPreview" style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer;border:3px solid var(--gray-border)" onclick="document.getElementById('avFileInput').click()"></div>
+      <div style="font-size:12px;color:var(--text-muted);text-align:center">
+        Click vào ảnh để thay đổi<br>
+        <span style="color:#2980b9;font-weight:500">Kích thước chuẩn: 200 × 200 px</span> (vuông). Tối đa 3MB.<br>
+        <span style="opacity:.7">Ảnh sẽ được tự động crop và resize về 200×200px.</span>
+      </div>
+      </div>
+      <input type="file" id="avFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+      <div style="display:flex;gap:8px;width:100%">
+        <button onclick="document.getElementById('avFileInput').click()" class="btn btn-outline btn-sm" style="flex:1">📁 Chọn ảnh</button>
+        <button onclick="removeAvatar()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6">🗑 Xoá ảnh</button>
+      </div>
+      <div id="avErr" style="display:none;color:#e74c3c;font-size:12px;width:100%"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAvatarModal()">Huỷ</button>
+      <button class="btn btn-primary" onclick="saveAvatar()">✓ Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settingsModal" onclick="if(event.target===this)closeSettings()">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>⚙ Cài đặt giao diện</h3>
+      <button class="modal-close" onclick="closeSettings()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:16px">
+      <div class="form-group" style="width:100%">
+        <label style="font-weight:600">🖼 Ảnh nền sảnh chờ</label>
+        <p style="font-size:12px;color:var(--text-muted);margin:4px 0 10px">Ảnh sẽ hiển thị phía sau các hồ sơ trên màn hình đăng nhập.<br>
+        <b>Kích thước chuẩn:</b> <span style="color:#2980b9">1920 × 1080 px</span> (tỉ lệ 16:9). Tối thiểu 800px chiều ngang. Tối đa 2MB.</p>
+        <!-- Preview -->
+        <div id="settingsBgPreview" style="width:100%;height:140px;border-radius:10px;border:2px dashed var(--gray-border);background:#f8f9fa;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;position:relative;cursor:pointer" onclick="document.getElementById('settingsBgInput').click()">
+          <div id="settingsBgPlaceholder" style="text-align:center;color:var(--text-muted);font-size:13px;pointer-events:none">
+            <div style="font-size:28px;margin-bottom:6px">🖼</div>
+            <div>Click để chọn ảnh</div>
+            <div style="font-size:11px;margin-top:4px">JPG, PNG, WEBP — tối đa 2MB</div>
+          </div>
+          <img id="settingsBgImg" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
+          <div id="settingsBgOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;font-size:13px;color:#fff;cursor:pointer" onclick="document.getElementById('settingsBgInput').click()">
+            ✏️ Đổi ảnh
+          </div>
+        </div>
+        <input type="file" id="settingsBgInput" accept="image/*" style="display:none" onchange="handleBgUpload(event)">
+        <div style="display:flex;gap:8px">
+          <button onclick="document.getElementById('settingsBgInput').click()" class="btn btn-outline btn-sm" style="flex:1">📁 Chọn ảnh</button>
+          <button onclick="removeBg()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6" id="settingsBgRemoveBtn">🗑 Xoá ảnh</button>
+        </div>
+        <div id="settingsBgErr" style="display:none;color:#e74c3c;font-size:12px;margin-top:6px"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeSettings()">Đóng</button>
+      <button class="btn btn-primary" onclick="saveSettings()" id="settingsSaveBtn">✓ Lưu</button>
+    </div>
+  </div>
+</div>
+
+<!-- AVATAR SETTINGS MODAL -->
+<div class="modal-overlay" id="avatarSettingsModal" onclick="if(event.target===this)closeAvatarSettings()">
+  <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🖼️ Ảnh đại diện sảnh chờ</h3>
+      <button class="modal-close" onclick="closeAvatarSettings()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:16px">
+      <p style="font-size:13px;color:var(--text-muted);margin:0">Tải ảnh lên để hiển thị trong sảnh chọn hồ sơ. Ảnh sẽ đồng bộ qua Firebase.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+        <!-- Admin -->
+        <div style="text-align:center">
+          <div id="avPreview_admin" style="width:80px;height:80px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 8px;overflow:hidden;border:2px solid var(--gray-border)">⚙</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Admin</div>
+          <label style="cursor:pointer;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:11px;display:inline-block">
+            📁 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event,'admin')">
+          </label>
+          <button onclick="removeAvatar('admin')" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer">✕ Xóa</button>
+        </div>
+        <!-- Hiếu -->
+        <div style="text-align:center">
+          <div id="avPreview_hieu" style="width:80px;height:80px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 8px;overflow:hidden;border:2px solid var(--gray-border)">H</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Hiếu</div>
+          <label style="cursor:pointer;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:11px;display:inline-block">
+            📁 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event,'hieu')">
+          </label>
+          <button onclick="removeAvatar('hieu')" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer">✕ Xóa</button>
+        </div>
+        <!-- Hải -->
+        <div style="text-align:center">
+          <div id="avPreview_hai" style="width:80px;height:80px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 8px;overflow:hidden;border:2px solid var(--gray-border)">H</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Hải</div>
+          <label style="cursor:pointer;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:11px;display:inline-block">
+            📁 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event,'hai')">
+          </label>
+          <button onclick="removeAvatar('hai')" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer">✕ Xóa</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAvatarSettings()">Đóng</button>
     </div>
   </div>
 </div>
