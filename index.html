@@ -225,7 +225,13 @@
   .gv-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
   .gv-badge-wait{background:#fff3e0;color:#e67e22;border:1px solid #fce0b0;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
   .gv-badge-doing{background:#f0f7fd;color:#2980b9;border:1px solid #b8d4ea;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
-  .gv-badge-done{background:#f0faf4;color:#27ae60;border:1px solid #a8deba;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}border:1px solid #ffc107;border-radius:10px;padding:0;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 8px rgba(255,193,7,.15)}
+  .gv-badge-done{background:#f0faf4;color:#27ae60;border:1px solid #a8deba;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+  .prompt-card{background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:14px 16px;transition:box-shadow .15s;position:relative}
+  .prompt-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.08)}
+  .prompt-card.type-anh{border-left:3px solid #8e44ad}
+  .prompt-card.type-viet{border-left:3px solid #2980b9}
+  .prompt-content{font-family:monospace;font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap;background:#f8f9fa;border-radius:6px;padding:10px 12px;margin-top:8px;max-height:120px;overflow:hidden;transition:max-height .3s;cursor:text;user-select:text}
+  .prompt-content.expanded{max-height:600px}border:1px solid #ffc107;border-radius:10px;padding:0;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 8px rgba(255,193,7,.15)}
   #page-index .it-due-banner{border-radius:0;border-left:none;border-right:none;border-top:none;margin-bottom:0;box-shadow:none;border-bottom:2px solid #ffc107}
   .it-due-header{background:#ffc107;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
   .it-due-header h3{font-size:13px;font-weight:700;color:#5d4037;margin:0;display:flex;align-items:center;gap:6px}
@@ -403,6 +409,7 @@
   <div class="nav-section">Quản lý</div>
   <button onclick="showPage('tasks')">&#128203; Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
   <button onclick="showPage('index')">&#128269; Index Tasks <span id="navBadgeIndex" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
+  <button onclick="showPage('prompts')">&#9997; Prompt</button>
   <button onclick="showPage('links')">&#128279; Link quan trọng</button>
 </nav>
 
@@ -1125,6 +1132,34 @@
       <button class="btn btn-outline" id="qi_btn_back" style="display:none" onclick="qi_goBack()">&#8592; Nhập lại</button>
       <button class="btn btn-primary" id="qi_btn_parse" onclick="qi_parse()">&#129302; Phân tích với AI</button>
       <button class="btn btn-primary" id="qi_btn_add" style="display:none" onclick="qi_addAll()">&#43; Thêm tất cả vào Kanban</button>
+    </div>
+  </div>
+</div>
+
+<!-- PROMPTS PAGE -->
+<div id="page-prompts" class="page">
+  <!-- TAB BAR -->
+  <div style="display:flex;background:#fff;border-radius:8px 8px 0 0;border:1px solid var(--gray-border);border-bottom:none;width:fit-content;overflow:hidden">
+    <button class="gv-tab active" id="ptab-viet" onclick="switchPromptTab('viet')">✍️ Prompt viết</button>
+    <button class="gv-tab" id="ptab-anh" onclick="switchPromptTab('anh')">🖼️ Prompt ảnh</button>
+  </div>
+  <div style="border:1px solid var(--gray-border);border-radius:0 8px 8px 8px;background:#fff;display:flex;flex-direction:column;height:calc(100vh - 120px);overflow:hidden">
+    <!-- TOOLBAR -->
+    <div class="panel-header" style="border-radius:0;border:none;border-bottom:1px solid var(--gray-border);flex-shrink:0">
+      <div>
+        <input type="text" id="promptSearch" placeholder="🔍 Tìm prompt..." oninput="renderPrompts()" style="width:200px;height:32px;font-size:12px">
+        <select id="promptFilterCat" onchange="renderPrompts()" style="height:32px;font-size:12px;margin-left:6px">
+          <option value="">Tất cả danh mục</option>
+        </select>
+      </div>
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" onclick="openAddPromptModal()">&#43; Thêm prompt</button>
+      </div>
+    </div>
+    <!-- LIST -->
+    <div style="flex:1;overflow-y:auto;padding:16px" id="promptListWrap">
+      <div id="promptList" style="display:flex;flex-direction:column;gap:10px"></div>
+      <div id="promptEmpty" class="empty" style="display:none"><div class="icon">✍️</div>Chưa có prompt nào.</div>
     </div>
   </div>
 </div>
@@ -2771,6 +2806,7 @@ function showPage(name){
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderWebsites(); renderLinks(); renderWebsites(); }
   if(name==='index') renderIndexTasks();
+  if(name==='prompts') renderPrompts();
   try{ localStorage.setItem('wt_activePage', name); } catch(e){}
 }
 
@@ -2809,6 +2845,7 @@ function saveAppData(){
     localStorage.setItem('wt_index_tasks', JSON.stringify(indexTasks));
     localStorage.setItem('wt_giaoviec', JSON.stringify(giaoViecList));
     localStorage.setItem('wt_assignees', JSON.stringify(assignees));
+    localStorage.setItem('wt_prompts', JSON.stringify(prompts));
     localStorage.setItem('wt_ts', String(ts));
   }catch(e){}
 
@@ -2816,7 +2853,7 @@ function saveAppData(){
     console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
-      tasks, taskOrder: tasks.map(t=>t.id), deletedTasks, links, linkCategories, websites, wsGroups, indexTasks, giaoViecList, assignees, _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'), _ts: ts, _sid: _sessionId
+      tasks, taskOrder: tasks.map(t=>t.id), deletedTasks, links, linkCategories, websites, wsGroups, indexTasks, giaoViecList, assignees, prompts, _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'), _ts: ts, _sid: _sessionId
     }).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
@@ -2848,6 +2885,7 @@ function forceSyncToCloud(){
     indexTasks,
     giaoViecList,
     assignees,
+    prompts,
     _ts: Date.now(), _sid: _sessionId
   }).then(()=>{
     toast('☁ Đã đồng bộ toàn bộ dữ liệu lên đám mây!');
@@ -2916,6 +2954,7 @@ function initFirebaseListener(){
       if(Array.isArray(r.indexTasks)){ indexTasks=r.indexTasks; itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
+      if(Array.isArray(r.prompts)){ prompts=r.prompts; promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
 
       localStorage.setItem('wt_data_hai', JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu', JSON.stringify(data.hieu));
@@ -2926,6 +2965,7 @@ function initFirebaseListener(){
       localStorage.setItem('wt_index_tasks', JSON.stringify(indexTasks));
       localStorage.setItem('wt_giaoviec', JSON.stringify(giaoViecList));
       localStorage.setItem('wt_assignees', JSON.stringify(assignees));
+      localStorage.setItem('wt_prompts', JSON.stringify(prompts));
       if(r._ts) localStorage.setItem('wt_ts', String(r._ts));
 
       renderDashboard(); renderHai(); renderHieu();
@@ -2974,6 +3014,7 @@ function loadAppData(){
     const it=localStorage.getItem('wt_index_tasks'); if(it){ indexTasks=JSON.parse(it); itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
     const gv=localStorage.getItem('wt_giaoviec'); if(gv){ giaoViecList=JSON.parse(gv); giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
     const ga=localStorage.getItem('wt_assignees'); if(ga) assignees=JSON.parse(ga);
+    const pr=localStorage.getItem('wt_prompts'); if(pr){ prompts=JSON.parse(pr); promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
   }catch(e){ console.warn('localStorage load failed', e); }
 }
 
@@ -3944,9 +3985,9 @@ function qi_addAll(){
 }
 // ===== MEMBER SWITCHER =====
 const MEMBER_CONFIG = {
-  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','tasks','add','import','links','index']},
-  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','tasks','add','import','links','index']},
-  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','tasks','add','import','links','index']},
+  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','tasks','add','import','links','index','prompts']},
+  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','tasks','add','import','links','index','prompts']},
+  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','tasks','add','import','links','index','prompts']},
 };
 
 function toggleMemberDropdown(){
@@ -4065,6 +4106,8 @@ let selectedTaskIds = new Set();
 let giaoViecList = [];
 let giaoViecNextId = 1;
 let assignees = ['Hải', 'Hiếu']; // default, customizable
+let prompts = [];
+let promptNextId = 1;
 
 (function restoreMember(){
   try{
@@ -7191,6 +7234,160 @@ function clearIndexIdFilter(sheet){
   if(sheet==='hai') renderHai(); else renderHieu();
 }
 
+// ===== PROMPTS =====
+let _promptTab = 'viet';
+
+function switchPromptTab(tab){
+  _promptTab = tab;
+  document.getElementById('ptab-viet').classList.toggle('active', tab==='viet');
+  document.getElementById('ptab-anh').classList.toggle('active', tab==='anh');
+  renderPrompts();
+}
+
+function renderPrompts(){
+  const list = document.getElementById('promptList');
+  const empty = document.getElementById('promptEmpty');
+  if(!list) return;
+
+  const q = (document.getElementById('promptSearch')?.value||'').toLowerCase();
+  const fCat = document.getElementById('promptFilterCat')?.value||'';
+
+  // Update category filter options
+  const catSel = document.getElementById('promptFilterCat');
+  if(catSel){
+    const cur = catSel.value;
+    const cats = [...new Set(prompts.filter(p=>p.type===_promptTab).map(p=>p.cat).filter(Boolean))].sort();
+    catSel.innerHTML = '<option value="">Tất cả danh mục</option>'
+      + cats.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
+  }
+
+  let items = prompts.filter(p=>{
+    if(p.type !== _promptTab) return false;
+    if(fCat && p.cat !== fCat) return false;
+    if(q && !p.name.toLowerCase().includes(q) && !p.content.toLowerCase().includes(q) && !(p.cat||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if(!items.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  // Group by category
+  const grouped = {};
+  items.forEach(p=>{
+    const k = p.cat||'Khác';
+    if(!grouped[k]) grouped[k]=[];
+    grouped[k].push(p);
+  });
+
+  list.innerHTML = Object.entries(grouped).map(([cat, ps])=>`
+    <div style="margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 2px;margin-bottom:6px;border-bottom:1px solid var(--gray-border)">${cat} <span style="font-weight:400;color:var(--gray-border)">(${ps.length})</span></div>
+      ${ps.map(p=>`
+      <div class="prompt-card type-${p.type}" style="margin-bottom:8px" id="pcard-${p.id}">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;margin-bottom:2px">${p.name}</div>
+            ${p.note?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">💡 ${p.note}</div>`:''}
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
+            <button onclick="copyPrompt(${p.id},this)" title="Copy prompt"
+              style="background:#f0f7fd;border:1px solid #b8d4ea;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;color:#2980b9;white-space:nowrap;transition:all .15s"
+              onmouseover="this.style.background='#2980b9';this.style.color='#fff'" onmouseout="this.style.background='#f0f7fd';this.style.color='#2980b9'">📋 Copy</button>
+            <button onclick="openEditPromptModal(${p.id})" title="Sửa"
+              style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px"
+              onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✎</button>
+            <button onclick="togglePromptExpand(${p.id})" title="Xem đầy đủ / thu gọn"
+              style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px"
+              id="pexpand-${p.id}">▼</button>
+          </div>
+        </div>
+        <div class="prompt-content" id="pcontent-${p.id}">${escHtml(p.content)}</div>
+      </div>`).join('')}
+    </div>`).join('');
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function togglePromptExpand(id){
+  const el = document.getElementById('pcontent-'+id);
+  const btn = document.getElementById('pexpand-'+id);
+  if(!el) return;
+  el.classList.toggle('expanded');
+  if(btn) btn.textContent = el.classList.contains('expanded') ? '▲' : '▼';
+}
+
+function copyPrompt(id, btn){
+  const p = prompts.find(x=>x.id===id);
+  if(!p) return;
+  copyText(p.content, btn);
+}
+
+function openAddPromptModal(){
+  document.getElementById('pm_id').value='';
+  document.getElementById('pm_name').value='';
+  document.getElementById('pm_content').value='';
+  document.getElementById('pm_note').value='';
+  document.getElementById('pm_cat').value='';
+  document.getElementById('pm_type').value=_promptTab;
+  document.getElementById('pm_delete_btn').style.display='none';
+  document.getElementById('promptModalTitle').textContent='+ Thêm prompt';
+  document.getElementById('promptModal').classList.add('open');
+  setTimeout(()=>document.getElementById('pm_name').focus(),100);
+}
+
+function openEditPromptModal(id){
+  const p = prompts.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('pm_id').value=id;
+  document.getElementById('pm_name').value=p.name;
+  document.getElementById('pm_content').value=p.content;
+  document.getElementById('pm_note').value=p.note||'';
+  document.getElementById('pm_cat').value=p.cat||'';
+  document.getElementById('pm_type').value=p.type;
+  document.getElementById('pm_delete_btn').style.display='inline-flex';
+  document.getElementById('promptModalTitle').textContent='✎ Sửa prompt';
+  document.getElementById('promptModal').classList.add('open');
+  setTimeout(()=>document.getElementById('pm_name').focus(),100);
+}
+
+function closePromptModal(){
+  document.getElementById('promptModal').classList.remove('open');
+}
+
+function savePrompt(){
+  const name=(document.getElementById('pm_name').value||'').trim();
+  const content=(document.getElementById('pm_content').value||'').trim();
+  if(!name){ toast('Vui lòng nhập tên prompt!','#e74c3c'); return; }
+  if(!content){ toast('Vui lòng nhập nội dung prompt!','#e74c3c'); return; }
+  const editId = document.getElementById('pm_id').value;
+  const obj={
+    name, content,
+    type:document.getElementById('pm_type').value||'viet',
+    cat:(document.getElementById('pm_cat').value||'').trim()||'Khác',
+    note:(document.getElementById('pm_note').value||'').trim(),
+  };
+  if(editId){
+    const p=prompts.find(x=>x.id===parseInt(editId));
+    if(p) Object.assign(p,obj);
+  } else {
+    prompts.push({id:promptNextId++,...obj});
+  }
+  saveAppData();
+  closePromptModal();
+  renderPrompts();
+  toast('✓ Đã lưu prompt: '+name);
+}
+
+function deletePrompt(){
+  const editId=parseInt(document.getElementById('pm_id').value);
+  if(!editId||!confirm('Xoá prompt này?')) return;
+  prompts=prompts.filter(p=>p.id!==editId);
+  saveAppData();
+  closePromptModal();
+  renderPrompts();
+  toast('Đã xoá.');
+}
+
 // ===== INIT — load after all variables declared =====
 loadAppData();
 renderDashboard();
@@ -7210,7 +7407,7 @@ window._websites = websites;
   let restoredPage = 'dashboard';
   try{
     const saved = localStorage.getItem('wt_activePage');
-    const validPages = ['dashboard','hai','hieu','add','import','tasks','links','index'];
+    const validPages = ['dashboard','hai','hieu','add','import','tasks','links','index','prompts'];
     const cfg = MEMBER_CONFIG[currentMember] || MEMBER_CONFIG['admin'];
     if(saved && validPages.includes(saved) && cfg.pages.includes(saved)){
       restoredPage = saved;
@@ -7433,6 +7630,51 @@ setTimeout(initFirebaseListener, 1000);
       <button class="btn btn-outline btn-sm" id="tpmClearBtn" style="margin-right:auto;display:none" onclick="resolveTaskPendingFromModal()">✓ Bỏ pending</button>
       <button class="btn btn-outline" onclick="closeTaskPendingModal()">Huỷ</button>
       <button class="btn btn-primary" onclick="saveTaskPending()">⏸ Xác nhận pending</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT PROMPT MODAL -->
+<div class="modal-overlay" id="promptModal" onclick="if(event.target===this)closePromptModal()">
+  <div class="modal" style="max-width:580px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="promptModalTitle">&#43; Thêm prompt</h3>
+      <button class="modal-close" onclick="closePromptModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <input type="hidden" id="pm_id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
+        <div class="form-group">
+          <label>Loại *</label>
+          <select id="pm_type" style="width:100%">
+            <option value="viet">✍️ Prompt viết</option>
+            <option value="anh">🖼️ Prompt ảnh</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Danh mục</label>
+          <div style="display:flex;gap:4px">
+            <input type="text" id="pm_cat" style="flex:1" placeholder="VD: SEO, Landing page...">
+          </div>
+        </div>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Tên prompt *</label>
+        <input type="text" id="pm_name" style="width:100%" placeholder="VD: Viết bài tinh gọn SEO...">
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Nội dung prompt *</label>
+        <textarea id="pm_content" rows="8" style="width:100%;font-family:monospace;font-size:12px;line-height:1.6" placeholder="Nhập nội dung câu lệnh..."></textarea>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Ghi chú</label>
+        <input type="text" id="pm_note" style="width:100%" placeholder="Mô tả ngắn hoặc hướng dẫn sử dụng...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="pm_delete_btn" style="display:none;margin-right:auto" onclick="deletePrompt()">🗑 Xoá</button>
+      <button class="btn btn-outline" onclick="closePromptModal()">Huỷ</button>
+      <button class="btn btn-primary" onclick="savePrompt()">✓ Lưu</button>
     </div>
   </div>
 </div>
