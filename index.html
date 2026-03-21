@@ -231,7 +231,10 @@
   .prompt-card.type-anh{border-left:3px solid #8e44ad}
   .prompt-card.type-viet{border-left:3px solid #2980b9}
   .prompt-content{font-family:monospace;font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap;background:#f8f9fa;border-radius:6px;padding:10px 12px;margin-top:8px;max-height:120px;overflow:hidden;transition:max-height .3s;cursor:text;user-select:text}
-  .prompt-content.expanded{max-height:600px}border:1px solid #ffc107;border-radius:10px;padding:0;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 8px rgba(255,193,7,.15)}
+  .prompt-content.expanded{max-height:600px}
+  .prompt-cat-tag{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--gray-border);background:#fff;color:var(--text-muted);transition:all .15s;white-space:nowrap}
+  .prompt-cat-tag:hover{border-color:var(--red);color:var(--red)}
+  .prompt-cat-tag.active{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}border:1px solid #ffc107;border-radius:10px;padding:0;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 8px rgba(255,193,7,.15)}
   #page-index .it-due-banner{border-radius:0;border-left:none;border-right:none;border-top:none;margin-bottom:0;box-shadow:none;border-bottom:2px solid #ffc107}
   .it-due-header{background:#ffc107;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
   .it-due-header h3{font-size:13px;font-weight:700;color:#5d4037;margin:0;display:flex;align-items:center;gap:6px}
@@ -1190,16 +1193,13 @@
   </div>
   <div style="border:1px solid var(--gray-border);border-radius:0 8px 8px 8px;background:#fff;display:flex;flex-direction:column;height:calc(100vh - 120px);overflow:hidden">
     <!-- TOOLBAR -->
-    <div class="panel-header" style="border-radius:0;border:none;border-bottom:1px solid var(--gray-border);flex-shrink:0">
-      <div>
-        <input type="text" id="promptSearch" placeholder="🔍 Tìm prompt..." oninput="renderPrompts()" style="width:200px;height:32px;font-size:12px">
-        <select id="promptFilterCat" onchange="renderPrompts()" style="height:32px;font-size:12px;margin-left:6px">
-          <option value="">Tất cả danh mục</option>
-        </select>
-      </div>
-      <div class="toolbar">
+    <div class="panel-header" style="border-radius:0;border:none;border-bottom:1px solid var(--gray-border);flex-shrink:0;flex-direction:column;align-items:stretch;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <input type="text" id="promptSearch" placeholder="🔍 Tìm prompt..." oninput="renderPrompts()" style="width:220px;height:32px;font-size:12px">
         <button class="btn btn-primary btn-sm" onclick="openAddPromptModal()">&#43; Thêm prompt</button>
       </div>
+      <!-- CATEGORY TAGS -->
+      <div id="promptCatTags" style="display:flex;gap:6px;flex-wrap:wrap;padding:2px 0"></div>
     </div>
     <!-- LIST -->
     <div style="flex:1;overflow-y:auto;padding:16px" id="promptListWrap">
@@ -7422,20 +7422,22 @@ function renderPrompts(){
   if(!list) return;
 
   const q = (document.getElementById('promptSearch')?.value||'').toLowerCase();
-  const fCat = document.getElementById('promptFilterCat')?.value||'';
+  // _promptCatFilter stored on window
+  const fCat = window._promptCatFilter||'';
 
-  // Update category filter options
-  const catSel = document.getElementById('promptFilterCat');
-  if(catSel){
-    const cur = catSel.value;
-    const cats = [...new Set(prompts.filter(p=>p.type===_promptTab).map(p=>p.cat).filter(Boolean))].sort();
-    catSel.innerHTML = '<option value="">Tất cả danh mục</option>'
-      + cats.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
+  // Render category tags
+  const cats = [...new Set(prompts.filter(p=>p.type===_promptTab).map(p=>p.cat||'Khác').filter(Boolean))].sort();
+  const tagWrap = document.getElementById('promptCatTags');
+  if(tagWrap){
+    tagWrap.innerHTML = [
+      `<span class="prompt-cat-tag ${!fCat?'active':''}" onclick="setPromptCat('')">Tất cả</span>`,
+      ...cats.map(c=>`<span class="prompt-cat-tag ${fCat===c?'active':''}" onclick="setPromptCat('${c.replace(/'/g,"\\'")}')">${c}</span>`)
+    ].join('');
   }
 
   let items = prompts.filter(p=>{
     if(p.type !== _promptTab) return false;
-    if(fCat && p.cat !== fCat) return false;
+    if(fCat && (p.cat||'Khác') !== fCat) return false;
     if(q && !p.name.toLowerCase().includes(q) && !p.content.toLowerCase().includes(q) && !(p.cat||'').toLowerCase().includes(q)) return false;
     return true;
   });
@@ -7443,39 +7445,86 @@ function renderPrompts(){
   if(!items.length){ list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
 
-  // Group by category
-  const grouped = {};
-  items.forEach(p=>{
-    const k = p.cat||'Khác';
-    if(!grouped[k]) grouped[k]=[];
-    grouped[k].push(p);
-  });
-
-  list.innerHTML = Object.entries(grouped).map(([cat, ps])=>`
-    <div style="margin-bottom:8px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 2px;margin-bottom:6px;border-bottom:1px solid var(--gray-border)">${cat} <span style="font-weight:400;color:var(--gray-border)">(${ps.length})</span></div>
-      ${ps.map(p=>`
-      <div class="prompt-card type-${p.type}" style="margin-bottom:8px" id="pcard-${p.id}">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:600;margin-bottom:2px">${p.name}</div>
-            ${p.note?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">💡 ${p.note}</div>`:''}
+  list.innerHTML = items.map(p=>`
+    <div class="prompt-card type-${p.type}" id="pcard-${p.id}">
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+            <span style="font-size:13px;font-weight:700;color:var(--text)">${p.name}</span>
+            ${p.cat?`<span style="font-size:10px;padding:2px 8px;border-radius:20px;background:#f0f0f0;color:#555;font-weight:500">${p.cat}</span>`:''}
           </div>
-          <div style="display:flex;gap:4px;flex-shrink:0">
-            <button onclick="copyPrompt(${p.id},this)" title="Copy prompt"
-              style="background:#f0f7fd;border:1px solid #b8d4ea;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;color:#2980b9;white-space:nowrap;transition:all .15s"
-              onmouseover="this.style.background='#2980b9';this.style.color='#fff'" onmouseout="this.style.background='#f0f7fd';this.style.color='#2980b9'">📋 Copy</button>
-            <button onclick="openEditPromptModal(${p.id})" title="Sửa"
-              style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px"
-              onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✎</button>
-            <button onclick="togglePromptExpand(${p.id})" title="Xem đầy đủ / thu gọn"
-              style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px"
-              id="pexpand-${p.id}">▼</button>
-          </div>
+          ${p.note?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:2px">💡 ${p.note}</div>`:''}
         </div>
-        <div class="prompt-content" id="pcontent-${p.id}">${escHtml(p.content)}</div>
-      </div>`).join('')}
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button onclick="copyPrompt(${p.id},this)" title="Copy prompt"
+            style="background:#f0f7fd;border:1px solid #b8d4ea;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600;color:#2980b9;white-space:nowrap;transition:all .15s"
+            onmouseover="this.style.background='#2980b9';this.style.color='#fff'" onmouseout="this.style.background='#f0f7fd';this.style.color='#2980b9'">📋 Copy</button>
+          <button onclick="openEditPromptModal(${p.id})" title="Sửa"
+            style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px"
+            onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✎</button>
+          <button onclick="togglePromptExpand(${p.id})" title="Xem đầy đủ / thu gọn"
+            style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:11px"
+            id="pexpand-${p.id}">▼</button>
+        </div>
+      </div>
+      <div class="prompt-content" id="pcontent-${p.id}">${escHtml(p.content)}</div>
     </div>`).join('');
+}
+
+function setPromptCat(cat){
+  window._promptCatFilter = cat;
+  renderPrompts();
+}
+
+function pmCatSearch(){
+  const q = (document.getElementById('pm_cat')?.value||'').toLowerCase();
+  const type = document.getElementById('pm_type')?.value||'viet';
+  const cats = [...new Set(prompts.filter(p=>p.type===type).map(p=>p.cat||'').filter(Boolean))].sort();
+  const filtered = q ? cats.filter(c=>c.toLowerCase().includes(q)) : cats;
+  const drop = document.getElementById('pmCatDrop');
+  if(!drop) return;
+  if(!filtered.length && !q){ drop.style.display='none'; return; }
+  const addNew = q && !cats.map(c=>c.toLowerCase()).includes(q);
+  drop.innerHTML = [
+    ...filtered.map(c=>`<div onclick="pmSelectCat('${c.replace(/'/g,"\\'")}')"
+      style="padding:7px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--gray-border)"
+      onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+      ${c}
+    </div>`),
+    addNew ? `<div onclick="pmSelectCat('${q.replace(/'/g,"\\'")}')"
+      style="padding:7px 12px;cursor:pointer;font-size:13px;color:var(--red);font-weight:600"
+      onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+      + Thêm mới: "${q}"
+    </div>` : ''
+  ].join('');
+  drop.style.display = (filtered.length || addNew) ? 'block' : 'none';
+  pmRenderCatTags(type);
+}
+
+function pmSelectCat(cat){
+  const inp = document.getElementById('pm_cat');
+  if(inp) inp.value = cat;
+  pmCatClose();
+  pmRenderCatTags(document.getElementById('pm_type')?.value||'viet');
+}
+
+function pmCatClose(){
+  const d = document.getElementById('pmCatDrop');
+  if(d) d.style.display='none';
+}
+
+function pmRenderCatTags(type){
+  const existing = document.getElementById('pmCatExisting');
+  if(!existing) return;
+  const cur = document.getElementById('pm_cat')?.value||'';
+  const cats = [...new Set(prompts.filter(p=>p.type===type).map(p=>p.cat||'').filter(Boolean))].sort();
+  if(!cats.length){ existing.innerHTML=''; return; }
+  existing.innerHTML = cats.map(c=>`<span onclick="pmSelectCat('${c.replace(/'/g,"\\'")}')"
+    style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;border:1px solid ${cur===c?'var(--red)':'var(--gray-border)'};background:${cur===c?'#fdf2f2':'#fff'};color:${cur===c?'var(--red)':'var(--text-muted)'};transition:all .15s"
+    onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
+    onmouseout="this.style.borderColor='${cur===c?'var(--red)':'var(--gray-border)'}';this.style.color='${cur===c?'var(--red)':'var(--text-muted)'}'">
+    ${c}
+  </span>`).join('');
 }
 
 function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -7504,6 +7553,7 @@ function openAddPromptModal(){
   document.getElementById('pm_delete_btn').style.display='none';
   document.getElementById('promptModalTitle').textContent='+ Thêm prompt';
   document.getElementById('promptModal').classList.add('open');
+  pmRenderCatTags(_promptTab);
   setTimeout(()=>document.getElementById('pm_name').focus(),100);
 }
 
@@ -7519,6 +7569,7 @@ function openEditPromptModal(id){
   document.getElementById('pm_delete_btn').style.display='inline-flex';
   document.getElementById('promptModalTitle').textContent='✎ Sửa prompt';
   document.getElementById('promptModal').classList.add('open');
+  pmRenderCatTags(p.type||'viet');
   setTimeout(()=>document.getElementById('pm_name').focus(),100);
 }
 
@@ -7889,16 +7940,21 @@ setTimeout(initFirebaseListener, 1000);
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
         <div class="form-group">
           <label>Loại *</label>
-          <select id="pm_type" style="width:100%">
+          <select id="pm_type" style="width:100%" onchange="pmRenderCatTags(this.value);pmCatSearch()">
             <option value="viet">✍️ Prompt viết</option>
             <option value="anh">🖼️ Prompt ảnh</option>
           </select>
         </div>
         <div class="form-group">
           <label>Danh mục</label>
-          <div style="display:flex;gap:4px">
-            <input type="text" id="pm_cat" style="flex:1" placeholder="VD: SEO, Landing page...">
+          <div style="position:relative" id="pmCatWrap">
+            <input type="text" id="pm_cat" style="width:100%" placeholder="Tìm hoặc nhập danh mục mới..."
+              oninput="pmCatSearch()" onfocus="pmCatSearch()" onblur="setTimeout(pmCatClose,200)"
+              autocomplete="off">
+            <div id="pmCatDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-border);border-radius:0 0 6px 6px;box-shadow:0 4px 12px rgba(0,0,0,.1);z-index:400;max-height:160px;overflow-y:auto"></div>
           </div>
+          <!-- Existing category tags to click-select -->
+          <div id="pmCatExisting" style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px"></div>
         </div>
       </div>
       <div class="form-group" style="width:100%">
