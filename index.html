@@ -9178,21 +9178,19 @@ setTimeout(initFirebaseListener, 1000);
       <button class="modal-close" onclick="closeAvatarModal()">&times;</button>
     </div>
     <div class="modal-body" style="gap:14px;align-items:center">
-      <!-- Current avatar preview -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
-        <label for="avFileInput" style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);cursor:pointer;border:3px solid var(--gray-border)" id="avModalPreview"></label>
-      <div style="font-size:12px;color:var(--text-muted);text-align:center">
-        Click vào ảnh để thay đổi<br>
-        <span style="color:#2980b9;font-weight:500">Kích thước chuẩn: 200 × 200 px</span> (vuông). Tối đa 3MB.<br>
-        <span style="opacity:.7">Ảnh sẽ được tự động crop và resize về 200×200px.</span>
+        <div id="avModalPreview" style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);border:3px solid var(--gray-border)"></div>
+        <div style="font-size:12px;color:var(--text-muted);text-align:center">
+          <span style="color:#2980b9;font-weight:500">Kích thước chuẩn: 200 × 200 px</span> (vuông). Tối đa 3MB.
+        </div>
       </div>
+      <div style="width:100%">
+        <input type="file" id="avFileInput" accept="image/jpeg,image/png,image/webp,image/gif"
+          style="width:100%;font-size:13px;padding:6px;border:1px solid var(--gray-border);border-radius:6px;cursor:pointer;background:#f8f9fa"
+          onchange="handleAvatarUpload(event)">
       </div>
       <div style="display:flex;gap:8px;width:100%">
-        <label class="btn btn-outline btn-sm" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
-          📁 Chọn ảnh
-          <input type="file" id="avFileInput" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
-        </label>
-        <button onclick="removeAvatar()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6">🗑 Xoá ảnh</button>
+        <button onclick="removeAvatar()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6">🗑 Xoá ảnh hiện tại</button>
       </div>
       <div id="avErr" style="display:none;color:#e74c3c;font-size:12px;width:100%"></div>
     </div>
