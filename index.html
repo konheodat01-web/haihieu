@@ -271,6 +271,8 @@
 
 <!-- LOGIN SCREEN -->
 <div id="loginScreen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1a0a0a 0%,#2c1010 50%,#1a0a0a 100%);flex-direction:column;align-items:center;justify-content:center;font-family:inherit;display:flex">
+  <div id="loginBgOverlay" style="position:absolute;inset:0;background:rgba(0,0,0,.45);pointer-events:none;z-index:0;transition:background .3s"></div>
+  <div style="position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center">
   <div style="text-align:center;margin-bottom:48px">
     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c0392b'/%3E%3Crect x='7' y='9' width='18' height='2.5' rx='1.2' fill='white'/%3E%3Crect x='7' y='14.7' width='18' height='2.5' rx='1.2' fill='white'/%3E%3Crect x='7' y='20.5' width='12' height='2.5' rx='1.2' fill='white'/%3E%3Ccircle cx='25' cy='22' r='5' fill='%2327ae60'/%3E%3Cpath d='M22.5 22l2 2 3-3' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E"
       style="width:56px;height:56px;margin-bottom:14px;filter:drop-shadow(0 4px 12px rgba(192,57,43,.5))">
@@ -328,6 +330,7 @@
   </div>
 
   <p style="color:rgba(255,255,255,.18);font-size:11px;margin-top:48px">Phiên làm việc được ghi nhớ trong tab này</p>
+  </div>
 </div>
 
 <!-- GLOBAL KB TOOLTIP -->
@@ -4549,16 +4552,19 @@ function saveSettings(){
 
 function applyLoginBg(src){
   const ls = document.getElementById('loginScreen');
+  const overlay = document.getElementById('loginBgOverlay');
   if(!ls) return;
   if(src){
     ls.style.backgroundImage = `url('${src}')`;
     ls.style.backgroundSize = 'cover';
     ls.style.backgroundPosition = 'center';
     ls.style.backgroundRepeat = 'no-repeat';
+    if(overlay) overlay.style.background = 'rgba(0,0,0,.5)';
   } else {
     ls.style.backgroundImage = '';
     ls.style.backgroundSize = '';
     ls.style.backgroundPosition = '';
+    if(overlay) overlay.style.background = 'rgba(0,0,0,0)';
   }
 }
 
