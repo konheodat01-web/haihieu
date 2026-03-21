@@ -4433,22 +4433,11 @@ function handleAvatarUpload(event){
   err.style.display='none';
   const reader = new FileReader();
   reader.onload = e => {
-    const imgEl = new Image();
-    imgEl.onload = () => {
-      // Center-crop to square, max 400px (avatar display size)
-      const MAX_AV = 400;
-      const sq = Math.min(imgEl.width, imgEl.height);
-      const size = Math.min(sq, MAX_AV);
-      const canvas = document.createElement('canvas');
-      canvas.width = size; canvas.height = size;
-      const ox = (imgEl.width - sq)/2, oy = (imgEl.height - sq)/2;
-      canvas.getContext('2d').drawImage(imgEl, ox, oy, sq, sq, 0, 0, size, size);
-      _pendingAvatar = canvas.toDataURL('image/jpeg', 0.9);
-      const preview = document.getElementById('avModalPreview');
-      preview.innerHTML = `<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover">`;
-    };
-    imgEl.src = e.target.result;
+    _pendingAvatar = e.target.result;
+    const preview = document.getElementById('avModalPreview');
+    preview.innerHTML = `<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%">`;
   };
+  reader.onerror = () => { err.textContent='Không đọc được file ảnh.'; err.style.display='block'; };
   reader.readAsDataURL(file);
   event.target.value = '';
 }
