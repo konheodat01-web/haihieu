@@ -243,7 +243,8 @@
   .prompt-content.expanded{max-height:600px}
   .prompt-cat-tag{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--gray-border);background:#fff;color:var(--text-muted);transition:all .15s;white-space:nowrap}
   .prompt-cat-tag:hover{border-color:var(--red);color:var(--red)}
-  .prompt-cat-tag.active{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}border:1px solid #ffc107;border-radius:10px;padding:0;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 8px rgba(255,193,7,.15)}
+  .prompt-cat-tag.active{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+  .it-due-banner{border:1px solid #ffc107;border-radius:10px;padding:0;margin-bottom:16px;overflow:hidden;box-shadow:0 2px 8px rgba(255,193,7,.15)}
   #page-index .it-due-banner{border-radius:0;border-left:none;border-right:none;border-top:none;margin-bottom:0;box-shadow:none;border-bottom:2px solid #ffc107}
   .it-due-header{background:#ffc107;padding:10px 16px;display:flex;align-items:center;justify-content:space-between}
   .it-due-header h3{font-size:13px;font-weight:700;color:#5d4037;margin:0;display:flex;align-items:center;gap:6px}
@@ -747,7 +748,7 @@
   <!-- TAB BAR -->
   <div style="display:flex;background:#fff;border-radius:8px 8px 0 0;border:1px solid var(--gray-border);border-bottom:none;width:fit-content;margin-bottom:0;overflow:hidden">
     <button class="gv-tab active" id="tab-mytasks" onclick="switchTasksTab('mytasks')">📋 Task của tôi</button>
-    <button class="gv-tab" id="tab-giaoviec" onclick="switchTasksTab('giaoviec')" id="tabGiaoViec">📤 Giao việc <span id="gvBadge" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px"></span></button>
+    <button class="gv-tab" id="tabGiaoViec" onclick="switchTasksTab('giaoviec')">📤 Giao việc <span id="gvBadge" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px"></span></button>
   </div>
 
   <!-- PANEL: TASK CỦA TÔI -->
@@ -1174,7 +1175,7 @@
           </div>
           <div class="form-group">
             <label>NGƯỜI VIẾT</label>
-            <select id="iNguoiViet">
+            <select id="iNguoiViet" onchange="if((document.getElementById('iKeywords')?.value||'').trim()){if(!confirm('Đổi người viết sẽ không xoá keywords đã nhập. Bạn có muốn tiếp tục?'))this.value=this.dataset.prev||this.value;else this.dataset.prev=this.value;}else this.dataset.prev=this.value">
               <option value="hieu">Hiếu</option>
               <option value="hai">Hải</option>
             </select>
@@ -1998,14 +1999,19 @@ function fmtDate(d){
   return `${dd}/${m}`;
 }
 
-function totalHai(){
-  return data.hai.reduce((a,r)=>a+loaiPrice(r.loai)+(r.chiDang||0)*4000,0);
+function _currentMonthYM(){
+  const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
 }
-function totalHieu(){
-  return data.hieu.reduce((a,r)=>a+loaiPrice(r.loai)+(r.chiDang||0)*4000,0);
+function totalHai(monthYM){
+  const ym=monthYM||_currentMonthYM();
+  return data.hai.filter(r=>(r.ngay||'').startsWith(ym)).reduce((a,r)=>a+loaiPrice(r.loai)+(r.chiDang||0)*4000,0);
 }
-function totalBaiHai(){return data.hai.length;}
-function totalBaiHieu(){return data.hieu.length;}
+function totalHieu(monthYM){
+  const ym=monthYM||_currentMonthYM();
+  return data.hieu.filter(r=>(r.ngay||'').startsWith(ym)).reduce((a,r)=>a+loaiPrice(r.loai)+(r.chiDang||0)*4000,0);
+}
+function totalBaiHai(monthYM){ const ym=monthYM||_currentMonthYM(); return data.hai.filter(r=>(r.ngay||'').startsWith(ym)).length; }
+function totalBaiHieu(monthYM){ const ym=monthYM||_currentMonthYM(); return data.hieu.filter(r=>(r.ngay||'').startsWith(ym)).length; }
 
 function renderDashboard(){
   const tHai = totalHai(), tHieu = totalHieu();
@@ -2894,7 +2900,7 @@ function getF(id){return (document.getElementById(id)||{}).value||'';}
 function inDateRange(ngay,from,to){
   if(!from&&!to) return true;
   if(!ngay) return false;
-  if(from&&!to) return ngay===from;
+  if(from&&!to) return ngay>=from;
   if(from&&to) return ngay>=from&&ngay<=to;
   if(!from&&to) return ngay<=to;
   return true;
@@ -2923,12 +2929,7 @@ function addEntry(){
   const key = person==='Hải'?'hai':'hieu';
   data[key].unshift(entry);
   
-  const d = date.split('-'); const dayKey = `${parseInt(d[2])}/${parseInt(d[1])}`;
-  const rep = reportData[key].find(r=>r.ngay===dayKey);
-  if(rep){rep.bai+=1;rep.chiDang+=(entry.chiDang||0);}
-  else{reportData[key].push({ngay:dayKey,bai:1,chiDang:entry.chiDang||0});}
-  
-  saveAppData();
+  saveAppData(); // reportData recomputed by renderDashboard from data[]
   toast('&#10003; Đã thêm bài thành công!');
   clearForm();
   activeDate[key] = date; // jump to the entry's date
@@ -2968,7 +2969,7 @@ function showPage(name){
   if(name==='hieu'){ activeDate['hieu']=todayVN(); renderHieu(); }
   if(name==='tasks') renderTasksOverview();
   if(name!=='tasks') clearTaskSelection();
-  if(name==='links'){ renderWebsites(); renderLinks(); renderWebsites(); }
+  if(name==='links'){ renderLinks(); renderWebsites(); }
   if(name==='index') renderIndexTasks();
   if(name==='prompts') renderPrompts();
   try{ localStorage.setItem('wt_activePage', name); } catch(e){}
@@ -3029,6 +3030,7 @@ function saveToLocalStorage(){
     localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
     localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
     localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
+    if(deletedTasks.length>50) deletedTasks=deletedTasks.slice(-50); // cap trash at 50
     localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
     localStorage.setItem('wt_links',           JSON.stringify(links));
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
@@ -3366,7 +3368,10 @@ function calcProjectProgress(task){
 
 function daysLeft(deadline){
   if(!deadline) return '';
-  const diff=Math.ceil((new Date(deadline)-new Date())/(1000*60*60*24));
+  // Compare as local date strings to avoid UTC offset issues
+  const today = new Date(); today.setHours(0,0,0,0);
+  const dl = new Date(deadline+'T00:00:00'); // force local midnight
+  const diff = Math.round((dl-today)/(1000*60*60*24));
   if(diff<0) return `<span style="color:var(--red);font-size:11px;font-weight:600">Trễ ${Math.abs(diff)}n</span>`;
   if(diff===0) return `<span style="color:var(--red);font-size:11px;font-weight:600">Hôm nay!</span>`;
   if(diff<=3) return `<span style="color:#e67e22;font-size:11px">Còn ${diff}n</span>`;
@@ -3684,7 +3689,7 @@ function calcTaskAutoStatus(task){
   // Done: all cards in last col
   if(cards.every(c=>c.colId===lastColId||c.colId==='done')) return 'Hoàn thành';
   // Pending if task itself is pending
-  if(task.pendingReason) return 'Đang làm'; // task pending handled separately
+  if(task.pendingReason) return 'Pending';
   // Chưa làm: all cards still in first col (or todo)
   if(cards.every(c=>c.colId===firstColId||c.colId==='todo')) return 'Chưa làm';
   // At least 1 card moved out of first col
@@ -3948,7 +3953,10 @@ function closePendingModal(){document.getElementById('pendingModal').classList.r
 function renderPendingSummary(){
   // Collect pending cards
   const allPendingCards=[];
-  tasks.forEach(task=>{
+  // Filter tasks by current member
+  const myTasks = currentMember==='admin' ? tasks
+    : tasks.filter(t=>t.person===(currentMember==='hai'?'Hải':'Hiếu'));
+  myTasks.forEach(task=>{
     const cols=getProjectCols(task);
     const pendingColIds=new Set(cols.filter(c=>c.id==='pending'||c.id==='col_pending'||c.label.toLowerCase().includes('pending')).map(c=>c.id));
     (task.cards||[]).forEach(card=>{
@@ -3957,7 +3965,7 @@ function renderPendingSummary(){
   });
 
   // Collect pending parent tasks
-  const allPendingTasks = tasks.filter(t=>t.pendingReason);
+  const allPendingTasks = myTasks.filter(t=>t.pendingReason);
 
   const panel=document.getElementById('pendingSummaryPanel');
   const body=document.getElementById('pendingSummaryBody');
@@ -4901,12 +4909,11 @@ let promptNextId = 1;
 
 (function restoreMember(){
   try{
-    // Prefer session (tab) over localStorage
     const session = sessionStorage.getItem('wt_session_member');
-    const saved = session || localStorage.getItem('wt_activeMember');
+    if(!session) return; // No session — login screen will handle, don't set member
     const valid = ['admin','hai','hieu'];
-    setMember(valid.includes(saved) ? saved : 'admin');
-  }catch(e){ setMember('admin'); }
+    setMember(valid.includes(session) ? session : 'admin');
+  }catch(e){}
 })();
 // ===== LINK QUAN TRỌNG =====
 let links = [
@@ -6082,7 +6089,9 @@ function deleteWebsiteFromModal(id){
 // ===== AUTOCOMPLETE =====
 function acGetValues(field){
   const all = new Set();
-  [...data.hai, ...data.hieu].forEach(r=>{
+  const person = document.getElementById('fPerson')?.value || '';
+  const sheet = person==='Hải' ? data.hai : person==='Hiếu' ? data.hieu : [...data.hai,...data.hieu];
+  (Array.isArray(sheet)?sheet:[...sheet]).forEach(r=>{
     const v = (r[field]||'').trim();
     if(v) all.add(v);
   });
@@ -6129,11 +6138,12 @@ function wsBulkCopyUrls(btn){
 
 function wsBulkDelete(){
   if(!_wsSelected.size) return;
-  if(!confirm('Xoá '+_wsSelected.size+' website đã chọn?')) return;
+  const count = _wsSelected.size;
+  if(!confirm('Xoá '+count+' website đã chọn?')) return;
   websites = websites.filter(w=>!_wsSelected.has(w.id));
   _wsSelected.clear();
   saveAppData(); renderWebsites(); updateWsIcons();
-  toast('✓ Đã xoá '+_wsSelected.size+' website.');
+  toast('✓ Đã xoá '+count+' website.');
 }
 
 function wsBulkEditToggle(){
@@ -7735,7 +7745,7 @@ function resolveGvPending(gvId, cardId){
   if(!g) return;
   if(cardId){
     const card=(g.taskCards||[]).find(c=>c.id===cardId);
-    if(card){ const cols=getProjectCols({cols:g.taskCols}); card.colId=cols[0].id; delete card.pendingReason; delete card.pendingDate; delete card.pendingStatus; }
+    if(card){ const cols=getProjectCols({cols:g.taskCols}); const pIdx=cols.findIndex(c=>c.id==='col_pending'||c.id==='pending'); card.colId=pIdx>0?cols[pIdx-1].id:cols[0].id; delete card.pendingReason; delete card.pendingDate; delete card.pendingStatus; }
   } else {
     delete g.pendingReason; delete g.pendingNote; delete g.pendingDate; delete g.pendingStatus;
   }
@@ -7749,6 +7759,8 @@ function updateGvBadge(){
   if(!badge) return;
   const myItems = currentMember==='hai'
     ? giaoViecList.filter(g=>g.assignee==='Hải')
+    : currentMember==='hieu'
+    ? giaoViecList.filter(g=>g.assignee==='Hiếu')
     : giaoViecList;
   const pending = myItems.filter(g=>g.status!=='Hoàn thành'&&g.status!=='Đã nghiệm thu').length;
   if(pending){ badge.textContent=pending; badge.style.display='inline'; }
@@ -8644,7 +8656,8 @@ function qi_parseUrl(){
   const err=document.getElementById('qi_error'); if(err) err.style.display='none';
 
   // Build task name from qi_taskname or default
-  const taskName=(document.getElementById('qi_taskname')?.value||'').trim()||`Task URL (${urls.length} link)`;
+  let taskName=(document.getElementById('qi_taskname')?.value||'').trim()||`Task URL (${urls.length} link)`;
+  if(!taskName.trim()){ toast('Vui lòng nhập tên task!','#e74c3c'); return; }
   const person=document.getElementById('qi_person')?.value||'';
   const from=document.getElementById('qi_from')?.value||todayVN();
   const deadline=document.getElementById('qi_deadline')?.value||'';
