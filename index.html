@@ -4436,20 +4436,22 @@ function handleAvatarUpload(event){
   reader.onload = e => {
     const imgEl = new Image();
     imgEl.onload = () => {
-      // Center-crop to square, no resize
-      const SIZE = Math.min(imgEl.width, imgEl.height);
+      // Center-crop to square, max 400px (avatar display size)
+      const MAX_AV = 400;
+      const sq = Math.min(imgEl.width, imgEl.height);
+      const size = Math.min(sq, MAX_AV);
       const canvas = document.createElement('canvas');
-      canvas.width=SIZE; canvas.height=SIZE;
-      const ox = (imgEl.width-SIZE)/2, oy = (imgEl.height-SIZE)/2;
-      canvas.getContext('2d').drawImage(imgEl, ox, oy, SIZE, SIZE, 0, 0, SIZE, SIZE);
-      _pendingAvatar = canvas.toDataURL('image/jpeg', 1.0);
+      canvas.width = size; canvas.height = size;
+      const ox = (imgEl.width - sq)/2, oy = (imgEl.height - sq)/2;
+      canvas.getContext('2d').drawImage(imgEl, ox, oy, sq, sq, 0, 0, size, size);
+      _pendingAvatar = canvas.toDataURL('image/jpeg', 0.9);
       const preview = document.getElementById('avModalPreview');
-      preview.innerHTML=`<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover">`;
+      preview.innerHTML = `<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover">`;
     };
     imgEl.src = e.target.result;
   };
   reader.readAsDataURL(file);
-  event.target.value='';
+  event.target.value = '';
 }
 
 function removeAvatar(){
