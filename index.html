@@ -3062,6 +3062,7 @@ function forceSyncToCloud(){
 
 // Unique session ID - avoid receiving own pushes
 const _sessionId = Math.random().toString(36).slice(2);
+const _pageLoadTime = Date.now();
 
 function initFirebaseListener(){
   if(!window._fbReady || !window._fbDb) return;
@@ -3073,10 +3074,12 @@ function initFirebaseListener(){
     // Only skip pushes from THIS session (to avoid echo)
     if(r._sid && r._sid === _sessionId){ console.log('Skipped own push'); return; }
 
-    // Skip if Firebase data is OLDER than our local save (prevents F5 regression)
+    // Skip if Firebase data is OLDER than our local save — but ONLY within 5s of page load
+    // After that, always accept Firebase to allow cross-device sync
     const localTs = parseInt(localStorage.getItem('wt_ts')||'0');
-    if((r._ts||0) < localTs){
-      console.log('Skipped stale Firebase data: fb_ts=', r._ts, 'local_ts=', localTs);
+    const timeSinceLoad = Date.now() - _pageLoadTime;
+    if(timeSinceLoad < 5000 && (r._ts||0) < localTs){
+      console.log('Skipped stale Firebase data (within 5s of load): fb_ts=', r._ts, 'local_ts=', localTs);
       return;
     }
 
@@ -3136,8 +3139,18 @@ function initFirebaseListener(){
       if(r._ts) localStorage.setItem('wt_ts', String(r._ts));
 
       renderDashboard(); renderHai(); renderHieu();
-      // Always re-render tasks overview (don't rely on active class detection)
       renderTasksOverview();
+      // Fix: also re-render sub-board if currently open
+      if(currentProjectId){
+        const openTask = tasks.find(t=>t.id===currentProjectId);
+        if(openTask){
+          // Normalize cards array (Firebase may return object instead of array)
+          normalizeTaskCards(openTask);
+          renderSubBoard(openTask);
+        }
+      }
+      // Normalize all tasks' cards arrays defensively
+      tasks.forEach(normalizeTaskCards);
       const active=document.querySelector('.page.active')?.id?.replace('page-','');
       if(active==='links'){renderLinks();renderWebsites();}
       if(active==='index') renderIndexTasks();
@@ -3161,6 +3174,7 @@ function loadAppData(){
     if(t){
       tasks = JSON.parse(t);
       deduplicateTasks();
+      tasks.forEach(normalizeTaskCards);
       if(tasks.length) taskNextId = Math.max(taskNextId, ...tasks.map(x=>x.id||0)) + 1;
       // update cardNextId from all existing cards
       tasks.forEach(task=>{ (task.cards||[]).forEach(c=>{ const n=parseInt((c.id||'').replace(/\D/g,''))||0; if(n>=cardNextId) cardNextId=n+1; }); });
@@ -3307,6 +3321,28 @@ let dragCardId = null;
 let pendingDragCard = null;
 let editingCardId = null;
 let editingProjectId = null;
+
+function normalizeTaskCards(task){
+  if(!task) return;
+  // Firebase may return cards as object {0:{...},1:{...}} instead of array
+  if(task.cards && !Array.isArray(task.cards)){
+    task.cards = Object.values(task.cards);
+  }
+  if(!task.cards) task.cards = [];
+  // Normalize each card's colId against the task's columns
+  const cols = getProjectCols(task);
+  const validColIds = new Set(cols.map(c=>c.id));
+  // Add legacy colId aliases
+  validColIds.add('todo'); validColIds.add('doing'); validColIds.add('pending'); validColIds.add('done');
+  const firstColId = cols[0].id;
+  task.cards.forEach(card=>{
+    if(!card.colId || !validColIds.has(card.colId)){
+      // Unknown colId — put back in first col
+      console.warn(`Card ${card.id} has invalid colId "${card.colId}", resetting to "${firstColId}"`);
+      card.colId = firstColId;
+    }
+  });
+}
 
 function getProjectCols(task){
   return task.cols || DEFAULT_COLS;
@@ -4306,7 +4342,11 @@ function setMember(m){
     else if(activeId==='hai') renderHai();
     else if(activeId==='hieu') renderHieu();
     else if(activeId==='tasks') renderTasksOverview();
-    else if(activeId==='links') renderLinks();
+    else if(activeId==='links'){ renderLinks(); renderWebsites(); }
+    else if(activeId==='index') renderIndexTasks();
+    else if(activeId==='prompts') renderPrompts();
+    // Always re-render dashboard stats
+    renderDashboard();
   }
 
   // Always update website Team 02 filter visibility
