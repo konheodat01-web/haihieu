@@ -4409,6 +4409,13 @@ function openAvatarModal(){
   const preview = document.getElementById('avModalPreview');
   _renderAvPreview(preview, m, cur);
   document.getElementById('avErr').style.display='none';
+  // Bind file input fresh each open to avoid stale handlers
+  const inp = document.getElementById('avFileInput');
+  if(inp){
+    const newInp = inp.cloneNode(true);
+    inp.parentNode.replaceChild(newInp, inp);
+    newInp.addEventListener('change', handleAvatarUpload);
+  }
   document.getElementById('avatarModal').classList.add('open');
 }
 function closeAvatarModal(){ document.getElementById('avatarModal').classList.remove('open'); }
@@ -9186,8 +9193,7 @@ setTimeout(initFirebaseListener, 1000);
       </div>
       <div style="width:100%">
         <input type="file" id="avFileInput" accept="image/jpeg,image/png,image/webp,image/gif"
-          style="width:100%;font-size:13px;padding:6px;border:1px solid var(--gray-border);border-radius:6px;cursor:pointer;background:#f8f9fa"
-          onchange="handleAvatarUpload(event)">
+          style="width:100%;font-size:13px;padding:6px;border:1px solid var(--gray-border);border-radius:6px;cursor:pointer;background:#f8f9fa">
       </div>
       <div style="display:flex;gap:8px;width:100%">
         <button onclick="removeAvatar()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6">🗑 Xoá ảnh hiện tại</button>
