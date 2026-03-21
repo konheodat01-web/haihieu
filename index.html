@@ -4512,13 +4512,13 @@ function handleBgUpload(event){
     const dataUrl = e.target.result;
     const imgEl = new Image();
     imgEl.onload = () => {
-      const MAX = 900;
+      const MAX = 1920;
       let w = imgEl.width, h = imgEl.height;
       if(w > MAX){ h = Math.round(h * MAX/w); w = MAX; }
       const canvas = document.createElement('canvas');
       canvas.width=w; canvas.height=h;
       canvas.getContext('2d').drawImage(imgEl,0,0,w,h);
-      const compressed = canvas.toDataURL('image/jpeg', 0.75);
+      const compressed = canvas.toDataURL('image/jpeg', 0.92);
       _pendingBg = compressed;
       // Show preview
       const imgPrev = document.getElementById('settingsBgImg');
