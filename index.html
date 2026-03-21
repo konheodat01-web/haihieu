@@ -415,6 +415,11 @@
       <div class="toolbar">
         <input type="text" id="kwSearchHai" placeholder="&#128269; Tìm keyword..." oninput="renderHai()"
           style="width:180px;height:32px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="text" id="indexIdFilterHai" placeholder="&#128269; Lọc ID Index..." oninput="renderHai()"
+            style="width:150px;height:32px;font-size:12px">
+          <button onclick="clearIndexIdFilter('hai')" title="Xoá lọc ID" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 7px;height:32px;cursor:pointer;font-size:12px;color:var(--text-muted)" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✕</button>
+        </div>
         <span id="haiCount" style="font-size:12px;color:var(--text-muted)"></span>
         <button class="btn btn-outline btn-sm" onclick="openSheetImport('hai')">&#8679; Import</button>
         <button class="btn btn-outline btn-sm" onclick="clearFilter('hai')">&#10005; Xoá lọc</button>
@@ -473,6 +478,8 @@
       <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hai','spin')" title="Mở hàng loạt link spin">🔗 Mở spin</button>
       <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hai')" title="Copy định dạng Excel">📊 Copy Excel</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
+      <button class="btn btn-sm" onclick="openBulkIndexId('hai')" style="background:#f0f7fd;border:1px solid #2980b9;color:#2980b9;font-weight:600">🔍 Gán ID Index</button>
+      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm btn-danger" onclick="bulkDelete('hai')">&#128465; Xoá</button>
       <button class="btn btn-sm btn-outline" onclick="clearSelection('hai')">&#10005; Bỏ chọn</button>
     </div>
@@ -483,6 +490,7 @@
             <th style="width:32px;user-select:none" id="thChkHai"
               title="Tích giữ + kéo để chọn nhanh nhiều dòng">
               <input type="checkbox" id="chkAllHai" onchange="toggleAll('hai',this.checked)" style="cursor:pointer"></th>
+            <th style="width:110px">ID Index</th>
             <th class="fh" onclick="openFilter('hai','ngay',this)">Ngày <span class="fh-ic">&#9660;</span></th>
             <th style="width:28px"></th>
             <th class="fh" onclick="openFilter('hai','keyword',this)">Keyword <span class="fh-ic">&#9660;</span></th>
@@ -492,7 +500,6 @@
             <th class="fh" onclick="openFilter('hai','anchor',this)">Anchor <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','chuyenMuc',this)">Chuyên mục <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
-            
             <th>Xem</th><th></th>
           </tr>
         </thead>
@@ -511,6 +518,11 @@
       <div class="toolbar">
         <input type="text" id="kwSearchHieu" placeholder="&#128269; Tìm keyword..." oninput="renderHieu()"
           style="width:180px;height:32px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="text" id="indexIdFilterHieu" placeholder="&#128269; Lọc ID Index..." oninput="renderHieu()"
+            style="width:150px;height:32px;font-size:12px">
+          <button onclick="clearIndexIdFilter('hieu')" title="Xoá lọc ID" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 7px;height:32px;cursor:pointer;font-size:12px;color:var(--text-muted)" onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✕</button>
+        </div>
         <span id="hieuCount" style="font-size:12px;color:var(--text-muted)"></span>
         <button class="btn btn-outline btn-sm" onclick="openSheetImport('hieu')">&#8679; Import</button>
         <button class="btn btn-outline btn-sm" onclick="clearFilter('hieu')">&#10005; Xoá lọc</button>
@@ -569,6 +581,8 @@
       <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hieu','spin')" title="Mở hàng loạt link spin">🔗 Mở spin</button>
       <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hieu')" title="Copy định dạng Excel">📊 Copy Excel</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
+      <button class="btn btn-sm" onclick="openBulkIndexId('hieu')" style="background:#f0f7fd;border:1px solid #2980b9;color:#2980b9;font-weight:600">🔍 Gán ID Index</button>
+      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm btn-danger" onclick="bulkDelete('hieu')">&#128465; Xoá</button>
       <button class="btn btn-sm btn-outline" onclick="clearSelection('hieu')">&#10005; Bỏ chọn</button>
     </div>
@@ -577,6 +591,7 @@
         <thead>
           <tr>
             <th style="width:32px"><input type="checkbox" id="chkAllHieu" onchange="toggleAll('hieu',this.checked)" style="cursor:pointer"></th>
+            <th style="width:110px">ID Index</th>
             <th class="fh" onclick="openFilter('hieu','ngay',this)">Ngày <span class="fh-ic">&#9660;</span></th>
             <th style="width:28px"></th>
             <th class="fh" onclick="openFilter('hieu','keyword',this)">Keyword <span class="fh-ic">&#9660;</span></th>
@@ -588,7 +603,6 @@
             <th class="fh" onclick="openFilter('hieu','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','spin',this)">Spin <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','index',this)">Index <span class="fh-ic">&#9660;</span></th>
-            
             <th>Xem</th><th></th>
           </tr>
         </thead>
@@ -2392,6 +2406,9 @@ function renderHai(){
     const bg=!sel&&r._color?'background:'+r._color:'';
     return `<tr class="${sel?'row-selected':''}" data-id="${r.id}" style="${bg}">
       <td style="width:32px;text-align:center"><input type="checkbox" ${sel?'checked':''} onchange="toggleRow('hai',${r.id},this.checked)" style="cursor:pointer;accent-color:var(--red)"></td>
+      <td onclick="openAssignIndexId('hai',${r.id})" title="Click để gán / đổi ID Index" style="cursor:pointer;white-space:nowrap" onmouseover="this.style.background='#f0f7fd'" onmouseout="this.style.background=''">
+        ${r.indexId ? `<span style="font-family:monospace;font-size:11px;background:#f0f7fd;color:#2980b9;padding:2px 7px;border-radius:4px;font-weight:600;border:1px solid #b8d4ea">${r.indexId}</span>` : '<span style="font-size:11px;color:var(--text-muted);border:1px dashed var(--gray-border);padding:2px 7px;border-radius:4px">+ Gán</span>'}
+      </td>
       <td class="ec" onclick="editCell('hai',${r.id},'ngay',this)">${fmtDate(r.ngay)}</td>
       <td style="width:28px;text-align:center;padding:0 2px">
         <button onclick="copyText(this.dataset.kw,this)" data-kw="${r.keyword.replace(/\"/g,'&quot;')}"
@@ -2410,7 +2427,6 @@ function renderHai(){
       <td class="ec" onclick="editCell('hai',${r.id},'anchor',this)" style="color:var(--text-muted);max-width:100px">${r.anchor||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'link',this)" style="max-width:140px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.link||''}">${r.link||'<span style=color:var(--text-muted)>—</span>'}</span></td>
-
       <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hai',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hai',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hai',${r.id})">&#128465;</button></td>
     </tr>`;}).join('');
@@ -2434,6 +2450,9 @@ function renderHieu(){
     const bg=!sel&&r._color?'background:'+r._color:'';
     return `<tr class="${sel?'row-selected':''}" data-id="${r.id}" style="${bg}">
       <td style="width:32px;text-align:center"><input type="checkbox" ${sel?'checked':''} onchange="toggleRow('hieu',${r.id},this.checked)" style="cursor:pointer;accent-color:var(--red)"></td>
+      <td onclick="openAssignIndexId('hieu',${r.id})" title="Click để gán / đổi ID Index" style="cursor:pointer;white-space:nowrap" onmouseover="this.style.background='#f0f7fd'" onmouseout="this.style.background=''">
+        ${r.indexId ? `<span style="font-family:monospace;font-size:11px;background:#f0f7fd;color:#2980b9;padding:2px 7px;border-radius:4px;font-weight:600;border:1px solid #b8d4ea">${r.indexId}</span>` : '<span style="font-size:11px;color:var(--text-muted);border:1px dashed var(--gray-border);padding:2px 7px;border-radius:4px">+ Gán</span>'}
+      </td>
       <td class="ec" onclick="editCell('hieu',${r.id},'ngay',this)">${fmtDate(r.ngay)}</td>
       <td style="width:28px;text-align:center;padding:0 2px">
         <button onclick="copyText(this.dataset.kw,this)" data-kw="${r.keyword.replace(/\"/g,'&quot;')}"
@@ -2454,7 +2473,6 @@ function renderHieu(){
       <td class="ec" onclick="editCell('hieu',${r.id},'link',this)" style="max-width:130px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.link||''}">${r.link||'<span style=color:var(--text-muted)>—</span>'}</span></td>
       <td class="ec" onclick="editCell('hieu',${r.id},'spin',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.spin||''}">${r.spin||'<span style=color:var(--text-muted)>—</span>'}</span></td>
       <td class="ec" onclick="editCell('hieu',${r.id},'index',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.index||''}">${r.index||'<span style=color:var(--text-muted)>—</span>'}</span></td>
-
       <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hieu',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hieu',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hieu',${r.id})">&#128465;</button></td>
     </tr>`;}).join('');
@@ -2473,10 +2491,16 @@ function toggleRow(sheet, id, checked){
 }
 
 function getVisibleRows(sheet){
+  const idxQ = (document.getElementById('indexIdFilter'+sheet.charAt(0).toUpperCase()+sheet.slice(1))||{}).value?.trim().toLowerCase()||'';
   let rows = applyFilters(sheet, data[sheet]);
-  // Only filter by date if activeDate is a valid date string (not null/undefined = Tất cả)
-  if(activeDate[sheet] && typeof activeDate[sheet]==='string' && activeDate[sheet].length===10){
-    rows = rows.filter(r=>r.ngay===activeDate[sheet]);
+  // If indexId filter active → bypass date filter, only filter by indexId
+  if(idxQ){
+    rows = rows.filter(r=>(r.indexId||'').toLowerCase().includes(idxQ));
+  } else {
+    // Only filter by date if activeDate is a valid date string (not null/undefined = Tất cả)
+    if(activeDate[sheet] && typeof activeDate[sheet]==='string' && activeDate[sheet].length===10){
+      rows = rows.filter(r=>r.ngay===activeDate[sheet]);
+    }
   }
   const kw = (document.getElementById('kwSearch'+sheet.charAt(0).toUpperCase()+sheet.slice(1))||{}).value?.toLowerCase()||'';
   if(kw) rows = rows.filter(r=>(r.keyword||'').toLowerCase().includes(kw));
@@ -6241,6 +6265,96 @@ function deleteIndexTask(taskId){
   toast('Đã xoá.');
 }
 
+// ===== INDEX ID ASSIGNMENT =====
+let _assignSheet = null;
+let _assignIds = []; // row ids being assigned (single or bulk)
+
+function _getIndexIdOptions(){
+  // Return active (non-done) index tasks sorted newest first
+  return indexTasks.filter(t=>t.status!=='Done').slice().reverse();
+}
+
+function _populateAssignSelect(){
+  const sel = document.getElementById('assignIdSelect');
+  if(!sel) return;
+  const opts = _getIndexIdOptions();
+  sel.innerHTML = '<option value="">-- Chọn từ danh sách --</option>'
+    + opts.map(t=>`<option value="${t.taskId}">${t.taskId}${t.name?' — '+t.name:''}</option>`).join('');
+}
+
+function onAssignIdSelectChange(){
+  const sel = document.getElementById('assignIdSelect');
+  const manual = document.getElementById('assignIdManual');
+  if(sel&&manual&&sel.value) manual.value = sel.value;
+}
+
+function openAssignIndexId(sheet, rowId){
+  _assignSheet = sheet;
+  _assignIds = [rowId];
+  const r = data[sheet].find(x=>x.id===rowId);
+  const ctx = document.getElementById('assignIdContext');
+  if(ctx) ctx.textContent = `Bài: ${r?.keyword||'(không tên)'} — ${fmtDate(r?.ngay)||''}`;
+  _populateAssignSelect();
+  const manual = document.getElementById('assignIdManual');
+  if(manual) manual.value = r?.indexId||'';
+  const sel = document.getElementById('assignIdSelect');
+  if(sel) sel.value = r?.indexId||'';
+  document.getElementById('assignIndexIdModal').classList.add('open');
+  setTimeout(()=>document.getElementById('assignIdManual').focus(),100);
+}
+
+function openBulkIndexId(sheet){
+  const ids = [...selected[sheet]];
+  if(!ids.length){ toast('Chưa chọn dòng nào!','#e74c3c'); return; }
+  _assignSheet = sheet;
+  _assignIds = ids;
+  const ctx = document.getElementById('assignIdContext');
+  if(ctx) ctx.textContent = `Gán cho ${ids.length} dòng đã chọn trong Sheet ${sheet==='hai'?'Hải':'Hiếu'}`;
+  _populateAssignSelect();
+  const manual = document.getElementById('assignIdManual');
+  if(manual) manual.value = '';
+  const sel = document.getElementById('assignIdSelect');
+  if(sel) sel.value = '';
+  document.getElementById('assignIndexIdModal').classList.add('open');
+  setTimeout(()=>document.getElementById('assignIdManual').focus(),100);
+}
+
+function applyAssignIndexId(){
+  const val = (document.getElementById('assignIdManual')?.value||'').trim()
+           || (document.getElementById('assignIdSelect')?.value||'').trim();
+  if(!val){ toast('Nhập hoặc chọn ID Index!','#e74c3c'); return; }
+  _assignIds.forEach(id=>{
+    const r = data[_assignSheet].find(x=>x.id===id);
+    if(r) r.indexId = val;
+  });
+  saveAppData();
+  closeAssignIndexIdModal();
+  if(_assignSheet==='hai') renderHai(); else renderHieu();
+  toast(`✓ Đã gán ID "${val}" cho ${_assignIds.length} dòng`);
+}
+
+function clearAssignIndexId(){
+  _assignIds.forEach(id=>{
+    const r = data[_assignSheet].find(x=>x.id===id);
+    if(r) r.indexId = '';
+  });
+  saveAppData();
+  closeAssignIndexIdModal();
+  if(_assignSheet==='hai') renderHai(); else renderHieu();
+  toast('Đã xoá ID Index khỏi các dòng đã chọn');
+}
+
+function closeAssignIndexIdModal(){
+  document.getElementById('assignIndexIdModal').classList.remove('open');
+  _assignSheet = null; _assignIds = [];
+}
+
+function clearIndexIdFilter(sheet){
+  const el = document.getElementById('indexIdFilter'+sheet.charAt(0).toUpperCase()+sheet.slice(1));
+  if(el){ el.value=''; }
+  if(sheet==='hai') renderHai(); else renderHieu();
+}
+
 // ===== INIT — load after all variables declared =====
 loadAppData();
 renderDashboard();
@@ -6426,6 +6540,36 @@ setTimeout(initFirebaseListener, 1000);
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeIndexActionModal()">Huỷ</button>
       <button class="btn btn-primary" id="iamSubmitBtn" onclick="submitIndexAction()">&#10003; Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN INDEX ID MODAL -->
+<div class="modal-overlay" id="assignIndexIdModal" onclick="if(event.target===this)closeAssignIndexIdModal()">
+  <div class="modal" style="max-width:420px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🔍 Gán ID Index</h3>
+      <button class="modal-close" onclick="closeAssignIndexIdModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:10px">
+      <div style="font-size:12px;color:var(--text-muted)" id="assignIdContext"></div>
+      <div class="form-group" style="width:100%">
+        <label>Chọn hoặc nhập ID Index</label>
+        <select id="assignIdSelect" style="width:100%;height:36px;font-size:13px" onchange="onAssignIdSelectChange()">
+          <option value="">-- Chọn từ danh sách --</option>
+        </select>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Hoặc nhập thủ công</label>
+        <input type="text" id="assignIdManual" style="width:100%" placeholder="VD: 030101136-1165">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="applyAssignIndexId()" style="flex:1">✓ Gán</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAssignIndexId()" title="Xoá ID khỏi các dòng này">✕ Xoá ID</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAssignIndexIdModal()">Huỷ</button>
     </div>
   </div>
 </div>
