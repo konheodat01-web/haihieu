@@ -699,7 +699,7 @@
         <select id="gvFilterPerson" onchange="renderGiaoViec()" style="height:32px;font-size:12px">
           <option value="">Tất cả người</option>
         </select>
-        <button class="btn btn-outline btn-sm" onclick="openManageAssignees()">⚙ Quản lý người nhận</button>
+        <button id="btnManageAssignees" class="btn btn-outline btn-sm" onclick="openManageAssignees()">⚙ Quản lý người nhận</button>
       </div>
     </div>
 
@@ -6565,7 +6565,12 @@ function renderGiaoViec(){
   const fStatus = document.getElementById('gvFilterStatus')?.value||'';
   const fPerson = document.getElementById('gvFilterPerson')?.value||'';
 
+  // Show/hide controls based on member
   const personSel = document.getElementById('gvFilterPerson');
+  const manageBtn = document.getElementById('btnManageAssignees');
+  if(personSel) personSel.style.display = currentMember==='hai' ? 'none' : '';
+  if(manageBtn) manageBtn.style.display = currentMember==='hai' ? 'none' : '';
+
   if(personSel){
     const cur = personSel.value;
     const all = [...new Set(giaoViecList.map(g=>g.assignee))].sort();
@@ -6574,6 +6579,8 @@ function renderGiaoViec(){
   }
 
   let items = giaoViecList.filter(g=>{
+    // Hải chỉ thấy task được giao cho mình
+    if(currentMember==='hai' && g.assignee!=='Hải') return false;
     if(fStatus==='Pending' && !g.pendingReason) return false;
     if(fStatus && fStatus!=='Pending' && g.status!==fStatus) return false;
     if(fPerson && g.assignee!==fPerson) return false;
@@ -6616,9 +6623,9 @@ function renderGiaoViec(){
           </select>
           <button onclick="openGvTaskPending(${g.id})" title="${isPendingTask?'Sửa/xoá pending':'Pending task này'}"
             style="background:none;border:1px solid ${isPendingTask?'#e67e22':'var(--gray-border)'};border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:${isPendingTask?'#e67e22':'var(--text-muted)'}">⏸</button>
-          <button onclick="openEditGiaoViec(${g.id})" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px">✎</button>
-          <button onclick="recallGiaoViec(${g.id})" title="Thu hồi về Task của tôi"
-            style="background:none;border:1px solid #a8deba;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:#27ae60">↩</button>
+          ${currentMember!=='hai'?`<button onclick="openEditGiaoViec(${g.id})" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px">✎</button>`:''}
+          ${currentMember!=='hai'?`<button onclick="recallGiaoViec(${g.id})" title="Thu hồi về Task của tôi"
+            style="background:none;border:1px solid #a8deba;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:#27ae60">↩</button>`:''}
         </div>
       </div>
     </div>`;
@@ -6787,10 +6794,10 @@ function renderGvPendingSummary(){
   if(!panel||!body) return;
 
   // Pending parent gv tasks
-  const pendingParents = giaoViecList.filter(g=>g.pendingReason);
+  const pendingParents = giaoViecList.filter(g=>g.pendingReason && (currentMember!=='hai' || g.assignee==='Hải'));
   // Pending child cards within gv tasks
   const pendingCards = [];
-  giaoViecList.forEach(g=>{
+  giaoViecList.filter(g=>currentMember!=='hai' || g.assignee==='Hải').forEach(g=>{
     (g.taskCards||[]).forEach(card=>{
       if(card.pendingReason) pendingCards.push({g,card});
     });
@@ -6877,7 +6884,10 @@ function resolveGvPending(gvId, cardId){
 function updateGvBadge(){
   const badge = document.getElementById('gvBadge');
   if(!badge) return;
-  const pending = giaoViecList.filter(g=>g.status!=='Hoàn thành').length;
+  const myItems = currentMember==='hai'
+    ? giaoViecList.filter(g=>g.assignee==='Hải')
+    : giaoViecList;
+  const pending = myItems.filter(g=>g.status!=='Hoàn thành').length;
   if(pending){ badge.textContent=pending; badge.style.display='inline'; }
   else badge.style.display='none';
 }
