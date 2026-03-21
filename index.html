@@ -4284,7 +4284,6 @@ function closeMemberDropdownOutside(e){
 function setMember(m){
   currentMember = m;
   try{ localStorage.setItem('wt_activeMember', m); }catch(e){}
-  try{ sessionStorage.setItem('wt_session_member', m); }catch(e){}
   const cfg = MEMBER_CONFIG[m];
   document.getElementById('memberDropdown').classList.remove('open');
   // Close any open popups to avoid stale state
