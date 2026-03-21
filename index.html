@@ -268,7 +268,7 @@
 <body>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1a0a0a 0%,#2c1010 50%,#1a0a0a 100%);flex-direction:column;align-items:center;justify-content:center;font-family:inherit;display:none">
+<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#1a0a0a 0%,#2c1010 50%,#1a0a0a 100%);flex-direction:column;align-items:center;justify-content:center;font-family:inherit;display:flex">
   <div style="text-align:center;margin-bottom:48px">
     <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23c0392b'/%3E%3Crect x='7' y='9' width='18' height='2.5' rx='1.2' fill='white'/%3E%3Crect x='7' y='14.7' width='18' height='2.5' rx='1.2' fill='white'/%3E%3Crect x='7' y='20.5' width='12' height='2.5' rx='1.2' fill='white'/%3E%3Ccircle cx='25' cy='22' r='5' fill='%2327ae60'/%3E%3Cpath d='M22.5 22l2 2 3-3' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E"
       style="width:56px;height:56px;margin-bottom:14px;filter:drop-shadow(0 4px 12px rgba(192,57,43,.5))">
@@ -328,6 +328,9 @@
   <p style="color:rgba(255,255,255,.18);font-size:11px;margin-top:48px">Phiên làm việc được ghi nhớ trong tab này</p>
 </div>
 
+<!-- GLOBAL KB TOOLTIP -->
+<div id="kbTooltip" style="display:none;position:fixed;background:#2c3e50;color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:99999;pointer-events:none;line-height:1.5;word-break:break-word"></div>
+
 <header>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="member-picker" id="memberPicker">
@@ -355,22 +358,41 @@
     <h1>&#128188; Quản lý công việc</h1>
   </div>
   <div class="meta" id="currentDate"></div>
-  <!-- QUICK LINK SEARCH -->
-  <div style="position:relative;display:flex;align-items:center" id="qlSearchWrap">
-    <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,.95);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2)">
-      <span style="padding:0 10px;font-size:14px;color:#aaa">🔗</span>
-      <input id="qlInput" type="text" placeholder="Tìm link / website..." autocomplete="off"
-        style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 4px;width:200px;font-weight:500"
-        oninput="qlSearch()" onfocus="qlSearch()" onblur="setTimeout(qlClose,200)"
-        onkeydown="qlKeydown(event)">
-      <button onclick="qlOpenAdd()" title="Thêm link mới"
+  <!-- UNIFIED SEARCH BOX -->
+  <div style="position:relative;display:flex;align-items:center" id="uniSearchWrap">
+    <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,.95);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2);min-width:300px">
+      <!-- Mode toggle button -->
+      <button id="uniModeBtn" onclick="uniToggleMode()" title="Chuyển chế độ tìm kiếm"
+        style="background:none;border:none;border-right:1px solid #e9ecef;padding:0 10px;height:38px;cursor:pointer;font-size:15px;transition:background .15s;flex-shrink:0"
+        onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">🔗</button>
+      <!-- Input -->
+      <input id="uniInput" type="text" placeholder="Tìm link / website..." autocomplete="off"
+        style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 8px;flex:1;font-weight:500;min-width:180px"
+        oninput="uniSearch()" onfocus="uniSearch()" onblur="setTimeout(uniClose,200)"
+        onkeydown="uniKeydown(event)">
+      <!-- Add button -->
+      <button id="uniAddBtn" onclick="uniAdd()" title="Thêm mới"
         style="background:none;border:none;padding:0 12px;cursor:pointer;font-size:22px;font-weight:300;height:38px;display:flex;align-items:center;color:#e74c3c;opacity:.8;transition:opacity .15s"
         onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">+</button>
     </div>
-    <!-- Dropdown results -->
+    <!-- Dropdown: link/website results (reuse existing qlDropdown) -->
     <div id="qlDropdown" onmousedown="_qlKeepOpen=true" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:360px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:360px;overflow-y:auto"></div>
+    <!-- Dropdown: prompt results (reuse existing pqDropdown) -->
+    <div id="pqDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:420px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:480px;flex-direction:column">
+      <div style="display:flex;border-bottom:1px solid var(--gray-border);flex-shrink:0">
+        <button id="pqTabViet" onclick="pqSetTab('viet')"
+          style="flex:1;padding:9px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);background:#fff">✍️ Viết</button>
+        <button id="pqTabAnh" onclick="pqSetTab('anh')"
+          style="flex:1;padding:9px;font-size:12px;font-weight:500;border:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);background:#fff">🖼️ Ảnh</button>
+      </div>
+      <div id="pqResults" style="overflow-y:auto;flex:1;max-height:380px"></div>
+      <div style="padding:8px 12px;border-top:1px solid var(--gray-border);background:#f8f9fa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <span style="font-size:11px;color:var(--text-muted)">Click để copy • ✎ để sửa</span>
+        <button onclick="uniClose();showPage('prompts')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue)">Xem tất cả →</button>
+      </div>
+    </div>
   </div>
-  <!-- QUICK ADD MODAL -->
+  <!-- QUICK ADD MODAL (link) -->
   <div id="qlAddModal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.2);z-index:600;width:380px;padding:20px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-weight:600;font-size:14px">🔗 Thêm link nhanh</div>
@@ -461,35 +483,7 @@
     </div>
   </div>
   <div id="qlOverlay" style="display:none;position:fixed;inset:0;z-index:599" onclick="qlCloseAdd()"></div>
-
-  <!-- PROMPT QUICK ACCESS -->
-  <div style="position:relative" id="pqWrap">
-    <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,.95);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2)">
-      <span style="padding:0 10px;font-size:14px;color:#aaa">✍️</span>
-      <input id="pqInput" type="text" placeholder="Tìm prompt..." autocomplete="off"
-        style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 4px;width:180px;font-weight:500"
-        oninput="pqSearch()" onfocus="pqSearch()" onblur="setTimeout(pqClose,200)"
-        onkeydown="if(event.key==='Escape'){pqClose();event.target.blur()}">
-      <button onclick="pqOpenAdd()" title="Thêm prompt mới"
-        style="background:none;border:none;padding:0 12px;cursor:pointer;font-size:22px;font-weight:300;height:38px;display:flex;align-items:center;color:#8e44ad;opacity:.8;transition:opacity .15s"
-        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">+</button>
-    </div>
-    <!-- Tab filter -->
-    <div id="pqDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:420px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:480px;display:none;flex-direction:column">
-      <div style="display:flex;border-bottom:1px solid var(--gray-border);flex-shrink:0">
-        <button id="pqTabViet" onclick="pqSetTab('viet')"
-          style="flex:1;padding:9px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);background:#fff">✍️ Viết</button>
-        <button id="pqTabAnh" onclick="pqSetTab('anh')"
-          style="flex:1;padding:9px;font-size:12px;font-weight:500;border:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);background:#fff">🖼️ Ảnh</button>
-      </div>
-      <div id="pqResults" style="overflow-y:auto;flex:1;max-height:380px"></div>
-      <div style="padding:8px 12px;border-top:1px solid var(--gray-border);background:#f8f9fa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
-        <span style="font-size:11px;color:var(--text-muted)">Click để copy • ✎ để sửa</span>
-        <button onclick="pqClose();showPage('prompts')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue)">Xem tất cả →</button>
-      </div>
-    </div>
-  </div>
-  <div id="pqOverlay" style="display:none;position:fixed;inset:0;z-index:498" onclick="pqClose()"></div>
+  <div id="pqOverlay" style="display:none;position:fixed;inset:0;z-index:498" onclick="uniClose()"></div>
 
   <div style="display:flex;align-items:center;gap:8px">
     <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#fff;white-space:nowrap;background:rgba(0,0,0,.2);padding:3px 8px;border-radius:4px">☁ Đã đồng bộ</div>
@@ -3586,25 +3580,24 @@ function renderSubBoard(task){
       // Center: card body
       const cardEl=document.createElement('div');
       cardEl.className='kb-card';
-      cardEl.style.marginBottom='0';
-      cardEl.style.flex='1';
-      cardEl.style.minWidth='0';
+      cardEl.style.cssText='margin-bottom:0;flex:1;min-width:0;position:relative';
       cardEl.draggable=true;
       cardEl.innerHTML=`
         <div style="display:flex;align-items:center;gap:6px">
           <div style="flex:1;min-width:0;overflow:hidden">
             <div style="font-size:13px;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isLastCol?'text-decoration:line-through;color:var(--text-muted)':''}">
-              ${task.dang==='url' ? wsInlineIcon(card.name) : ''}<span title="${card.name}">${card.name}</span>
+              ${task.dang==='url' ? wsInlineIcon(card.name) : ''}<span class="kb-card-name" style="cursor:pointer" onclick="event.stopPropagation();openAddCardModal('${col.id}','${card.id}')" title="${(card.name||'').replace(/"/g,'&quot;')}">${card.name}</span>
             </div>
-            ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${card.desc}</div>`:''}
+            ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="event.stopPropagation();openAddCardModal('${col.id}','${card.id}')">${card.desc}</div>`:''}
             ${card.pendingReason?`<div class="kb-card-pending">\u2759\u2759 ${card.pendingReason}</div>`:''}
           </div>
           ${task.dang==='url'?`
             <button class="kb-ws-menu-btn" onclick="event.stopPropagation();toggleWsExpand('${card.id}',this)" title="Xem thêm">▼</button>
           `:''}
         </div>
-        ${task.dang==='url'?`<div class="kb-ws-expand" id="wsexp-${card.id}">${wsCardExpandItems(card.name)}</div>`:''}`;
-
+        ${task.dang==='url'?`<div class="kb-ws-expand" id="wsexp-${card.id}">${wsCardExpandItems(card.name)}</div>`:''}
+        <!-- Tooltip data only, rendered globally -->
+        <span class="kb-card-tooltip-data" data-name="${(card.name||'').replace(/"/g,'&quot;').replace(/`/g,'&#96;')}" data-desc="${(card.desc||'').replace(/"/g,'&quot;').replace(/`/g,'&#96;')}" style="display:none"></span>`;
 
       // Right: done/next tick
       const tickWrap = document.createElement('label');
@@ -3623,7 +3616,15 @@ function renderSubBoard(task){
 
       cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
       cardEl.addEventListener('dragend',()=>cardEl.classList.remove('dragging'));
-      cardEl.addEventListener('click',()=>openAddCardModal(col.id, card.id));
+      cardEl.addEventListener('mouseenter',e=>{
+        const data=cardEl.querySelector('.kb-card-tooltip-data');
+        if(!data) return;
+        const name=data.dataset.name, desc=data.dataset.desc;
+        if(!name && !desc) return;
+        showKbTooltip(e, name, desc);
+      });
+      cardEl.addEventListener('mousemove',e=>moveKbTooltip(e));
+      cardEl.addEventListener('mouseleave',()=>hideKbTooltip());
       cardsEl.appendChild(rowEl);
     });
   });
@@ -4349,6 +4350,68 @@ function hideLoginScreen(){
   document.body.classList.remove('login-mode');
 }
 
+// ===== UNIFIED SEARCH =====
+let _uniMode = 'link'; // 'link' | 'prompt'
+const UNI_MODES = {
+  link:   { icon:'🔗', placeholder:'Tìm link / website...', addColor:'#e74c3c' },
+  prompt: { icon:'✍️', placeholder:'Tìm prompt...',         addColor:'#8e44ad' },
+};
+
+function uniToggleMode(){
+  _uniMode = _uniMode==='link' ? 'prompt' : 'link';
+  const m = UNI_MODES[_uniMode];
+  document.getElementById('uniModeBtn').textContent = m.icon;
+  document.getElementById('uniInput').placeholder = m.placeholder;
+  document.getElementById('uniAddBtn').style.color = m.addColor;
+  document.getElementById('uniInput').value = '';
+  uniClose();
+}
+
+function uniSearch(){
+  if(_uniMode==='link') qlSearch();
+  else pqSearch();
+}
+
+function uniClose(){
+  qlClose();
+  pqClose();
+}
+
+function uniAdd(){
+  if(_uniMode==='link') qlOpenAdd();
+  else pqOpenAdd();
+}
+
+function uniKeydown(e){
+  if(_uniMode==='link') qlKeydown(e);
+  else if(e.key==='Escape'){ pqClose(); e.target.blur(); }
+}
+
+// Patch ql/pq to read from uniInput
+function qlGetInput(){ return document.getElementById('uniInput')?.value||''; }
+function pqGetInput(){ return document.getElementById('uniInput')?.value||''; }
+
+// ===== GLOBAL KB CARD TOOLTIP =====
+function showKbTooltip(e, name, desc){
+  const tip=document.getElementById('kbTooltip');
+  if(!tip) return;
+  tip.innerHTML=`<div style="font-weight:600;margin-bottom:${desc?'6px':'0'}">${name}</div>${desc?`<div style="color:rgba(255,255,255,.75)">${desc}</div>`:''}`;
+  tip.style.display='block';
+  moveKbTooltip(e);
+}
+function moveKbTooltip(e){
+  const tip=document.getElementById('kbTooltip');
+  if(!tip||tip.style.display==='none') return;
+  const x=e.clientX+14, y=e.clientY+14;
+  const w=tip.offsetWidth, h=tip.offsetHeight;
+  tip.style.left=(x+w>window.innerWidth ? x-w-20 : x)+'px';
+  tip.style.top=(y+h>window.innerHeight ? y-h-20 : y)+'px';
+}
+function hideKbTooltip(){
+  const tip=document.getElementById('kbTooltip');
+  if(tip) tip.style.display='none';
+}
+
 // ===== PASSWORD AUTH =====
 const DEFAULT_PW = '123456';
 let _pendingMember = null;
@@ -4506,20 +4569,18 @@ function confirmResetProfile(){
 }
 
 // Check session on load
-function checkSession(){
+// Check session — loginScreen is visible by default, hide if valid session
+(function checkSession(){
   try{
     const session = sessionStorage.getItem('wt_session_member');
-    if(!session){
+    if(session){
+      // Valid session — hide login immediately
       const ls = document.getElementById('loginScreen');
-      if(ls) ls.style.display='flex';
+      if(ls) ls.style.display='none';
     }
+    // No session → loginScreen stays visible (it's display:flex by default)
   }catch(e){}
-}
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', checkSession);
-} else {
-  checkSession();
-}
+})();
 
 // Restore member first (before restorePosition so page filter is correct)
 // ===== EARLY DECLARATIONS (needed before setMember/updateNavBadges) =====
@@ -6291,7 +6352,7 @@ function qlOpenAdmin(idx){
   const item = _qlItems[idx];
   if(!item) return;
   window.open(item.url, '_blank');
-  document.getElementById('qlInput').value='';
+  document.getElementById('uniInput').value='';
   qlClose();
 }
 
@@ -6299,7 +6360,7 @@ function qlEditWebsite(wsId){
   const w = websites.find(x=>x.id===wsId);
   if(!w) return;
   qlClose();
-  document.getElementById('qlInput').value='';
+  document.getElementById('uniInput').value='';
   // Open websiteInfoModal directly in edit mode
   websiteInfoTarget = w;
   showWebsiteInfo(w, true);
@@ -6308,7 +6369,7 @@ function qlEditWebsite(wsId){
 }
 
 function qlSearch(){
-  const q=(document.getElementById('qlInput')?.value||'').toLowerCase();
+  const q=(qlGetInput()||'').toLowerCase();
   const all=qlGetItems();
   const res=q?all.filter(i=>i.label.toLowerCase().includes(q)||(i.sub||'').toLowerCase().includes(q)):all.slice(0,8);
   _qlItems = res; // store for qlOpenAdmin
@@ -6318,7 +6379,7 @@ function qlSearch(){
   drop.innerHTML=res.map((item,idx)=>`
     <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-border);transition:background .1s"
       onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''"
-      onclick="window.open('${item.url.replace(/'/g,"\\'")}','_blank');document.getElementById('qlInput').value='';qlClose()">
+      onclick="window.open('${item.url.replace(/'/g,"\\'")}','_blank');document.getElementById('uniInput').value='';qlClose()">
       <span style="font-size:16px;flex-shrink:0">${item.icon}</span>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#212529">${item.label}</div>
@@ -6351,7 +6412,7 @@ function qlKeydown(e){
 
 function qlOpenAdd(){
   qlClose();
-  const q=(document.getElementById('qlInput')?.value||'').trim();
+  const q=(qlGetInput()||'').trim();
   document.getElementById('ql_name').value='';
   document.getElementById('ql_url').value=q.startsWith('http')?q:'';
   document.getElementById('ql_group').value='';
@@ -8392,7 +8453,7 @@ function pqSearch(){
   drop.style.display='flex';
   const pqOverlay = document.getElementById('pqOverlay');
   if(pqOverlay) pqOverlay.style.display='block';
-  const q = (document.getElementById('pqInput')?.value||'').toLowerCase();
+  const q = (pqGetInput()||'').toLowerCase();
   const items = prompts.filter(p=>{
     if(p.type!==_pqTab) return false;
     if(q && !p.name.toLowerCase().includes(q) && !p.content.toLowerCase().includes(q) && !(p.cat||'').toLowerCase().includes(q)) return false;
