@@ -3553,6 +3553,7 @@ function saveProject(){
     if(t){
       t.name=name;t.person=document.getElementById('npm_person').value;
       t.type=document.getElementById('npm_type').value;
+      t.priority=document.getElementById('npm_priority')?.value||t.priority||'Bình thường';
       t.from=document.getElementById('npm_from').value;
       t.deadline=document.getElementById('npm_deadline').value;
       t.desc=document.getElementById('npm_desc').value.trim();
