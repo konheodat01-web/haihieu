@@ -392,6 +392,35 @@
   </div>
   <div id="qlOverlay" style="display:none;position:fixed;inset:0;z-index:599" onclick="qlCloseAdd()"></div>
 
+  <!-- PROMPT QUICK ACCESS -->
+  <div style="position:relative" id="pqWrap">
+    <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,.95);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2)">
+      <span style="padding:0 10px;font-size:14px;color:#aaa">✍️</span>
+      <input id="pqInput" type="text" placeholder="Tìm prompt..." autocomplete="off"
+        style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 4px;width:180px;font-weight:500"
+        oninput="pqSearch()" onfocus="pqSearch()" onblur="setTimeout(pqClose,200)"
+        onkeydown="if(event.key==='Escape'){pqClose();event.target.blur()}">
+      <button onclick="pqOpenAdd()" title="Thêm prompt mới"
+        style="background:none;border:none;padding:0 12px;cursor:pointer;font-size:22px;font-weight:300;height:38px;display:flex;align-items:center;color:#8e44ad;opacity:.8;transition:opacity .15s"
+        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">+</button>
+    </div>
+    <!-- Tab filter -->
+    <div id="pqDropdown" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:420px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:480px;display:none;flex-direction:column">
+      <div style="display:flex;border-bottom:1px solid var(--gray-border);flex-shrink:0">
+        <button id="pqTabViet" onclick="pqSetTab('viet')"
+          style="flex:1;padding:9px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);background:#fff">✍️ Viết</button>
+        <button id="pqTabAnh" onclick="pqSetTab('anh')"
+          style="flex:1;padding:9px;font-size:12px;font-weight:500;border:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);background:#fff">🖼️ Ảnh</button>
+      </div>
+      <div id="pqResults" style="overflow-y:auto;flex:1;max-height:380px"></div>
+      <div style="padding:8px 12px;border-top:1px solid var(--gray-border);background:#f8f9fa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+        <span style="font-size:11px;color:var(--text-muted)">Click để copy • ✎ để sửa</span>
+        <button onclick="pqClose();showPage('prompts')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--blue)">Xem tất cả →</button>
+      </div>
+    </div>
+  </div>
+  <div id="pqOverlay" style="display:none;position:fixed;inset:0;z-index:498" onclick="pqClose()"></div>
+
   <div style="display:flex;align-items:center;gap:8px">
     <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#fff;white-space:nowrap;background:rgba(0,0,0,.2);padding:3px 8px;border-radius:4px">☁ Đã đồng bộ</div>
     <button onclick="forceSyncToCloud()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
@@ -701,6 +730,7 @@
           <option value="Chờ làm">Chờ làm</option>
           <option value="Đang làm">Đang làm</option>
           <option value="Pending">Pending</option>
+          <option value="Chờ nghiệm thu">Chờ nghiệm thu</option>
           <option value="Hoàn thành">Hoàn thành</option>
         </select>
         <select id="gvFilterPerson" onchange="renderGiaoViec()" style="height:32px;font-size:12px">
@@ -734,6 +764,21 @@
     <div id="gvListWrap" style="padding:14px">
       <div id="gvList"></div>
       <div id="gvEmpty" class="empty" style="display:none"><div class="icon">📤</div>Chưa có việc nào được giao.</div>
+
+      <!-- GV DONE SECTION -->
+      <div id="gvDoneSection" style="display:none;margin-top:16px">
+        <div onclick="toggleGvDoneSection()" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:#f0faf4;border-radius:8px;border:1px solid #a8deba;user-select:none;margin-bottom:0"
+          onmouseover="this.style.background='#e6f7ee'" onmouseout="this.style.background='#f0faf4'">
+          <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#27ae60">✅ Đã nghiệm thu (<span id="gvDoneCount">0</span>)</span>
+          <span id="gvDoneChevron" style="font-size:11px;color:#27ae60;display:inline-block">▼</span>
+        </div>
+        <div id="gvDoneList" style="display:none;flex-direction:column;gap:8px;margin-top:8px"></div>
+        <div id="gvDoneBulkBar" style="display:none;align-items:center;gap:8px;padding:8px 12px;background:#2c3e50;color:#fff;border-radius:8px;margin-top:8px">
+          <span id="gvDoneBulkCount" style="font-size:13px;font-weight:600"></span>
+          <button onclick="bulkDeleteGvDone()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá</button>
+          <button onclick="document.querySelectorAll('.gv-done-chk').forEach(c=>c.checked=false);updateGvDoneBulk()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:16px;padding:0 4px">×</button>
+        </div>
+      </div>
     </div>
 
     <!-- GV KANBAN SUB BOARD -->
@@ -6622,29 +6667,45 @@ function renderGiaoViec(){
       + all.map(p=>`<option value="${p}" ${p===cur?'selected':''}>${p}</option>`).join('');
   }
 
+  // Filter active items (exclude đã nghiệm thu)
   let items = giaoViecList.filter(g=>{
-    // Hải chỉ thấy task được giao cho mình
+    if(g.status==='Đã nghiệm thu') return false;
     if(currentMember==='hai' && g.assignee!=='Hải') return false;
     if(fStatus==='Pending' && !g.pendingReason) return false;
-    if(fStatus && fStatus!=='Pending' && g.status!==fStatus) return false;
+    if(fStatus && fStatus!=='Pending' && fStatus!=='Chờ nghiệm thu' && g.status!==fStatus) return false;
+    if(fStatus==='Chờ nghiệm thu' && g.status!=='Chờ nghiệm thu') return false;
     if(fPerson && g.assignee!==fPerson) return false;
     return true;
   }).slice().sort((a,b)=>(b.id||0)-(a.id||0));
 
-  if(!items.length){ list.innerHTML=''; empty.style.display='block'; return; }
-  empty.style.display='none';
+  if(!items.length){ list.innerHTML=''; empty.style.display='block'; }
+  else {
+    empty.style.display='none';
 
   list.innerHTML = items.map(g=>{
     const isPendingTask = !!g.pendingReason;
+    const isWaitingAccept = g.status==='Chờ nghiệm thu';
     const autoStatus = gvCalcStatus(g);
-    const badgeCls = isPendingTask?'gv-badge-wait':autoStatus==='Hoàn thành'?'gv-badge-done':autoStatus==='Đang làm'?'gv-badge-doing':'gv-badge-wait';
-    const badgeLabel = isPendingTask?'⏸ Pending':autoStatus;
+    const badgeCls = isPendingTask?'gv-badge-wait':isWaitingAccept?'gv-badge-wait':autoStatus==='Hoàn thành'?'gv-badge-done':autoStatus==='Đang làm'?'gv-badge-doing':'gv-badge-wait';
+    const badgeLabel = isPendingTask?'⏸ Pending':isWaitingAccept?'🔔 Chờ nghiệm thu':autoStatus;
     const dlLabel = g.deadline ? `📅 ${fmtDate(g.deadline)}` : '';
-    const isOverdue = g.deadline && g.deadline < todayVN() && g.status!=='Hoàn thành';
-    const cardStyle = isPendingTask ? 'border-left:3px solid #e67e22;background:#fff8ee' : '';
+    const isOverdue = g.deadline && g.deadline < todayVN() && !isWaitingAccept;
+    const cardStyle = isPendingTask ? 'border-left:3px solid #e67e22;background:#fff8ee'
+                    : isWaitingAccept ? 'border-left:3px solid #27ae60;background:#f0faf4' : '';
     const totalCards = (g.taskCards||[]).length;
     const doneCols = g.taskCols ? new Set([g.taskCols[g.taskCols.length-1]?.id,'done']) : new Set(['done']);
     const doneCards = (g.taskCards||[]).filter(c=>doneCols.has(c.colId)).length;
+
+    // Phân quyền đổi trạng thái:
+    // - Hải được giao → chỉ Hải đổi (assignee==='Hải' && currentMember==='hai')
+    // - Người khác được giao → người giao (admin/hieu) đổi
+    const isHaiTask = g.assignee==='Hải';
+    const canChangeStatus = isHaiTask ? currentMember==='hai' : currentMember!=='hai';
+    // Khi Hoàn thành, Hải không tự set nữa, phải qua nghiệm thu
+    const statusOptions = isHaiTask && canChangeStatus
+      ? ['Chờ làm','Đang làm','Hoàn thành']  // Hải chọn, khi chọn Hoàn thành → tự chuyển thành Chờ nghiệm thu
+      : ['Chờ làm','Đang làm','Hoàn thành'];
+
     return `<div class="gv-card" style="${cardStyle}">
       <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
         <div style="flex:1;min-width:200px;cursor:pointer" onclick="openGvBoard(${g.id})">
@@ -6657,14 +6718,16 @@ function renderGiaoViec(){
             ${totalCards?`<span style="font-size:11px;color:var(--text-muted)">${doneCards}/${totalCards} thẻ</span>`:''}
           </div>
           ${isPendingTask?`<div style="font-size:11px;color:#e67e22">⏸ ${(g.pendingReason||'').slice(0,80)}</div>`:''}
+          ${isWaitingAccept?`<div style="font-size:11px;color:#27ae60;font-weight:500">🔔 Đã hoàn thành — chờ người giao nghiệm thu</div>`:''}
           ${g.note?`<div style="font-size:12px;color:var(--text-muted)">📝 ${g.note}</div>`:''}
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;flex-wrap:wrap">
-          <select onchange="updateGvStatus(${g.id},this.value)" style="height:28px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
-            <option ${g.status==='Chờ làm'?'selected':''}>Chờ làm</option>
-            <option ${g.status==='Đang làm'?'selected':''}>Đang làm</option>
-            <option ${g.status==='Hoàn thành'?'selected':''}>Hoàn thành</option>
-          </select>
+          ${canChangeStatus && !isWaitingAccept ? `<select onchange="updateGvStatus(${g.id},this.value)" style="height:28px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
+            ${statusOptions.map(s=>`<option ${g.status===s?'selected':''}>${s}</option>`).join('')}
+          </select>` : ''}
+          ${isWaitingAccept && currentMember!=='hai' ? `<button onclick="confirmNghiemThu(${g.id})"
+            style="background:#27ae60;border:none;border-radius:6px;padding:5px 10px;cursor:pointer;font-size:12px;color:#fff;font-weight:600;white-space:nowrap">✓ Nghiệm thu</button>` : ''}
+          ${isWaitingAccept && currentMember==='hai' ? `<span style="font-size:11px;color:#27ae60;padding:4px 8px;background:#f0faf4;border-radius:6px;border:1px solid #a8deba">⏳ Chờ nghiệm thu</span>` : ''}
           <button onclick="openGvTaskPending(${g.id})" title="${isPendingTask?'Sửa/xoá pending':'Pending task này'}"
             style="background:none;border:1px solid ${isPendingTask?'#e67e22':'var(--gray-border)'};border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:${isPendingTask?'#e67e22':'var(--text-muted)'}">⏸</button>
           ${currentMember!=='hai'?`<button onclick="openEditGiaoViec(${g.id})" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px">✎</button>`:''}
@@ -6674,6 +6737,10 @@ function renderGiaoViec(){
       </div>
     </div>`;
   }).join('');
+  } // end else
+
+  // Render Done section
+  renderGvDoneSection();
 }
 
 function gvCalcStatus(g){
@@ -6931,7 +6998,7 @@ function updateGvBadge(){
   const myItems = currentMember==='hai'
     ? giaoViecList.filter(g=>g.assignee==='Hải')
     : giaoViecList;
-  const pending = myItems.filter(g=>g.status!=='Hoàn thành').length;
+  const pending = myItems.filter(g=>g.status!=='Hoàn thành'&&g.status!=='Đã nghiệm thu').length;
   if(pending){ badge.textContent=pending; badge.style.display='inline'; }
   else badge.style.display='none';
 }
@@ -7028,9 +7095,112 @@ function saveGiaoViec(){
 function updateGvStatus(id, status){
   const g = giaoViecList.find(x=>x.id===id);
   if(!g) return;
-  g.status = status;
+  // Nếu Hải chọn Hoàn thành → chuyển sang Chờ nghiệm thu (cần người giao xác nhận)
+  if(g.assignee==='Hải' && currentMember==='hai' && status==='Hoàn thành'){
+    g.status='Chờ nghiệm thu';
+    g.completedAt=todayVN();
+  } else {
+    g.status = status;
+  }
   saveAppData();
   renderGiaoViec();
+}
+
+function confirmNghiemThu(id){
+  const g = giaoViecList.find(x=>x.id===id);
+  if(!g) return;
+  g.status='Đã nghiệm thu';
+  g.acceptedAt=todayVN();
+  saveAppData();
+  renderGiaoViec();
+  toast('✅ Đã nghiệm thu: '+g.taskName);
+}
+
+function renderGvDoneSection(){
+  const sec = document.getElementById('gvDoneSection');
+  const doneList = document.getElementById('gvDoneList');
+  const cnt = document.getElementById('gvDoneCount');
+  if(!sec) return;
+
+  const doneItems = giaoViecList.filter(g=>{
+    if(g.status!=='Đã nghiệm thu') return false;
+    if(currentMember==='hai' && g.assignee!=='Hải') return false;
+    return true;
+  }).slice().sort((a,b)=>(b.acceptedAt||'').localeCompare(a.acceptedAt||''));
+
+  if(!doneItems.length){ sec.style.display='none'; return; }
+  sec.style.display='block';
+  cnt.textContent=doneItems.length;
+
+  const isOpen=(localStorage.getItem('gv_done_open')||'0')==='1';
+  const chevron=document.getElementById('gvDoneChevron');
+  if(chevron) chevron.textContent=isOpen?'▲':'▼';
+  doneList.style.display=isOpen?'flex':'none';
+
+  // Bulk select
+  const selIds = new Set();
+  doneList.innerHTML = doneItems.map(g=>`
+    <div class="gv-card" style="opacity:.85;border-left:3px solid #27ae60">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input type="checkbox" class="gv-done-chk" data-id="${g.id}" onchange="updateGvDoneBulk()"
+          style="width:16px;height:16px;cursor:pointer;accent-color:var(--red);flex-shrink:0">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600">${g.taskName}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">
+            👤 ${g.assignee}
+            ${g.assigner?` · Giao bởi: ${g.assigner}`:''}
+            ${g.acceptedAt?` · Nghiệm thu: ${fmtDate(g.acceptedAt)}`:''}
+          </div>
+        </div>
+        ${currentMember!=='hai'?`<button onclick="restoreGvDone(${g.id})" title="Khôi phục về Chờ làm"
+          style="background:none;border:1px solid #b8d4ea;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:#2980b9">↩ Khôi phục</button>
+        <button onclick="deleteGvDone(${g.id})" title="Xoá"
+          style="background:none;border:none;cursor:pointer;font-size:14px;color:var(--text-muted);opacity:.5"
+          onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.5;this.style.color='var(--text-muted)'">🗑</button>`:''}
+      </div>
+    </div>`).join('');
+
+  // Bulk bar
+  const bar = document.getElementById('gvDoneBulkBar');
+  if(bar) bar.style.display='none';
+}
+
+function toggleGvDoneSection(){
+  const cur=(localStorage.getItem('gv_done_open')||'0')==='1';
+  localStorage.setItem('gv_done_open', cur?'0':'1');
+  renderGvDoneSection();
+}
+
+function updateGvDoneBulk(){
+  const chks=[...document.querySelectorAll('.gv-done-chk:checked')];
+  const bar=document.getElementById('gvDoneBulkBar');
+  const cnt=document.getElementById('gvDoneBulkCount');
+  if(bar){ bar.style.display=chks.length?'flex':'none'; }
+  if(cnt) cnt.textContent=chks.length+' đã chọn';
+}
+
+function bulkDeleteGvDone(){
+  const ids=[...document.querySelectorAll('.gv-done-chk:checked')].map(c=>parseInt(c.dataset.id));
+  if(!ids.length) return;
+  if(!confirm('Xoá '+ids.length+' task đã nghiệm thu?')) return;
+  giaoViecList=giaoViecList.filter(g=>!ids.includes(g.id));
+  saveAppData(); renderGiaoViec(); toast('Đã xoá '+ids.length+' task.');
+}
+
+function restoreGvDone(id){
+  const g=giaoViecList.find(x=>x.id===id);
+  if(!g) return;
+  g.status='Chờ làm';
+  delete g.acceptedAt; delete g.completedAt;
+  saveAppData(); renderGiaoViec();
+  toast('↩ Đã khôi phục: '+g.taskName);
+}
+
+function deleteGvDone(id){
+  const g=giaoViecList.find(x=>x.id===id);
+  if(!g||!confirm('Xoá "'+g.taskName+'"?')) return;
+  giaoViecList=giaoViecList.filter(x=>x.id!==id);
+  saveAppData(); renderGiaoViec(); toast('Đã xoá.');
 }
 
 function recallGiaoViec(id){
@@ -7387,6 +7557,77 @@ function deletePrompt(){
   closePromptModal();
   renderPrompts();
   toast('Đã xoá.');
+}
+
+// ===== PROMPT QUICK ACCESS (HEADER) =====
+let _pqTab = 'viet';
+
+function pqSetTab(tab){
+  _pqTab = tab;
+  const bv=document.getElementById('pqTabViet'), ba=document.getElementById('pqTabAnh');
+  if(bv){ bv.style.borderBottomColor=tab==='viet'?'var(--red)':'transparent'; bv.style.color=tab==='viet'?'var(--red)':'var(--text-muted)'; bv.style.fontWeight=tab==='viet'?'600':'500'; }
+  if(ba){ ba.style.borderBottomColor=tab==='anh'?'var(--red)':'transparent'; ba.style.color=tab==='anh'?'var(--red)':'var(--text-muted)'; ba.style.fontWeight=tab==='anh'?'600':'500'; }
+  pqSearch();
+}
+
+function pqSearch(){
+  const drop = document.getElementById('pqDropdown');
+  if(!drop) return;
+  drop.style.display='flex';
+  const pqOverlay = document.getElementById('pqOverlay');
+  if(pqOverlay) pqOverlay.style.display='block';
+  const q = (document.getElementById('pqInput')?.value||'').toLowerCase();
+  const items = prompts.filter(p=>{
+    if(p.type!==_pqTab) return false;
+    if(q && !p.name.toLowerCase().includes(q) && !p.content.toLowerCase().includes(q) && !(p.cat||'').toLowerCase().includes(q)) return false;
+    return true;
+  }).slice(0,12);
+  const results = document.getElementById('pqResults');
+  if(!results) return;
+  if(!items.length){
+    results.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:12px">Không tìm thấy prompt nào<br><span style="font-size:11px">Nhấn + để thêm mới</span></div>';
+    return;
+  }
+  results.innerHTML = items.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--gray-border);transition:background .1s"
+      onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="pqCopy(${p.id},this)">
+        <div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:1px">${p.cat||''}${p.note?` · ${p.note.slice(0,40)}`:''}</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;font-family:monospace">${(p.content||'').slice(0,60)}…</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button onclick="event.stopPropagation();pqCopy(${p.id},this)"
+          style="background:#f0f7fd;border:1px solid #b8d4ea;border-radius:6px;padding:4px 8px;cursor:pointer;font-size:11px;font-weight:600;color:#2980b9;white-space:nowrap">📋 Copy</button>
+        <button onclick="event.stopPropagation();pqEdit(${p.id})"
+          style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:4px 7px;cursor:pointer;font-size:11px">✎</button>
+      </div>
+    </div>`).join('');
+}
+
+function pqCopy(id, btn){
+  const p = prompts.find(x=>x.id===id);
+  if(!p) return;
+  copyText(p.content, btn);
+}
+
+function pqEdit(id){
+  pqClose();
+  showPage('prompts');
+  setTimeout(()=>{ _promptTab=prompts.find(x=>x.id===id)?.type||'viet'; renderPrompts(); openEditPromptModal(id); }, 100);
+}
+
+function pqClose(){
+  const drop=document.getElementById('pqDropdown');
+  const ov=document.getElementById('pqOverlay');
+  if(drop) drop.style.display='none';
+  if(ov) ov.style.display='none';
+}
+
+function pqOpenAdd(){
+  pqClose();
+  showPage('prompts');
+  setTimeout(()=>{ _promptTab=_pqTab; renderPrompts(); openAddPromptModal(); }, 100);
 }
 
 // ===== INIT — load after all variables declared =====
