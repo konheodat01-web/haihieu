@@ -693,6 +693,7 @@
           <option value="">Tất cả trạng thái</option>
           <option value="Chờ làm">Chờ làm</option>
           <option value="Đang làm">Đang làm</option>
+          <option value="Pending">Pending</option>
           <option value="Hoàn thành">Hoàn thành</option>
         </select>
         <select id="gvFilterPerson" onchange="renderGiaoViec()" style="height:32px;font-size:12px">
@@ -701,9 +702,41 @@
         <button class="btn btn-outline btn-sm" onclick="openManageAssignees()">⚙ Quản lý người nhận</button>
       </div>
     </div>
-    <div style="padding:14px">
+
+    <!-- GV PENDING SUMMARY — độc lập với task của tôi -->
+    <div id="gvPendingPanel" style="display:none;background:#fff8ee;border-bottom:2px solid #fce0b0;overflow:hidden">
+      <div style="padding:10px 14px;border-bottom:1px solid #fce0b0;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-weight:600;font-size:13px;color:#e67e22">⏸ Pending trong giao việc (<span id="gvPendingCount">0</span>)</div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px" id="gvPendingTable">
+        <thead>
+          <tr style="background:#fff3e0">
+            <th style="padding:7px 12px;text-align:left;font-weight:600;color:#b7770d;font-size:11px;border-bottom:1px solid #fce0b0;min-width:140px">Task giao</th>
+            <th style="padding:7px 12px;text-align:left;font-weight:600;color:#b7770d;font-size:11px;border-bottom:1px solid #fce0b0">Loại pending</th>
+            <th style="padding:7px 12px;text-align:left;font-weight:600;color:#b7770d;font-size:11px;border-bottom:1px solid #fce0b0;min-width:90px">Ngày</th>
+            <th style="padding:7px 12px;text-align:left;font-weight:600;color:#b7770d;font-size:11px;border-bottom:1px solid #fce0b0">Lý do</th>
+            <th style="padding:7px 12px;text-align:left;font-weight:600;color:#b7770d;font-size:11px;border-bottom:1px solid #fce0b0">Tình trạng</th>
+            <th style="padding:7px 4px;border-bottom:1px solid #fce0b0"></th>
+          </tr>
+        </thead>
+        <tbody id="gvPendingBody"></tbody>
+      </table>
+    </div>
+
+    <!-- GV LIST -->
+    <div id="gvListWrap" style="padding:14px">
       <div id="gvList"></div>
       <div id="gvEmpty" class="empty" style="display:none"><div class="icon">📤</div>Chưa có việc nào được giao.</div>
+    </div>
+
+    <!-- GV KANBAN SUB BOARD -->
+    <div id="gvSubBoard" style="display:none;padding:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:10px 16px">
+        <button class="btn btn-outline btn-sm" onclick="closeGvBoard()">← Quay lại</button>
+        <div style="font-weight:600;font-size:15px;flex:1" id="gvSubBoardTitle"></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddCardModal(null)">+ Thêm thẻ</button>
+      </div>
+      <div id="gvKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;padding-bottom:16px;min-height:300px"></div>
     </div>
   </div>
 
@@ -2783,7 +2816,7 @@ function saveAppData(){
     console.log('Pushing to Firebase, ts=', ts);
     window._fbDb.ref('appData').set({
       hai: data.hai, hieu: data.hieu,
-      tasks, taskOrder: tasks.map(t=>t.id), deletedTasks, links, linkCategories, websites, wsGroups, indexTasks, giaoViecList, assignees, _ts: ts, _sid: _sessionId
+      tasks, taskOrder: tasks.map(t=>t.id), deletedTasks, links, linkCategories, websites, wsGroups, indexTasks, giaoViecList, assignees, _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'), _ts: ts, _sid: _sessionId
     }).then(()=>{
       console.log('Firebase push OK');
       const ind=document.getElementById('syncIndicator');
@@ -2864,8 +2897,16 @@ function initFirebaseListener(){
           tasks = [...ordered, ...rest];
         }
       } catch(e){}
-      // Only accept Firebase deletedTasks if it's newer than our local version
-      if(Array.isArray(r.deletedTasks)) deletedTasks=r.deletedTasks;
+      // Accept Firebase deletedTasks only if not overriding a more recent local permanent-delete
+      const trashTs = Math.max(
+        parseInt(localStorage.getItem('wt_trash_ts')||'0'),
+        r._trash_ts||0
+      );
+      if(Array.isArray(r.deletedTasks) && (r._ts||0) >= trashTs) deletedTasks=r.deletedTasks;
+      // Sync trash_ts
+      if((r._trash_ts||0) > parseInt(localStorage.getItem('wt_trash_ts')||'0')){
+        localStorage.setItem('wt_trash_ts', String(r._trash_ts));
+      }
       localStorage.setItem('wt_deleted_tasks', JSON.stringify(deletedTasks));
       links = Array.isArray(r.links) ? r.links : (r.links != null ? r.links : []);
       linkCategories = r.linkCategories != null ? r.linkCategories : linkCategories;
@@ -3567,19 +3608,35 @@ function deleteCard(){
 function confirmPending(){
   const reason=document.getElementById('pendingReason').value.trim();
   if(pendingDragCard){
-    const task=tasks.find(t=>t.id===currentProjectId);
-    const card=task?.cards.find(c=>c.id===pendingDragCard.cardId);
-    if(card){
-      card.colId=pendingDragCard.colId;
-      card.pendingReason=reason;
-      card.pendingDate=todayVN();
-      card.pendingStatus='Chờ xử lý';
+    if(pendingDragCard.gvId!=null){
+      // Card in a GV board
+      const g=giaoViecList.find(x=>x.id===pendingDragCard.gvId);
+      const card=(g?.taskCards||[]).find(c=>c.id===pendingDragCard.cardId);
+      if(card){
+        card.colId=pendingDragCard.colId;
+        card.pendingReason=reason;
+        card.pendingDate=todayVN();
+        card.pendingStatus='Chờ xử lý';
+      }
+      pendingDragCard=null;
+      if(g) renderGvKanban({id:g.id,name:g.taskName,cols:g.taskCols,cards:g.taskCards});
+      renderGiaoViec();
+      saveAppData();
+    } else {
+      const task=tasks.find(t=>t.id===currentProjectId);
+      const card=task?.cards.find(c=>c.id===pendingDragCard.cardId);
+      if(card){
+        card.colId=pendingDragCard.colId;
+        card.pendingReason=reason;
+        card.pendingDate=todayVN();
+        card.pendingStatus='Chờ xử lý';
+      }
+      pendingDragCard=null;
+      if(task) renderSubBoard(task);
+      renderTasksOverview();
+      saveAppData();
     }
-    pendingDragCard=null;
-    if(task) renderSubBoard(task);
-    renderTasksOverview();
-    saveAppData();
-  toast('❙❙ Đã chuyển sang Pending');
+    toast('❙❙ Đã chuyển sang Pending');
   }
   closePendingModal();
 }
@@ -5556,6 +5613,7 @@ function permanentDeleteTask(idx){
   if(!confirm('Xoá vĩnh viễn "'+name+'"? Không thể khôi phục!')) return;
   deletedTasks.splice(idx,1);
   saveAppData();
+  try{ localStorage.setItem('wt_trash_ts', String(Date.now())); }catch(e){}
   renderTrash();
   updateTrashBadge();
   toast('Đã xoá vĩnh viễn.');
@@ -5566,6 +5624,7 @@ function emptyTrash(){
   if(!confirm('Xoá vĩnh viễn tất cả '+deletedTasks.length+' task trong thùng rác?')) return;
   deletedTasks=[];
   saveAppData();
+  try{ localStorage.setItem('wt_trash_ts', String(Date.now())); }catch(e){}
   renderTrash();
   updateTrashBadge();
   toast('Đã dọn sạch thùng rác.');
@@ -5922,8 +5981,10 @@ function genIndexTaskId(dateStr, team, stt){
   const d = dateStr || todayVN();
   const mm = d.split('-')[1] || String(new Date().getMonth()+1).padStart(2,'0');
   const tNum = team === 'Team 02' ? '02' : '01';
-  // Pad each number in stt to 4 digits: "1-99" → "0001-0099"
-  const paddedStt = stt.replace(/\d+/g, n => String(n).padStart(4,'0'));
+  // If single number → expand to X-X range: "1" → "1-1"
+  const normalizedStt = /^\d+$/.test(stt.trim()) ? `${stt.trim()}-${stt.trim()}` : stt;
+  // Pad each number to 4 digits: "1-99" → "0001-0099"
+  const paddedStt = normalizedStt.replace(/\d+/g, n => String(n).padStart(4,'0'));
   return mm + tNum + paddedStt;
 }
 
@@ -6204,15 +6265,27 @@ function saveAddIndexTask(){
     return;
   }
 
-  // Check trùng tháng + STT trong cùng team (khác team = nguồn data riêng, không tính)
+  // Parse STT range thành [start, end]
+  function parseSttRange(s){
+    const norm = /^\d+$/.test(s.trim()) ? `${s.trim()}-${s.trim()}` : s;
+    const parts = norm.split('-').map(Number);
+    return [parts[0], parts[1]||parts[0]];
+  }
+
+  // Check trùng ID chính xác (đã kiểm tra ở trên)
+  // Check xung đột range STT trong cùng tháng + team
   const mm = taskId.slice(0,2);
-  const paddedStt = taskId.slice(4);
-  const sttDup = indexTasks.find(t=> {
-    if(t.team !== _aimTeam) return false; // khác team → bỏ qua
-    return t.taskId.slice(0,2)===mm && t.taskId.slice(4)===paddedStt;
+  const [newStart, newEnd] = parseSttRange(sttVal);
+  const sttConflict = indexTasks.find(t=>{
+    if(t.team !== _aimTeam) return false;
+    if(t.taskId.slice(0,2) !== mm) return false;
+    const [exStart, exEnd] = parseSttRange(t.stt);
+    // Overlap nếu: newStart <= exEnd AND newEnd >= exStart
+    return newStart <= exEnd && newEnd >= exStart;
   });
-  if(sttDup){
-    const msg = `⚠️ Thêm task thất bại!\n\nTháng ${parseInt(mm)} + ${_aimTeam} đã có STT "${sttVal}" (ID: ${sttDup.taskId}).\n• Tên: ${sttDup.name||'(không tên)'}\n\nVui lòng dùng STT khác.`;
+  if(sttConflict){
+    const [exS, exE] = parseSttRange(sttConflict.stt);
+    const msg = `⚠️ Thêm task thất bại!\n\nSTT "${sttVal}" bị xung đột với task đã tồn tại:\n• ID: ${sttConflict.taskId}\n• STT: ${sttConflict.stt} (${exS}–${exE})\n• Tên: ${sttConflict.name||'(không tên)'}\n\nSố thứ tự bị trùng — vui lòng dùng dải STT khác.`;
     alert(msg);
     return;
   }
@@ -6422,34 +6495,43 @@ function closeTaskPendingModal(){
 }
 
 function saveTaskPending(){
-  const taskId = parseInt(document.getElementById('tpm_taskId').value);
-  const t = tasks.find(x=>x.id===taskId);
-  if(!t) return;
-  const reason = (document.getElementById('tpm_reason').value||'').trim();
-  if(!reason){ toast('Vui lòng nhập lý do pending!','#e74c3c'); return; }
-  t.pendingReason = reason;
-  t.pendingNote = (document.getElementById('tpm_note').value||'').trim();
-  t.pendingDate = todayVN();
-  t.pendingStatus = 'Chờ xử lý';
-  saveAppData();
-  closeTaskPendingModal();
-  renderTasksOverview();
-  toast('⏸ Đã pending task: '+t.name);
+  const rawId = document.getElementById("tpm_taskId").value;
+  const reason = (document.getElementById("tpm_reason").value||"").trim();
+  if(!reason){ toast("Vui lòng nhập lý do pending!","#e74c3c"); return; }
+  const note = (document.getElementById("tpm_note").value||"").trim();
+  if(rawId.startsWith("gv_")){
+    const gvId = parseInt(rawId.replace("gv_",""));
+    const g = giaoViecList.find(x=>x.id===gvId);
+    if(!g) return;
+    g.pendingReason=reason; g.pendingNote=note; g.pendingDate=todayVN(); g.pendingStatus="Chờ xử lý";
+    saveAppData(); closeTaskPendingModal(); renderGiaoViec();
+    toast("⏸ Đã pending: "+g.taskName);
+  } else {
+    const t = tasks.find(x=>x.id===parseInt(rawId));
+    if(!t) return;
+    t.pendingReason=reason; t.pendingNote=note; t.pendingDate=todayVN(); t.pendingStatus="Chờ xử lý";
+    saveAppData(); closeTaskPendingModal(); renderTasksOverview();
+    toast("⏸ Đã pending task: "+t.name);
+  }
 }
 
 function resolveTaskPending(taskId){
   const t = tasks.find(x=>x.id===taskId);
   if(!t) return;
   delete t.pendingReason; delete t.pendingNote; delete t.pendingDate; delete t.pendingStatus;
-  saveAppData();
-  renderTasksOverview();
-  toast('✓ Đã bỏ pending task: '+t.name);
+  saveAppData(); renderTasksOverview();
+  toast("✓ Đã bỏ pending task: "+t.name);
 }
 
 function resolveTaskPendingFromModal(){
-  const taskId = parseInt(document.getElementById('tpm_taskId').value);
-  resolveTaskPending(taskId);
-  closeTaskPendingModal();
+  const rawId = document.getElementById("tpm_taskId").value;
+  if(rawId.startsWith("gv_")){
+    resolveGvPending(parseInt(rawId.replace("gv_","")), null);
+    closeTaskPendingModal();
+  } else {
+    resolveTaskPending(parseInt(rawId));
+    closeTaskPendingModal();
+  }
 }
 
 function updateTaskPendingStatus(taskId, status){
@@ -6470,6 +6552,12 @@ function switchTasksTab(tab){
 
 function renderGiaoViec(){
   updateGvBadge();
+  renderGvPendingSummary();
+
+  const listWrap = document.getElementById('gvListWrap');
+  const gvSub = document.getElementById('gvSubBoard');
+  if(gvSub && gvSub.style.display!=='none') return; // board open, don't re-render list
+
   const list = document.getElementById('gvList');
   const empty = document.getElementById('gvEmpty');
   if(!list) return;
@@ -6477,7 +6565,6 @@ function renderGiaoViec(){
   const fStatus = document.getElementById('gvFilterStatus')?.value||'';
   const fPerson = document.getElementById('gvFilterPerson')?.value||'';
 
-  // Populate person filter
   const personSel = document.getElementById('gvFilterPerson');
   if(personSel){
     const cur = personSel.value;
@@ -6487,46 +6574,304 @@ function renderGiaoViec(){
   }
 
   let items = giaoViecList.filter(g=>{
-    if(fStatus && g.status!==fStatus) return false;
+    if(fStatus==='Pending' && !g.pendingReason) return false;
+    if(fStatus && fStatus!=='Pending' && g.status!==fStatus) return false;
     if(fPerson && g.assignee!==fPerson) return false;
     return true;
-  }).slice().sort((a,b)=>(b.id||0)-(a.id||0)); // newest first
+  }).slice().sort((a,b)=>(b.id||0)-(a.id||0));
 
   if(!items.length){ list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
 
   list.innerHTML = items.map(g=>{
-    const badgeCls = g.status==='Hoàn thành'?'gv-badge-done':g.status==='Đang làm'?'gv-badge-doing':'gv-badge-wait';
+    const isPendingTask = !!g.pendingReason;
+    const autoStatus = gvCalcStatus(g);
+    const badgeCls = isPendingTask?'gv-badge-wait':autoStatus==='Hoàn thành'?'gv-badge-done':autoStatus==='Đang làm'?'gv-badge-doing':'gv-badge-wait';
+    const badgeLabel = isPendingTask?'⏸ Pending':autoStatus;
     const dlLabel = g.deadline ? `📅 ${fmtDate(g.deadline)}` : '';
     const isOverdue = g.deadline && g.deadline < todayVN() && g.status!=='Hoàn thành';
-    return `<div class="gv-card">
+    const cardStyle = isPendingTask ? 'border-left:3px solid #e67e22;background:#fff8ee' : '';
+    const totalCards = (g.taskCards||[]).length;
+    const doneCols = g.taskCols ? new Set([g.taskCols[g.taskCols.length-1]?.id,'done']) : new Set(['done']);
+    const doneCards = (g.taskCards||[]).filter(c=>doneCols.has(c.colId)).length;
+    return `<div class="gv-card" style="${cardStyle}">
       <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
-        <div style="flex:1;min-width:200px">
+        <div style="flex:1;min-width:200px;cursor:pointer" onclick="openGvBoard(${g.id})">
           <div style="font-size:13px;font-weight:600;margin-bottom:4px">${g.taskName}</div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px">
-            <span class="${badgeCls}">${g.status}</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:4px">
+            <span class="${badgeCls}">${badgeLabel}</span>
             <span style="font-size:12px">👤 <b>${g.assignee}</b></span>
-            ${dlLabel?`<span style="font-size:11px;color:${isOverdue?'#e74c3c':'var(--text-muted)'};font-weight:${isOverdue?600:400}">${dlLabel}${isOverdue?' ⚠️':''}</span>`:''}
+            ${dlLabel?`<span style="font-size:11px;color:${isOverdue?'#e74c3c':'var(--text-muted)'}">${dlLabel}${isOverdue?' ⚠️':''}</span>`:''}
             ${g.assigner?`<span style="font-size:11px;color:var(--text-muted)">Giao bởi: ${g.assigner}</span>`:''}
+            ${totalCards?`<span style="font-size:11px;color:var(--text-muted)">${doneCards}/${totalCards} thẻ</span>`:''}
           </div>
-          ${g.note?`<div style="font-size:12px;color:var(--text-muted);line-height:1.4">📝 ${g.note}</div>`:''}
-          ${g.taskDesc?`<div style="font-size:11px;color:var(--text-muted);margin-top:3px;font-style:italic">${g.taskDesc.slice(0,80)}${g.taskDesc.length>80?'…':''}</div>`:''}
+          ${isPendingTask?`<div style="font-size:11px;color:#e67e22">⏸ ${(g.pendingReason||'').slice(0,80)}</div>`:''}
+          ${g.note?`<div style="font-size:12px;color:var(--text-muted)">📝 ${g.note}</div>`:''}
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center;flex-wrap:wrap">
           <select onchange="updateGvStatus(${g.id},this.value)" style="height:28px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
             <option ${g.status==='Chờ làm'?'selected':''}>Chờ làm</option>
             <option ${g.status==='Đang làm'?'selected':''}>Đang làm</option>
             <option ${g.status==='Hoàn thành'?'selected':''}>Hoàn thành</option>
           </select>
-          <button onclick="openEditGiaoViec(${g.id})" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px"
-            onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✎</button>
-          <button onclick="recallGiaoViec(${g.id})" title="Thu hồi — chuyển task về lại Task của tôi"
-            style="background:none;border:1px solid #a8deba;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:#27ae60"
-            onmouseover="this.style.background='#f0faf4'" onmouseout="this.style.background=''">↩ Thu hồi</button>
+          <button onclick="openGvTaskPending(${g.id})" title="${isPendingTask?'Sửa/xoá pending':'Pending task này'}"
+            style="background:none;border:1px solid ${isPendingTask?'#e67e22':'var(--gray-border)'};border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:${isPendingTask?'#e67e22':'var(--text-muted)'}">⏸</button>
+          <button onclick="openEditGiaoViec(${g.id})" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px">✎</button>
+          <button onclick="recallGiaoViec(${g.id})" title="Thu hồi về Task của tôi"
+            style="background:none;border:1px solid #a8deba;border-radius:6px;padding:3px 8px;cursor:pointer;font-size:12px;color:#27ae60">↩</button>
         </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function gvCalcStatus(g){
+  if(!g.taskCards||!g.taskCards.length) return g.status||'Chờ làm';
+  const cols = g.taskCols||null;
+  const lastColId = cols ? cols[cols.length-1].id : 'done';
+  const firstColId = cols ? cols[0].id : 'col_new';
+  const allDone = g.taskCards.every(c=>c.colId===lastColId||c.colId==='done');
+  if(allDone) return 'Hoàn thành';
+  const allFirst = g.taskCards.every(c=>c.colId===firstColId||c.colId==='todo');
+  if(allFirst) return 'Chờ làm';
+  return 'Đang làm';
+}
+
+// GV: open kanban board for a giao viec item
+let _gvBoardId = null;
+function openGvBoard(gvId){
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  _gvBoardId = gvId;
+  // Build a temp task object for renderSubBoard
+  const tempTask = {
+    id: gvId,
+    name: g.taskName,
+    person: g.assignee,
+    cols: g.taskCols,
+    cards: g.taskCards||[],
+  };
+  document.getElementById('gvListWrap').style.display='none';
+  document.getElementById('gvPendingPanel').style.display='none';
+  document.getElementById('gvSubBoard').style.display='block';
+  document.getElementById('gvSubBoardTitle').textContent = g.taskName;
+  renderGvKanban(tempTask);
+}
+
+function closeGvBoard(){
+  _gvBoardId=null;
+  document.getElementById('gvSubBoard').style.display='none';
+  document.getElementById('gvListWrap').style.display='block';
+  renderGiaoViec();
+}
+
+function renderGvKanban(tempTask){
+  const board = document.getElementById('gvKanbanBoard');
+  if(!board) return;
+  const cols = getProjectCols(tempTask);
+  board.innerHTML='';
+  cols.forEach(col=>{
+    const cards=(tempTask.cards||[]).filter(c=>{
+      if(c.colId===col.id) return true;
+      if(col.id==='col_new'&&c.colId==='todo') return true;
+      if(col.id==='col_pending'&&c.colId==='pending') return true;
+      return false;
+    });
+    const isPending = col.id==='pending'||col.id==='col_pending';
+    const colEl=document.createElement('div');
+    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:180px;display:flex;flex-direction:column`;
+    colEl.innerHTML=`
+      <div class="kb-col-header">
+        <span class="kb-col-title" style="color:${col.color}">${col.label}</span>
+        <span class="kb-col-count">${cards.length}</span>
+      </div>
+      <div id="gvcards-${col.id}" style="flex:1;overflow-y:auto"></div>`;
+    // Drop target
+    colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
+    colEl.addEventListener('dragleave',()=>colEl.style.background='var(--gray-light)');
+    colEl.addEventListener('drop',e=>{
+      e.preventDefault(); colEl.style.background='var(--gray-light)';
+      if(!dragCardId) return;
+      if(isPending){
+        pendingDragCard={cardId:dragCardId,colId:col.id,gvId:tempTask.id};
+        const card=(tempTask.cards||[]).find(c=>c.id===dragCardId);
+        document.getElementById('pendingReason').value=card?.pendingReason||'';
+        document.getElementById('pendingModal').classList.add('open');
+      } else {
+        const card=(tempTask.cards||[]).find(c=>c.id===dragCardId);
+        if(card){card.colId=col.id; delete card.pendingReason;}
+        const g=giaoViecList.find(x=>x.id===tempTask.id);
+        if(g){g.taskCards=tempTask.cards;}
+        saveAppData();
+        renderGvKanban(tempTask);
+        renderGiaoViec();
+        toast('Đã chuyển thẻ');
+      }
+      dragCardId=null;
+    });
+    board.appendChild(colEl);
+    const cardsEl=colEl.querySelector('#gvcards-'+col.id);
+    const isLastCol=col.id===cols[cols.length-1].id||col.id==='done';
+    cards.forEach(card=>{
+      const nextCol=!isLastCol?cols[cols.indexOf(col)+1]:null;
+      const cardEl=document.createElement('div');
+      cardEl.className='kb-card';
+      cardEl.draggable=true;
+      cardEl.innerHTML=`
+        <div style="display:flex;align-items:flex-start;gap:7px">
+          <input type="checkbox" ${isLastCol?'checked':''} style="cursor:pointer;accent-color:var(--red);margin-top:2px;flex-shrink:0;width:14px;height:14px"
+            onchange="gvMoveCard(event,${tempTask.id},'${card.id}','${col.id}')">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:500${isLastCol?';text-decoration:line-through;color:var(--text-muted)':''}">${card.name}</div>
+            ${card.pendingReason?`<div class="kb-card-pending">❙❙ ${card.pendingReason}</div>`:''}
+            ${nextCol&&!isLastCol?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px">Tick → ${nextCol.label}</div>`:''}
+          </div>
+        </div>`;
+      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
+      cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
+      cardsEl.appendChild(cardEl);
+    });
+  });
+}
+
+function gvMoveCard(event, gvId, cardId, currentColId){
+  event.stopPropagation();
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  const cols = getProjectCols({cols:g.taskCols});
+  const card=(g.taskCards||[]).find(c=>c.id===cardId);
+  if(!card) return;
+  const curIdx=cols.findIndex(c=>c.id===currentColId);
+  const nextCol=cols[curIdx+1];
+  if(!nextCol){
+    if(!event.target.checked&&curIdx>0) card.colId=cols[curIdx-1].id;
+    saveAppData(); renderGvKanban({id:gvId,cols:g.taskCols,cards:g.taskCards}); renderGiaoViec(); return;
+  }
+  if(nextCol.id==='pending'||nextCol.id==='col_pending'){
+    event.target.checked=false;
+    pendingDragCard={cardId,colId:nextCol.id,gvId};
+    document.getElementById('pendingReason').value=card.pendingReason||'';
+    document.getElementById('pendingModal').classList.add('open');
+  } else {
+    card.colId=nextCol.id;
+    delete card.pendingReason;
+    const _g=giaoViecList.find(x=>x.id===gvId);
+    if(_g) _g.taskCards=g.taskCards;
+    saveAppData();
+    renderGvKanban({id:gvId,name:g.taskName,cols:g.taskCols,cards:g.taskCards});
+    renderGiaoViec();
+    toast(`→ ${nextCol.label}`);
+  }
+}
+
+// GV: pending task cha (trong giao viec)
+function openGvTaskPending(gvId){
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  document.getElementById('tpm_taskId').value = 'gv_'+gvId;
+  document.getElementById('tpmTaskName').textContent = g.taskName + ' → ' + g.assignee;
+  document.getElementById('tpm_reason').value = g.pendingReason||'';
+  document.getElementById('tpm_note').value = g.pendingNote||'';
+  const isAlready = !!g.pendingReason;
+  document.getElementById('tpmTitle').textContent = isAlready?'⏸ Sửa / xoá pending':'⏸ Pending task giao';
+  document.getElementById('tpmClearBtn').style.display = isAlready?'inline-flex':'none';
+  document.getElementById('taskPendingModal').classList.add('open');
+  setTimeout(()=>document.getElementById('tpm_reason').focus(),100);
+}
+
+// GV: pending summary
+function renderGvPendingSummary(){
+  const panel = document.getElementById('gvPendingPanel');
+  const body = document.getElementById('gvPendingBody');
+  const cnt = document.getElementById('gvPendingCount');
+  if(!panel||!body) return;
+
+  // Pending parent gv tasks
+  const pendingParents = giaoViecList.filter(g=>g.pendingReason);
+  // Pending child cards within gv tasks
+  const pendingCards = [];
+  giaoViecList.forEach(g=>{
+    (g.taskCards||[]).forEach(card=>{
+      if(card.pendingReason) pendingCards.push({g,card});
+    });
+  });
+  const total = pendingParents.length + pendingCards.length;
+  if(!total){panel.style.display='none';return;}
+  panel.style.display='block';
+  cnt.textContent=total;
+
+  const STATUSES=['Chờ xử lý','Đang xử lý','Đã xử lý xong'];
+  const sColor={'Chờ xử lý':'#e67e22','Đang xử lý':'#2980b9','Đã xử lý xong':'#27ae60'};
+
+  const parentRows = pendingParents.map(g=>{
+    const st=g.pendingStatus||'Chờ xử lý';
+    const age=g.pendingDate?daysSince(g.pendingDate):0;
+    const ageStr=age===0?'Hôm nay':age===1?'Hôm qua':`${age} ngày`;
+    return `<tr style="border-bottom:1px solid #fce0b0;background:#fff3e6">
+      <td style="padding:7px 12px;font-size:12px;font-weight:600">${g.taskName} <span style="font-size:10px;background:#e67e22;color:#fff;border-radius:10px;padding:1px 6px;margin-left:4px">Task cha</span></td>
+      <td style="padding:7px 12px;font-size:11px;color:var(--text-muted)">👤 ${g.assignee}</td>
+      <td style="padding:7px 12px;font-size:12px;white-space:nowrap">${g.pendingDate?fmtDate(g.pendingDate):'?'} <span style="font-size:11px;color:var(--text-muted)">(${ageStr})</span></td>
+      <td style="padding:7px 12px;font-size:12px;color:var(--text-muted);max-width:180px">${g.pendingReason||'—'}</td>
+      <td style="padding:7px 12px">
+        <select onchange="updateGvPendingStatus(${g.id},null,this.value)"
+          style="font-size:11px;padding:2px 6px;border:1px solid #fce0b0;border-radius:4px;background:#fff;color:${sColor[st]};font-weight:500">
+          ${STATUSES.map(s=>`<option ${st===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:7px 8px;white-space:nowrap">
+        <button onclick="resolveGvPending(${g.id},null)" class="btn btn-sm btn-outline" style="font-size:11px;padding:3px 8px;color:#27ae60;border-color:#27ae60">✓ Bỏ pending</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const cardRows = pendingCards.map(({g,card})=>{
+    const st=card.pendingStatus||'Chờ xử lý';
+    const age=card.pendingDate?daysSince(card.pendingDate):0;
+    const ageStr=age===0?'Hôm nay':age===1?'Hôm qua':`${age} ngày`;
+    return `<tr style="border-bottom:1px solid #fce0b0">
+      <td style="padding:7px 12px;font-size:12px"><span onclick="openGvBoard(${g.id})" style="color:var(--blue);cursor:pointer;font-weight:500">${g.taskName}</span></td>
+      <td style="padding:7px 12px;font-size:12px;font-weight:500">${card.name}</td>
+      <td style="padding:7px 12px;font-size:12px;white-space:nowrap">${card.pendingDate?fmtDate(card.pendingDate):'?'} <span style="font-size:11px;color:var(--text-muted)">(${ageStr})</span></td>
+      <td style="padding:7px 12px;font-size:12px;color:var(--text-muted);max-width:180px">${card.pendingReason||'—'}</td>
+      <td style="padding:7px 12px">
+        <select onchange="updateGvPendingStatus(${g.id},'${card.id}',this.value)"
+          style="font-size:11px;padding:2px 6px;border:1px solid #fce0b0;border-radius:4px;background:#fff;color:${sColor[st]};font-weight:500">
+          ${STATUSES.map(s=>`<option ${st===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:7px 8px;white-space:nowrap">
+        <button onclick="resolveGvPending(${g.id},'${card.id}')" class="btn btn-sm btn-primary" style="font-size:11px;padding:3px 8px">✓ Done</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = parentRows + cardRows;
+}
+
+function updateGvPendingStatus(gvId, cardId, status){
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  if(cardId){
+    const card=(g.taskCards||[]).find(c=>c.id===cardId);
+    if(card) card.pendingStatus=status;
+  } else {
+    g.pendingStatus=status;
+  }
+  saveAppData();
+}
+
+function resolveGvPending(gvId, cardId){
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  if(cardId){
+    const card=(g.taskCards||[]).find(c=>c.id===cardId);
+    if(card){ const cols=getProjectCols({cols:g.taskCols}); card.colId=cols[0].id; delete card.pendingReason; delete card.pendingDate; delete card.pendingStatus; }
+  } else {
+    delete g.pendingReason; delete g.pendingNote; delete g.pendingDate; delete g.pendingStatus;
+  }
+  saveAppData();
+  renderGiaoViec();
+  toast('✓ Đã bỏ pending');
 }
 
 function updateGvBadge(){
