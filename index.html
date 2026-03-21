@@ -173,10 +173,17 @@
   .kb-col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .kb-col-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
   .kb-col-count{font-size:11px;background:#fff;border:1px solid var(--gray-border);border-radius:20px;padding:1px 8px;color:var(--text-muted)}
-  .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none}
+  .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;position:relative}
   .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
   .kb-card.dragging{opacity:.35;cursor:grabbing}
   .kb-card-pending{font-size:11px;color:#e67e22;background:#fff8ee;border:1px solid #fce0b0;border-radius:4px;padding:3px 7px;margin-top:5px}
+  .kb-card.card-selected{border-color:var(--red);background:#fdf9f9}
+  .kb-ws-menu-btn{background:none;border:none;padding:2px 5px;cursor:pointer;font-size:11px;color:var(--text-muted);line-height:1;flex-shrink:0;transition:color .15s}
+  .kb-ws-menu-btn:hover{color:var(--red)}
+  .kb-ws-expand{display:none;gap:5px;flex-wrap:wrap;padding:6px 0 2px 0;border-top:1px solid var(--gray-border);margin-top:5px}
+  .kb-ws-expand.open{display:flex}
+  .kb-ws-exp-btn{border-radius:4px;padding:3px 8px;cursor:pointer;font-size:11px;border:1px solid var(--gray-border);background:#f8f9fa;color:var(--text);white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:3px}
+  .kb-ws-exp-btn:hover{background:#f0f0f0}
   .kb-add-btn{width:100%;text-align:left;background:none;border:1px dashed var(--gray-border);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text-muted);cursor:pointer;margin-top:4px}
   .kb-add-btn:hover{background:#fff;border-color:var(--red);color:var(--red)}
   .member-picker{position:relative;display:flex;align-items:center;gap:8px}
@@ -804,8 +811,26 @@
       </div>
       <div class="toolbar">
         <button class="btn btn-outline btn-sm" onclick="openEditProjectModal()">&#9998; Sửa</button>
+        <div style="position:relative;display:inline-block">
+          <button class="btn btn-outline btn-sm" onclick="toggleSelectAllMenu()">☑ Chọn ▾</button>
+          <div id="selectAllMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:300;min-width:170px;overflow:hidden">
+            <div onclick="selectAllCards()" style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gray-border);font-weight:500" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">☑ Tất cả các cột</div>
+            <div id="selectColItems"></div>
+            <div onclick="clearCardSelection()" style="padding:9px 14px;font-size:13px;cursor:pointer;border-top:1px solid var(--gray-border);color:var(--text-muted)" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">☐ Bỏ chọn tất cả</div>
+          </div>
+        </div>
         <button class="btn btn-primary btn-sm" onclick="openAddCardModal(null)">&#43; Thêm thẻ</button>
       </div>
+    </div>
+    <!-- CARD BULK BAR -->
+    <div id="cardBulkBar" style="display:none;background:#2c3e50;color:#fff;border-radius:8px;padding:10px 16px;margin-bottom:10px;align-items:center;gap:8px;flex-wrap:wrap">
+      <span id="cardBulkCount" style="font-size:13px;font-weight:600"></span>
+      <div style="width:1px;height:18px;background:rgba(255,255,255,.2)"></div>
+      <button onclick="bulkCardMove('next')" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">→ Chuyển cột tiếp</button>
+      <button onclick="bulkCardCopyUrls(this)" class="btn btn-sm" style="background:#2980b9;color:#fff;border:none">🔗 Copy URL</button>
+      <button onclick="bulkCardCopyVidco(this)" class="btn btn-sm" style="background:#555;color:#fff;border:none">📋 Copy VIDCO</button>
+      <button onclick="bulkCardDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá thẻ</button>
+      <button onclick="clearCardSelection()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;margin-left:auto;padding:0 4px" title="Bỏ chọn & đóng">×</button>
     </div>
     <div id="subKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;overflow-y:visible;padding-bottom:16px;min-height:400px;padding-top:4px"></div>
   </div>
@@ -831,6 +856,13 @@
         <div class="form-group">
           <label>Loại</label>
           <select id="npm_type" style="width:100%"><option>Nội dung</option><option>SEO</option><option>Thiết kế</option><option>Kỹ thuật</option><option>Marketing</option><option>Khác</option></select>
+        </div>
+        <div class="form-group">
+          <label>Dạng task</label>
+          <select id="npm_dang" style="width:100%">
+            <option value="text">📝 Text</option>
+            <option value="url" selected>🔗 URL (mặc định)</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Ưu tiên</label>
@@ -1115,8 +1147,18 @@
         <div class="form-group" style="width:100%">
           <label style="font-size:13px;font-weight:500">Dán nội dung tin nhắn / yêu cầu công việc vào đây</label>
           <textarea id="qi_input" rows="5" placeholder="VD:&#10;sv88.jp.net&#10;Thay logo" style="width:100%;font-size:13px;line-height:1.6"></textarea>
+          <div id="qi_url_hint" style="display:none;margin-top:6px;font-size:12px;color:#2980b9;background:#f0f7fd;border-radius:6px;padding:8px 12px">
+            🔗 Chế độ URL: mỗi dòng là 1 URL. Các dòng không phải URL sẽ bị bỏ qua tự động.
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%">
+          <div class="form-group">
+            <label>Dạng task</label>
+            <select id="qi_dang" onchange="qi_onDangChange()" style="width:100%">
+              <option value="text">📝 Text</option>
+              <option value="url" selected>🔗 URL</option>
+            </select>
+          </div>
           <div class="form-group">
             <label>Giao cho</label>
             <select id="qi_person" style="width:100%">
@@ -1179,6 +1221,7 @@
       <button class="btn btn-outline" onclick="closeQuickImport()">Đóng</button>
       <button class="btn btn-outline" id="qi_btn_back" style="display:none" onclick="qi_goBack()">&#8592; Nhập lại</button>
       <button class="btn btn-primary" id="qi_btn_parse" onclick="qi_parse()">&#129302; Phân tích với AI</button>
+      <button class="btn btn-primary" id="qi_btn_parse_url" style="display:none" onclick="qi_parseUrl()">🔗 Nhận URL</button>
       <button class="btn btn-primary" id="qi_btn_add" style="display:none" onclick="qi_addAll()">&#43; Thêm tất cả vào Kanban</button>
     </div>
   </div>
@@ -1416,6 +1459,7 @@
             <input type="checkbox" id="wsSelectAll" onclick="wsToggleSelectAll(this)" style="width:15px;height:15px;cursor:pointer;accent-color:var(--red)" title="Chọn tất cả">
             <span id="wsBulkCount" style="font-size:13px;font-weight:600">0 web đã chọn</span>
             <button onclick="wsVidcoCopyBulk(this)" class="btn btn-sm" style="background:#2c3e50;color:#fff;border:none">📋 Copy VIDCO</button>
+            <button onclick="wsBulkCopyUrls(this)" class="btn btn-sm" style="background:#2980b9;color:#fff;border:none" title="Copy tất cả URL đã chọn">🔗 Copy URL</button>
             <button onclick="wsBulkEditToggle()" class="btn btn-sm btn-outline" id="wsBulkEditBtn">✏ Sửa hàng loạt</button>
             <button onclick="wsBulkDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá</button>
             <button onclick="wsClearSelect()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;margin-left:auto;line-height:1">×</button>
@@ -2966,6 +3010,8 @@ function initFirebaseListener(){
       data.hieu = Array.isArray(r.hieu) ? r.hieu : (r.hieu != null ? r.hieu : []);
       tasks = Array.isArray(r.tasks) ? r.tasks : (r.tasks != null ? r.tasks : []);
       deduplicateTasks();
+      if(tasks.length) taskNextId = Math.max(taskNextId, ...tasks.map(x=>x.id||0)) + 1;
+      tasks.forEach(task=>{ (task.cards||[]).forEach(c=>{ const n=parseInt((c.id||'').replace(/\D/g,''))||0; if(n>=cardNextId) cardNextId=n+1; }); });
       // Restore manual sort order if saved (no duplicates)
       try{
         // Prefer Firebase taskOrder over localStorage
@@ -3039,6 +3085,9 @@ function loadAppData(){
     if(t){
       tasks = JSON.parse(t);
       deduplicateTasks();
+      if(tasks.length) taskNextId = Math.max(taskNextId, ...tasks.map(x=>x.id||0)) + 1;
+      // update cardNextId from all existing cards
+      tasks.forEach(task=>{ (task.cards||[]).forEach(c=>{ const n=parseInt((c.id||'').replace(/\D/g,''))||0; if(n>=cardNextId) cardNextId=n+1; }); });
       try{
         const savedOrder = JSON.parse(localStorage.getItem('wt_task_order')||'[]');
         if(savedOrder.length){
@@ -3380,6 +3429,7 @@ function openProjectBoard(id){
 
 function backToOverview(){
   currentProjectId=null;
+  _selectedCardIds.clear();
   try{ localStorage.removeItem('wt_activeProject'); } catch(e){}
   document.getElementById('taskSubBoard').style.display='none';
   document.getElementById('tasksOverview').style.display='block';
@@ -3440,25 +3490,59 @@ function renderSubBoard(task){
     cards.forEach(card=>{
       const isLastCol = col.id===cols[cols.length-1].id || col.id==='done';
       const nextCol = !isLastCol ? cols[cols.indexOf(col)+1] : null;
+      // Wrapper row: [select] [card] [done tick]
+      const rowEl = document.createElement('div');
+      rowEl.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:8px';
+
+      // Left: select checkbox
+      const selWrap = document.createElement('div');
+      selWrap.style.cssText='flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center';
+      selWrap.innerHTML=`<input type="checkbox" class="card-chk" data-cardid="${card.id}" data-taskid="${task.id}"
+        style="cursor:pointer;accent-color:var(--red);width:14px;height:14px"
+        onchange="onCardCheck(event)">`;
+
+      // Center: card body
       const cardEl=document.createElement('div');
       cardEl.className='kb-card';
+      cardEl.style.marginBottom='0';
+      cardEl.style.flex='1';
+      cardEl.style.minWidth='0';
       cardEl.draggable=true;
       cardEl.innerHTML=`
-        <div style="display:flex;align-items:flex-start;gap:7px">
-          <input type="checkbox" ${isLastCol?'checked':''} title="${nextCol?'Chuyển sang: '+nextCol.label:'Hoàn thành'}"
-            style="cursor:pointer;accent-color:var(--red);margin-top:2px;flex-shrink:0;width:14px;height:14px"
-            onchange="moveCardByCheck(event,${task.id},'${card.id}','${col.id}')" onclick="event.stopPropagation()">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;line-height:1.4${isLastCol?';text-decoration:line-through;color:var(--text-muted)':''}">${card.name}</div>
-            ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:3px">${card.desc}</div>`:''}
-            ${card.pendingReason?`<div class="kb-card-pending">❙❙ ${card.pendingReason}</div>`:''}
-            ${nextCol&&!isLastCol?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px">Tick → ${nextCol.label}</div>`:''}
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="font-size:13px;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isLastCol?'text-decoration:line-through;color:var(--text-muted)':''}">
+              ${task.dang==='url' ? wsInlineIcon(card.name) : ''}<span title="${card.name}">${card.name}</span>
+            </div>
+            ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${card.desc}</div>`:''}
+            ${card.pendingReason?`<div class="kb-card-pending">\u2759\u2759 ${card.pendingReason}</div>`:''}
           </div>
-        </div>`;
+          ${task.dang==='url'?`
+            <button class="kb-ws-menu-btn" onclick="event.stopPropagation();toggleWsExpand('${card.id}',this)" title="Xem thêm">▼</button>
+          `:''}
+        </div>
+        ${task.dang==='url'?`<div class="kb-ws-expand" id="wsexp-${card.id}">${wsCardExpandItems(card.name)}</div>`:''}`;
+
+
+      // Right: done/next tick
+      const tickWrap = document.createElement('label');
+      tickWrap.title = nextCol ? '→ '+nextCol.label : 'Hoàn thành';
+      tickWrap.style.cssText='flex-shrink:0;width:32px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;opacity:.5;transition:opacity .15s';
+      tickWrap.onmouseover=()=>tickWrap.style.opacity='1';
+      tickWrap.onmouseout=()=>tickWrap.style.opacity='.5';
+      tickWrap.innerHTML=`
+        <input type="checkbox" ${isLastCol?'checked':''} style="cursor:pointer;accent-color:var(--red);width:14px;height:14px"
+          onchange="moveCardByCheck(event,${task.id},'${card.id}','${col.id}')" onclick="event.stopPropagation()">
+        <span style="font-size:8px;color:var(--text-muted);line-height:1.1;text-align:center">${nextCol?nextCol.label.slice(0,5):'Done'}</span>`;
+
+      rowEl.appendChild(selWrap);
+      rowEl.appendChild(cardEl);
+      rowEl.appendChild(tickWrap);
+
       cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
       cardEl.addEventListener('dragend',()=>cardEl.classList.remove('dragging'));
       cardEl.addEventListener('click',()=>openAddCardModal(col.id, card.id));
-      cardsEl.appendChild(cardEl);
+      cardsEl.appendChild(rowEl);
     });
   });
 }
@@ -3532,6 +3616,7 @@ function openNewProjectModal(){
   }
   document.getElementById('npm_type').value='Nội dung';
   const pri=document.getElementById('npm_priority'); if(pri) pri.value='Bình thường';
+  const dang0=document.getElementById('npm_dang'); if(dang0) dang0.value='url';
   document.getElementById('npm_from').value=todayVN();
   document.getElementById('npm_deadline').value='';
   document.getElementById('npm_desc').value='';
@@ -3555,6 +3640,7 @@ function openEditProjectModal(){
   if(npmPerson){ npmPerson.value=t.person||''; npmPerson.disabled=(currentMember!=='admin'); }
   document.getElementById('npm_type').value=t.type||'Nội dung';
   const pri=document.getElementById('npm_priority'); if(pri) pri.value=t.priority||'Bình thường';
+  const dang=document.getElementById('npm_dang'); if(dang) dang.value=t.dang||'text';
   document.getElementById('npm_from').value=t.from||'';
   document.getElementById('npm_deadline').value=t.deadline||'';
   document.getElementById('npm_desc').value=t.desc||'';
@@ -3599,6 +3685,7 @@ function saveProject(){
       t.name=name;t.person=document.getElementById('npm_person').value;
       t.type=document.getElementById('npm_type').value;
       t.priority=document.getElementById('npm_priority')?.value||t.priority||'Bình thường';
+      t.dang=document.getElementById('npm_dang')?.value||t.dang||'text';
       t.from=document.getElementById('npm_from').value;
       t.deadline=document.getElementById('npm_deadline').value;
       t.desc=document.getElementById('npm_desc').value.trim();
@@ -3613,7 +3700,7 @@ function saveProject(){
     const t={id:taskNextId++,name,person:document.getElementById('npm_person').value,
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
       deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
-      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',team:document.getElementById('npm_team')?.value||'Team 01'};
+      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01'};
     tasks.push(t);
   }
   closeNewProjectModal();
@@ -3627,12 +3714,14 @@ function saveProject(){
 }
 
 function deleteProject(){
-  if(!editingProjectId||!confirm('Xoá task này?')) return;
+  if(!editingProjectId) return;
+  const found=tasks.find(x=>x.id===editingProjectId);
+  if(found) deletedTasks.unshift({...found,_deletedAt:Date.now()});
   tasks=tasks.filter(t=>t.id!==editingProjectId);
   closeNewProjectModal();
   backToOverview();
   saveAppData();
-  toast('Đã xoá task.');
+  toast('🗑 Đã xoá task.','#2c3e50',4000);
 }
 
 // ---- CARD MODAL ----
@@ -3847,7 +3936,7 @@ let qi_parsedTasks = [];
 function openQuickImport(){
   document.getElementById('quickImportModal').classList.add('open');
   qi_goBack();
-  setTimeout(()=>document.getElementById('qi_input').focus(),100);
+  setTimeout(()=>{ document.getElementById('qi_input').focus(); qi_onDangChange(); }, 50);
   const _qiTeamRow=document.getElementById('qi_team_row'); if(_qiTeamRow) _qiTeamRow.style.display=currentMember==='hai'?'none':'block';
 }
 function qi_resetForm(){
@@ -3858,7 +3947,6 @@ function qi_resetForm(){
   document.getElementById('qi_step1').style.display='block';
   document.getElementById('qi_step2').style.display='none';
   document.getElementById('qi_loading').style.display='none';
-  document.getElementById('qi_btn_parse').style.display='inline-flex';
   document.getElementById('qi_btn_back').style.display='none';
   document.getElementById('qi_btn_add').style.display='none';
   document.getElementById('qi_error').style.display='none';
@@ -3866,6 +3954,12 @@ function qi_resetForm(){
   qi_parsedTasks=[];
   const qf=document.getElementById('qi_from'); if(qf) qf.value=todayVN();
   const qd=document.getElementById('qi_deadline'); if(qd) qd.value='';
+  // Restore button state based on current dang mode
+  const dang=(document.getElementById('qi_dang')?.value||'url');
+  const btnParse=document.getElementById('qi_btn_parse');
+  const btnParseUrl=document.getElementById('qi_btn_parse_url');
+  if(btnParse) btnParse.style.display=dang==='url'?'none':'inline-flex';
+  if(btnParseUrl) btnParseUrl.style.display=dang==='url'?'inline-flex':'none';
 }
 
 function closeQuickImport(e){
@@ -4022,12 +4116,26 @@ function qi_parse_repreview(){
 function qi_addAll(){
   if(!qi_parsedTasks.length) return;
   const t=qi_parsedTasks[0];
-  tasks.push({...t,id:taskNextId++});
+  const newTask={
+    id: taskNextId++,
+    name: t.name,
+    person: t.person||'',
+    type: t.type||'SEO',
+    dang: t.dang||'url',
+    from: t.from||todayVN(),
+    deadline: t.deadline||'',
+    desc: t.desc||'',
+    priority: t.priority||'Bình thường',
+    team: t.team||'Team 01',
+    cols: t.cols||null,
+    cards: (t.cards||[]).map(c=>({...c})), // deep copy each card
+  };
+  tasks.push(newTask);
   document.getElementById('quickImportModal').classList.remove('open');
   qi_resetForm();
   renderTasksOverview();
   saveAppData();
-  toast(`&#10003; Đã thêm task "${t.name}" với ${t.cards.length} thẻ con!`);
+  toast(`&#10003; Đã thêm task "${newTask.name}" với ${newTask.cards.length} thẻ con!`);
 }
 // ===== MEMBER SWITCHER =====
 const MEMBER_CONFIG = {
@@ -4975,6 +5083,7 @@ function renderWebsites(){
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
         ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
+        <button onclick="event.stopPropagation();copyText(this.dataset.url,this)" data-url="${(w.url||'').replace(/"/g,'&quot;')}" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;color:var(--blue);border-color:#b8d4ea" title="Copy URL">🔗</button>
         <button onclick="event.stopPropagation();wsCopyAccount(${w.id},this)" class="btn btn-sm" style="font-size:11px;padding:2px 10px;background:#27ae60;color:#fff;border:none;font-weight:600" title="Copy tài khoản">👤 TK</button>
         <button onclick="event.stopPropagation();wsCopyPassword(${w.id},this)" class="btn btn-sm" style="font-size:11px;padding:2px 10px;background:#2980b9;color:#fff;border:none;font-weight:600" title="Copy mật khẩu">🔑 MK</button>
         <button onclick="event.stopPropagation();openWebsiteForm(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:3px 7px" title="Sửa website">✏️</button>
@@ -5371,6 +5480,15 @@ function acClose(listId){
 document.addEventListener('click', e=>{
   if(!e.target.closest('.ac-wrap')) document.querySelectorAll('.ac-list').forEach(l=>l.classList.remove('open'));
 });
+function wsBulkCopyUrls(btn){
+  if(!_wsSelected.size) return;
+  const urls = [..._wsSelected].map(id=>{
+    const w = websites.find(x=>x.id===id);
+    return w?.url||'';
+  }).filter(Boolean).join('\n');
+  copyText(urls, btn);
+}
+
 function wsBulkDelete(){
   if(!_wsSelected.size) return;
   if(!confirm('Xoá '+_wsSelected.size+' website đã chọn?')) return;
@@ -5701,8 +5819,8 @@ function permanentDeleteTask(idx){
   const name=deletedTasks[idx].name;
   if(!confirm('Xoá vĩnh viễn "'+name+'"? Không thể khôi phục!')) return;
   deletedTasks.splice(idx,1);
-  saveAppData();
   try{ localStorage.setItem('wt_trash_ts', String(Date.now())); }catch(e){}
+  saveAppData();
   renderTrash();
   updateTrashBadge();
   toast('Đã xoá vĩnh viễn.');
@@ -5712,8 +5830,8 @@ function emptyTrash(){
   if(!deletedTasks.length) return;
   if(!confirm('Xoá vĩnh viễn tất cả '+deletedTasks.length+' task trong thùng rác?')) return;
   deletedTasks=[];
-  saveAppData();
   try{ localStorage.setItem('wt_trash_ts', String(Date.now())); }catch(e){}
+  saveAppData();
   renderTrash();
   updateTrashBadge();
   toast('Đã dọn sạch thùng rác.');
@@ -5830,14 +5948,14 @@ function clearTaskSelection(){
 }
 
 function confirmDeleteTask(id){
-  if(!confirm('Chuyển task này vào thùng rác?')) return;
-  const t = tasks.find(x=>x.id===id);
-  if(t){ deletedTasks.unshift({...t, _deletedAt: Date.now()}); }
-  tasks = tasks.filter(t=>t.id!==id);
+  const found = tasks.find(x=>x.id===id);
+  if(!found) return;
+  deletedTasks.unshift({...found, _deletedAt: Date.now()});
+  tasks = tasks.filter(x=>x.id!==id);
   selectedTaskIds.delete(id);
   saveAppData();
   renderTasksOverview();
-  toast('Đã chuyển vào thùng rác. <a onclick="undoDeleteTask('+id+')" style="color:#fff;text-decoration:underline;cursor:pointer">Hoàn tác</a>');
+  toast('🗑 Đã xoá task. <a onclick="undoDeleteTask('+id+')" style="color:#fff;text-decoration:underline;cursor:pointer;font-weight:600">Hoàn tác</a>', '#2c3e50', 6000);
 }
 
 function undoDeleteTask(id){
@@ -5856,13 +5974,12 @@ function bulkTaskDelete(){
   if(!selectedTaskIds.size) return;
   const ids = new Set([...selectedTaskIds].map(x=>parseInt(x)));
   const n = ids.size;
-  if(!confirm('Chuyển ' + n + ' task vào thùng rác?')) return;
   tasks.forEach(t=>{ if(ids.has(parseInt(t.id))) deletedTasks.unshift({...t,_deletedAt:Date.now()}); });
   tasks = tasks.filter(t=>!ids.has(parseInt(t.id)));
   selectedTaskIds.clear();
   saveAppData();
   renderTasksOverview();
-  toast('Đã chuyển ' + n + ' task vào thùng rác.');
+  toast('🗑 Đã xoá '+n+' task. <a onclick="undoDeleteBulk()" style="color:#fff;text-decoration:underline;cursor:pointer;font-weight:600">Hoàn tác</a>', '#2c3e50', 5000);
 }
 
 function bulkTaskDone(){
@@ -7609,6 +7726,382 @@ function deletePrompt(){
   closePromptModal();
   renderPrompts();
   toast('Đã xoá.');
+}
+
+// ===== CARD BULK SELECT =====
+let _selectedCardIds = new Set();
+let _lastSelectedColId = null;
+
+function wsCardExpandItems(url){
+  if(!url) return '';
+  const q=url.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+  const ws=websites.find(w=>{
+    const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    return wu===q||wu.includes(q)||q.includes(wu);
+  });
+  const adminUrl = ws?.admin ? joinAdminUrl(ws.url, ws.admin) : null;
+  const safeUrl = url.replace(/'/g,"\\'");
+  let html = `<button onclick="copyText('${safeUrl}',this)" class="kb-ws-exp-btn" style="color:#2980b9;border-color:#b8d4ea;background:#f0f7fd">🔗 URL</button>`;
+  if(adminUrl) html += `<a href="${adminUrl}" target="_blank" class="kb-ws-exp-btn">Admin</a>`;
+  if(ws?.account) html += `<button onclick="copyText('${(ws.account||'').replace(/'/g,"\\'")}',this)" class="kb-ws-exp-btn" style="color:#27ae60;border-color:#a8deba;background:#f0faf4">👤 TK</button>`;
+  if(ws?.password) html += `<button onclick="copyText('${(ws.password||'').replace(/'/g,"\\'")}',this)" class="kb-ws-exp-btn" style="color:var(--red);border-color:#f5c6c6;background:#fdf2f2">🔑 MK</button>`;
+  if(ws) html += `<button onclick="wsVidcoCopy(${ws.id},this)" class="kb-ws-exp-btn" style="color:#555">📋 VIDCO</button>`;
+  return html;
+}
+
+function wsCardMenuItems(url){ return wsCardExpandItems(url); }
+function wsCardActions(url){ return wsCardExpandItems(url); }
+
+function toggleWsExpand(cardId, btn){
+  const exp = document.getElementById('wsexp-'+cardId);
+  if(!exp) return;
+  const isOpen = exp.classList.contains('open');
+  exp.classList.toggle('open', !isOpen);
+  if(btn) btn.textContent = isOpen ? '▼' : '▲';
+}
+
+function toggleWsMenu(cardId, btn){ toggleWsExpand(cardId, btn); }
+
+function onCardCheck(event){
+  event.stopPropagation();
+  const chk = event.target;
+  const cardId = chk.dataset.cardid;
+  const row = chk.closest(`div[style*="display:flex"]`);
+  const card = row ? row.querySelector(".kb-card") : null;
+  if(chk.checked){
+    _selectedCardIds.add(cardId); if(card) card.classList.add("card-selected");
+    const task = tasks.find(x=>x.id===currentProjectId);
+    const c = task?.cards?.find(x=>x.id===cardId);
+    if(c){ _lastSelectedColId=c.colId; updateSelColBtn(); }
+  } else {
+    _selectedCardIds.delete(cardId); if(card) card.classList.remove("card-selected");
+  }
+  updateCardBulkBar();
+}
+
+function updateSelColBtn(){
+  const btn = document.getElementById("btnSelCol");
+  if(!btn||!_lastSelectedColId) return;
+  const task = tasks.find(x=>x.id===currentProjectId);
+  const cols = task ? getProjectCols(task) : [];
+  const col = cols.find(c=>c.id===_lastSelectedColId);
+  btn.textContent = col ? `u2611 Cu1ea3 "${col.label}"` : "u2611 Cu1ea3 cu1ed9t";
+}
+
+function updateCardBulkBar(){
+  const bar = document.getElementById('cardBulkBar');
+  const cnt = document.getElementById('cardBulkCount');
+  if(!bar) return;
+  if(_selectedCardIds.size>0){
+    bar.style.display='flex';
+    cnt.textContent = _selectedCardIds.size + ' thẻ đã chọn';
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function toggleSelectAllMenu(){
+  const menu = document.getElementById('selectAllMenu');
+  if(!menu) return;
+  const isOpen = menu.style.display!=='none';
+  if(isOpen){ menu.style.display='none'; return; }
+  // Populate column items
+  const task = tasks.find(x=>x.id===currentProjectId);
+  const colItems = document.getElementById('selectColItems');
+  if(task && colItems){
+    const cols = getProjectCols(task);
+    colItems.innerHTML = cols.map(col=>{
+      const cnt = (task.cards||[]).filter(c=>c.colId===col.id||(col.id==='col_new'&&c.colId==='todo')).length;
+      return `<div onclick="selectColCards('${col.id}')"
+        style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between"
+        onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+        <span style="color:${col.color}">${col.label}</span>
+        <span style="font-size:11px;color:var(--text-muted)">${cnt}</span>
+      </div>`;
+    }).join('');
+  }
+  menu.style.display='block';
+  // Close on outside click — but not when clicking inside the menu itself
+  setTimeout(()=>{
+    function outsideClick(e){
+      if(!document.getElementById('selectAllMenu')?.contains(e.target)){
+        closeSelectAllMenu();
+        document.removeEventListener('click', outsideClick);
+      }
+    }
+    document.addEventListener('click', outsideClick);
+  }, 10);
+}
+
+function closeSelectAllMenu(){
+  const menu = document.getElementById('selectAllMenu');
+  if(menu) menu.style.display='none';
+}
+
+function selectColCards(colId){
+  const task = tasks.find(x=>x.id===currentProjectId);
+  if(!task) return;
+  const colCards = (task.cards||[]).filter(c=>c.colId===colId||(colId==='col_new'&&c.colId==='todo'));
+  const colCardIds = new Set(colCards.map(c=>c.id));
+  document.querySelectorAll('.card-chk').forEach(chk=>{
+    if(!colCardIds.has(chk.dataset.cardid)) return;
+    chk.checked=true;
+    _selectedCardIds.add(chk.dataset.cardid);
+    const row = chk.closest('div[style*="display:flex"]');
+    const card = row ? row.querySelector('.kb-card') : null;
+    if(card) card.classList.add('card-selected');
+  });
+  updateCardBulkBar();
+  toast(`☑ Đã chọn ${colCards.length} thẻ trong cột`,'#2c3e50',2000);
+}
+
+function selectAllCards(){
+  const task = tasks.find(x=>x.id===currentProjectId);
+  if(!task) return;
+  task.cards.forEach(c=>_selectedCardIds.add(c.id));
+  document.querySelectorAll('.card-chk').forEach(chk=>{
+    chk.checked=true;
+    const row = chk.closest('div[style*="display:flex"]');
+    const card = row ? row.querySelector('.kb-card') : null;
+    if(card) card.classList.add('card-selected');
+  });
+  updateCardBulkBar();
+}
+
+function clearCardSelection(){
+  _selectedCardIds.clear();
+  document.querySelectorAll('.card-chk').forEach(c=>c.checked=false);
+  updateCardBulkBar();
+}
+
+function bulkCardMove(dir){
+  const task = tasks.find(x=>x.id===currentProjectId);
+  if(!task||!_selectedCardIds.size) return;
+  const cols = getProjectCols(task);
+  task.cards.forEach(card=>{
+    if(!_selectedCardIds.has(card.id)) return;
+    const curIdx = cols.findIndex(c=>c.id===card.colId||(c.id==='col_new'&&card.colId==='todo'));
+    const next = cols[curIdx+1];
+    if(next && next.id!=='pending' && next.id!=='col_pending') card.colId=next.id;
+  });
+  saveAppData();
+  clearCardSelection();
+  renderSubBoard(task);
+  renderTasksOverview();
+  toast(`→ Đã chuyển ${_selectedCardIds.size||'các'} thẻ`);
+}
+
+function bulkCardCopyUrls(btn){
+  const task = tasks.find(x=>x.id===currentProjectId);
+  if(!task||!_selectedCardIds.size) return;
+  const urls = task.cards.filter(c=>_selectedCardIds.has(c.id)).map(c=>c.name).join('\n');
+  copyText(urls, btn);
+}
+
+function bulkCardCopyVidco(btn){
+  const task = tasks.find(x=>x.id===currentProjectId);
+  if(!task||!_selectedCardIds.size) return;
+  const selected = task.cards.filter(c=>_selectedCardIds.has(c.id));
+  const found = [], notFound = [];
+  const lines = selected.map(c=>{
+    const q=c.name.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    const ws=websites.find(w=>{
+      const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+      return wu===q||wu.includes(q)||q.includes(wu);
+    });
+    if(ws){
+      found.push(c.name);
+      const domain=(ws.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+      const owner=(ws.owner&&ws.owner!=='Công ty'&&ws.owner!=='Chung')?ws.owner:'';
+      return domain+' | '+(ws.admin||'')+' | '+(ws.account||'')+' | '+(ws.password||'')+' | '+(ws.group||'')+' | '+owner;
+    } else {
+      notFound.push(c.name);
+      return null;
+    }
+  }).filter(Boolean);
+  if(!lines.length){ toast('Không có URL nào nhận diện được trong kho website.','#e67e22'); return; }
+  const text = lines.join('\n');
+  const doSuccess = () => {
+    let msg = `✓ Đã copy VIDCO ${found.length} web`;
+    if(notFound.length) msg += ` · Bỏ qua ${notFound.length} chưa có trong kho`;
+    toast(msg, '#27ae60', 4000);
+    if(btn){ const orig=btn.innerHTML; btn.innerHTML='✓'; setTimeout(()=>btn.innerHTML=orig,1500); }
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(doSuccess).catch(()=>fallbackCopy(text,btn,doSuccess));
+  } else {
+    fallbackCopy(text, btn, doSuccess);
+  }
+}
+
+function bulkCardDelete(){
+  const task = tasks.find(x=>x.id===currentProjectId);
+  if(!task||!_selectedCardIds.size) return;
+  const n = _selectedCardIds.size;
+  task.cards = task.cards.filter(c=>!_selectedCardIds.has(c.id));
+  saveAppData();
+  clearCardSelection();
+  renderSubBoard(task);
+  renderTasksOverview();
+  toast('🗑 Đã xoá '+n+' thẻ');
+}
+
+// ===== URL TASK MODE =====
+function wsInlineIcon(url){
+  if(!url) return '';
+  try{
+    const q=url.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    const ws=websites.find(w=>{
+      const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+      return wu===q||wu.includes(q)||q.includes(wu);
+    });
+    const icon=ws?(WS_STATUS_ICON[ws.status]||'✅'):'🔍';
+    const tip=ws?(ws.brand+' — '+ws.status):'Chưa có trong kho';
+    return `<span title="${tip}" style="margin-right:4px;cursor:default">${icon}</span>`;
+  }catch(e){return '';}
+}
+
+function isValidUrl(s){
+  s=(s||'').trim();
+  return /^(https?:\/\/)?[\w.-]+\.[a-z]{2,}(\/\S*)?$/i.test(s);
+}
+
+function extractUrlFromLine(line){
+  line=(line||'').trim();
+  // First check if the whole line is a URL
+  if(isValidUrl(line)) return line;
+  // Otherwise try to extract first URL-like token from the line
+  const tokens=line.split(/\s+/);
+  for(const t of tokens){
+    if(isValidUrl(t)) return t;
+  }
+  // Try regex match for URL embedded in text
+  const m=line.match(/(https?:\/\/[\w\-./:%?=&#@]+|[\w.-]+\.[a-z]{2,}(?:\/\S*)?)/i);
+  return m ? m[1] : null;
+}
+
+function qi_onDangChange(){
+  const dang=document.getElementById('qi_dang')?.value||'text';
+  const hint=document.getElementById('qi_url_hint');
+  const stepsRow=document.querySelector('#qi_step1 .form-group:has(#qi_steps)')?.closest('.form-group');
+  const btnParse=document.getElementById('qi_btn_parse');
+  const btnParseUrl=document.getElementById('qi_btn_parse_url');
+  if(hint) hint.style.display=dang==='url'?'block':'none';
+  if(btnParse) btnParse.style.display=dang==='url'?'none':'inline-flex';
+  if(btnParseUrl) btnParseUrl.style.display=dang==='url'?'inline-flex':'none';
+  // Hide steps textarea for URL mode
+  const stepsArea=document.getElementById('qi_steps')?.closest('.form-group');
+  if(stepsArea) stepsArea.style.display=dang==='url'?'none':'block';
+}
+
+function qi_parseUrl(){
+  const raw=(document.getElementById('qi_input')?.value||'');
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const urls=lines.map(extractUrlFromLine).filter(Boolean);
+  if(!urls.length){
+    const err=document.getElementById('qi_error');
+    if(err){err.textContent='Không tìm thấy URL hợp lệ trong nội dung dán vào.';err.style.display='block';}
+    return;
+  }
+  const err=document.getElementById('qi_error'); if(err) err.style.display='none';
+
+  // Build task name from qi_taskname or default
+  const taskName=(document.getElementById('qi_taskname')?.value||'').trim()||`Task URL (${urls.length} link)`;
+  const person=document.getElementById('qi_person')?.value||'';
+  const from=document.getElementById('qi_from')?.value||todayVN();
+  const deadline=document.getElementById('qi_deadline')?.value||'';
+  const priority=document.getElementById('qi_priority')?.value||'Bình thường';
+  const team=document.getElementById('qi_team')?.value||'Team 01';
+
+  const startId = cardNextId;
+  cardNextId += urls.length;
+  qi_parsedTasks=[{
+    name:taskName, person, type:'SEO', dang:'url',
+    from, deadline, desc:'', priority, team,
+    cols:null,
+    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:'todo', name:u, desc:''}))
+  }];
+
+  // Show preview
+  document.getElementById('qi_step1').style.display='none';
+  document.getElementById('qi_step2').style.display='block';
+  document.getElementById('qi_btn_parse_url').style.display='none';
+  document.getElementById('qi_btn_back').style.display='inline-flex';
+  document.getElementById('qi_btn_add').style.display='inline-flex';
+  document.getElementById('qi_count').textContent=1;
+
+  const t=qi_parsedTasks[0];
+  // Render URL preview with ws recognition
+  const STATUSES={
+    '✅':'Tốt','⚠️':'Lỗi web','🔒':'Chờ cấp lại mật khẩu','🔍':'Chưa có trong kho'
+  };
+  const grouped={};
+  t.cards.forEach(card=>{
+    const url=card.name;
+    const q=url.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    const ws=websites.find(w=>{
+      const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+      return wu===q||wu.includes(q)||q.includes(wu);
+    });
+    const icon=ws?(WS_STATUS_ICON[ws.status]||'✅'):'🔍';
+    const label=ws?(ws.brand+' — '+ws.status):'Chưa có trong kho';
+    const grp=icon+' '+label.split(' — ')[1];
+    if(!grouped[grp]) grouped[grp]=[];
+    grouped[grp].push({card,ws,icon,label});
+  });
+
+  // Summary badges
+  const inKho=t.cards.filter(card=>{
+    const q=card.name.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    return websites.some(w=>{const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');return wu===q||wu.includes(q)||q.includes(wu);});
+  }).length;
+
+  document.getElementById('qi_preview').innerHTML=`
+    <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">${t.name}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <span style="font-size:12px;background:#f0faf4;border:1px solid #a8deba;border-radius:20px;padding:2px 10px;color:#27ae60">✅ Trong kho: ${inKho}</span>
+        <span style="font-size:12px;background:#fdf2f2;border:1px solid #f5c6c6;border-radius:20px;padding:2px 10px;color:var(--red)">🔍 Chưa có: ${t.cards.length-inKho}</span>
+        <span style="font-size:12px;background:#f0f7fd;border:1px solid #b8d4ea;border-radius:20px;padding:2px 10px;color:#2980b9">Tổng: ${t.cards.length} URL</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto">
+        ${t.cards.map((card,i)=>{
+          const url=card.name;
+          const q=url.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+          const ws=websites.find(w=>{const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');return wu===q||wu.includes(q)||q.includes(wu);});
+          const icon=ws?(WS_STATUS_ICON[ws.status]||'✅'):'🔍';
+          const tip=ws?(ws.brand+' — '+ws.status):'Chưa có trong kho';
+          const tipColor=icon==='✅'?'#27ae60':icon==='🔍'?'#888':'#e74c3c';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:#fff;border-radius:6px;border:1px solid var(--gray-border)">
+            <span style="font-size:14px" title="${tip}">${icon}</span>
+            <span style="flex:1;font-size:12px;color:#333">${url}</span>
+            <span style="font-size:11px;color:${tipColor}">${tip}</span>
+            <button onclick="qi_parsedTasks[0].cards.splice(${i},1);qi_parseUrl_repreview()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px">✕</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+function qi_parseUrl_repreview(){
+  // Rebuild after deletion
+  const t=qi_parsedTasks[0]; if(!t) return;
+  const cards=document.getElementById('qi_preview').querySelectorAll('[style*="padding:6px"]');
+  // Just re-run qi_parseUrl logic on remaining cards
+  const inKho=t.cards.filter(card=>{
+    const q=card.name.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    return websites.some(w=>{const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');return wu===q||wu.includes(q)||q.includes(wu);});
+  }).length;
+  const container=document.getElementById('qi_preview');
+  if(container){
+    const summaryBadges=container.querySelector('[style*="display:flex;gap:8px"]');
+    if(summaryBadges){
+      summaryBadges.innerHTML=`
+        <span style="font-size:12px;background:#f0faf4;border:1px solid #a8deba;border-radius:20px;padding:2px 10px;color:#27ae60">✅ Trong kho: ${inKho}</span>
+        <span style="font-size:12px;background:#fdf2f2;border:1px solid #f5c6c6;border-radius:20px;padding:2px 10px;color:var(--red)">🔍 Chưa có: ${t.cards.length-inKho}</span>
+        <span style="font-size:12px;background:#f0f7fd;border:1px solid #b8d4ea;border-radius:20px;padding:2px 10px;color:#2980b9">Tổng: ${t.cards.length} URL</span>`;
+    }
+  }
 }
 
 // ===== PROMPT QUICK ACCESS (HEADER) =====
