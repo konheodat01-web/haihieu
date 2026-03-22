@@ -3955,7 +3955,10 @@ function renderPendingSummary(){
   const allPendingCards=[];
   // Filter tasks by current member
   const myTasks = currentMember==='admin' ? tasks
-    : tasks.filter(t=>t.person===(currentMember==='hai'?'Hải':'Hiếu'));
+    : tasks.filter(t=>{
+        const p = (t.person||'').trim();
+        return !p || p===(currentMember==='hai'?'Hải':'Hiếu');
+      });
   myTasks.forEach(task=>{
     const cols=getProjectCols(task);
     const pendingColIds=new Set(cols.filter(c=>c.id==='pending'||c.id==='col_pending'||c.label.toLowerCase().includes('pending')).map(c=>c.id));
