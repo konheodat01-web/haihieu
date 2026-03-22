@@ -178,6 +178,7 @@
   .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;position:relative}
   .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
   .kb-card.dragging{opacity:.35;cursor:grabbing}
+  .kb-card.dragging *{pointer-events:none}
   .kb-card-pending{font-size:11px;color:#e67e22;background:#fff8ee;border:1px solid #fce0b0;border-radius:4px;padding:3px 7px;margin-top:5px}
   .kb-card.card-selected{border-color:var(--red);background:#fdf9f9}
   .kb-ws-menu-btn{background:none;border:none;padding:2px 5px;cursor:pointer;font-size:11px;color:var(--text-muted);line-height:1;flex-shrink:0;transition:color .15s}
@@ -3610,7 +3611,7 @@ function renderSubBoard(task){
       <button class="kb-add-btn" onclick="openAddCardModal('${col.id}')">&#43; Thêm thẻ</button>`;
 
     colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
-    colEl.addEventListener('dragleave',()=>colEl.style.background='var(--gray-light)');
+    colEl.addEventListener('dragleave',e=>{if(!colEl.contains(e.relatedTarget))colEl.style.background='var(--gray-light)';});
     colEl.addEventListener('drop',e=>{
       e.preventDefault();colEl.style.background='var(--gray-light)';
       if(!dragCardId) return;
@@ -3684,7 +3685,7 @@ function renderSubBoard(task){
       rowEl.appendChild(tickWrap);
 
       cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
-      cardEl.addEventListener('dragend',()=>cardEl.classList.remove('dragging'));
+      cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
       cardEl.addEventListener('mouseenter',e=>{
         const data=cardEl.querySelector('.kb-card-tooltip-data');
         if(!data) return;
@@ -7452,7 +7453,7 @@ function renderGvKanban(tempTask){
       <div id="gvcards-${col.id}" style="flex:1;overflow-y:auto"></div>`;
     // Drop target
     colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
-    colEl.addEventListener('dragleave',()=>colEl.style.background='var(--gray-light)');
+    colEl.addEventListener('dragleave',e=>{if(!colEl.contains(e.relatedTarget))colEl.style.background='var(--gray-light)';});
     colEl.addEventListener('drop',e=>{
       e.preventDefault(); colEl.style.background='var(--gray-light)';
       if(!dragCardId) return;
