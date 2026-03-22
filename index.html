@@ -3126,12 +3126,11 @@ function initFirebaseListener(){
       if(Array.isArray(r.prompts)){      prompts=r.prompts;           promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
       if(r.passwords && typeof r.passwords==='object') localStorage.setItem('wt_passwords', JSON.stringify(r.passwords));
       if(r.settings && typeof r.settings==='object'){
-        // Merge: keep local avatars if Firebase doesn't have them
+        // Always merge avatars: Firebase avatars override local, but local fills gaps
         const localAvatars = _settings.avatars || {};
+        const fbAvatars = r.settings.avatars || {};
         _settings = r.settings;
-        if(!_settings.avatars || Object.keys(_settings.avatars).length===0){
-          _settings.avatars = localAvatars;
-        }
+        _settings.avatars = Object.assign({}, localAvatars, fbAvatars); // local fills gaps, fb overrides
         applyLoginBg(_settings.loginBg);
         applyAllAvatars();
         localStorage.setItem('wt_settings', JSON.stringify(_settings));
@@ -3213,7 +3212,21 @@ function loadAppData(){
     const gv=localStorage.getItem('wt_giaoviec'); if(gv){ giaoViecList=JSON.parse(gv); giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
     const ga=localStorage.getItem('wt_assignees'); if(ga) assignees=JSON.parse(ga);
     const pr=localStorage.getItem('wt_prompts'); if(pr){ prompts=JSON.parse(pr); promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
-    const st=localStorage.getItem('wt_settings'); if(st){ try{ _settings=JSON.parse(st); applyLoginBg(_settings.loginBg); applyAllAvatars(); }catch(e){} }
+    const st=localStorage.getItem('wt_settings');
+    if(st){
+      try{
+        _settings=JSON.parse(st);
+        // Always ensure default avatars are present
+        if(!_settings.avatars) _settings.avatars={};
+        if(window._defaultAvatars){
+          ['admin','hai','hieu'].forEach(m=>{
+            if(!_settings.avatars[m] && window._defaultAvatars[m]) _settings.avatars[m]=window._defaultAvatars[m];
+          });
+        }
+        applyLoginBg(_settings.loginBg);
+        applyAllAvatars();
+      }catch(e){}
+    }
   }catch(e){ console.warn('localStorage load failed', e); }
 }
 
