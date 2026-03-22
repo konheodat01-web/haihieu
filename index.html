@@ -4632,8 +4632,14 @@ const PROFILE_INFO = {
 function selectProfile(member){
   _pendingMember = member;
   const p = PROFILE_INFO[member];
-  document.getElementById('loginPwAvatar').setAttribute('style', p.avatarStyle+';width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+p.fontSize+';font-weight:700');
-  document.getElementById('loginPwAvatar').textContent = p.icon;
+  const avEl = document.getElementById('loginPwAvatar');
+  const avSrc = (_settings.avatars?.[member]) || window._defaultAvatars?.[member];
+  if(avEl){
+    avEl.setAttribute('style', 'width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0');
+    avEl.innerHTML = avSrc
+      ? `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;display:block">`
+      : `<div style="${p.avatarStyle};width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${p.fontSize};font-weight:700">${p.icon}</div>`;
+  }
   document.getElementById('loginPwName').textContent = p.name;
   document.getElementById('loginPwInput').value='';
   document.getElementById('loginPwErr').style.display='none';
