@@ -175,8 +175,8 @@
   .kb-col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .kb-col-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
   .kb-col-count{font-size:11px;background:#fff;border:1px solid var(--gray-border);border-radius:20px;padding:1px 8px;color:var(--text-muted)}
-  .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;position:relative}
-  .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
+  .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;-webkit-user-drag:element;position:relative}
+  .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.09)}
   .kb-card.dragging{opacity:.35;cursor:grabbing}
   .kb-card.dragging *{pointer-events:none}
   .kb-card-pending{font-size:11px;color:#e67e22;background:#fff8ee;border:1px solid #fce0b0;border-radius:4px;padding:3px 7px;margin-top:5px}
@@ -3588,20 +3588,19 @@ function renderSubBoard(task){
   const board = document.getElementById('subKanbanBoard');
   const cols = getProjectCols(task);
   board.innerHTML='';
+
   cols.forEach(col=>{
     const cards = (task.cards||[]).filter(c=>{
       if(c.colId===col.id) return true;
-      // Legacy: 'todo' maps to first col
       if(col.id==='col_new' && c.colId==='todo') return true;
-      // Legacy: 'pending' maps to col_pending
       if(col.id==='col_pending' && c.colId==='pending') return true;
       return false;
     });
-    const colEl = document.createElement('div');
-    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column;overflow:hidden`;
-    colEl.dataset.colId = col.id;
-
     const isPending = col.id==='pending' || col.id==='col_pending';
+
+    const colEl = document.createElement('div');
+    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column`;
+    colEl.dataset.colId = col.id;
     colEl.innerHTML=`
       <div class="kb-col-header">
         <span class="kb-col-title" style="color:${col.color}">${col.label}</span>
@@ -3609,52 +3608,28 @@ function renderSubBoard(task){
       </div>
       <div class="kb-cards" id="subcards-${col.id}" style="overflow-y:auto;flex:1"></div>
       <button class="kb-add-btn" onclick="openAddCardModal('${col.id}')">&#43; Thêm thẻ</button>`;
-
-    colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
-    colEl.addEventListener('dragleave',e=>{if(!colEl.contains(e.relatedTarget))colEl.style.background='var(--gray-light)';});
-    colEl.addEventListener('drop',e=>{
-      e.preventDefault();colEl.style.background='var(--gray-light)';
-      if(!dragCardId) return;
-      if(isPending){
-        pendingDragCard={cardId:dragCardId,colId:col.id};
-        const card = (task.cards||[]).find(c=>c.id===dragCardId);
-        document.getElementById('pendingReason').value=card?.pendingReason||'';
-        document.getElementById('pendingModal').classList.add('open');
-      } else {
-        const card=(task.cards||[]).find(c=>c.id===dragCardId);
-        if(card){card.colId=col.id;delete card.pendingReason;}
-        saveAppData();
-        renderSubBoard(task);
-        renderTasksOverview();
-        toast('Đã chuyển thẻ');
-      }
-      dragCardId=null;
-    });
     board.appendChild(colEl);
 
-    const cardsEl=document.getElementById('subcards-'+col.id);
-    cardsEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
-    cardsEl.addEventListener('dragleave',e=>{if(!colEl.contains(e.relatedTarget))colEl.style.background='var(--gray-light)';});
-    cardsEl.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();colEl.style.background='var(--gray-light)';if(!dragCardId)return;if(isPending){pendingDragCard={cardId:dragCardId,colId:col.id};const card=(task.cards||[]).find(c=>c.id===dragCardId);document.getElementById('pendingReason').value=card?.pendingReason||'';document.getElementById('pendingModal').classList.add('open');}else{const card=(task.cards||[]).find(c=>c.id===dragCardId);if(card){card.colId=col.id;delete card.pendingReason;}saveAppData();renderSubBoard(task);renderTasksOverview();toast('Đã chuyển thẻ');}dragCardId=null;});
+    const cardsEl = document.getElementById('subcards-'+col.id);
+
     cards.forEach(card=>{
       const isLastCol = col.id===cols[cols.length-1].id || col.id==='done';
       const nextCol = !isLastCol ? cols[cols.indexOf(col)+1] : null;
-      // Wrapper row: [select] [card] [done tick]
+
       const rowEl = document.createElement('div');
       rowEl.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:8px';
 
-      // Left: select checkbox
       const selWrap = document.createElement('div');
       selWrap.style.cssText='flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center';
       selWrap.innerHTML=`<input type="checkbox" class="card-chk" data-cardid="${card.id}" data-taskid="${task.id}"
         style="cursor:pointer;accent-color:var(--red);width:14px;height:14px"
         onchange="onCardCheck(event)">`;
 
-      // Center: card body
       const cardEl=document.createElement('div');
       cardEl.className='kb-card';
-      cardEl.style.cssText='margin-bottom:0;flex:1;min-width:0;position:relative';
-      cardEl.draggable=true;
+      cardEl.dataset.cardId=card.id;
+      cardEl.dataset.colId=col.id;
+      cardEl.style.cssText='margin-bottom:0;flex:1;min-width:0;position:relative;cursor:grab';
       cardEl.innerHTML=`
         <div style="display:flex;align-items:center;gap:6px">
           <div style="flex:1;min-width:0;overflow:hidden">
@@ -3664,15 +3639,11 @@ function renderSubBoard(task){
             ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="event.stopPropagation();openAddCardModal('${col.id}','${card.id}')">${card.desc}</div>`:''}
             ${card.pendingReason?`<div class="kb-card-pending">\u2759\u2759 ${card.pendingReason}</div>`:''}
           </div>
-          ${task.dang==='url'?`
-            <button class="kb-ws-menu-btn" onclick="event.stopPropagation();toggleWsExpand('${card.id}',this)" title="Xem thêm">▼</button>
-          `:''}
+          ${task.dang==='url'?`<button class="kb-ws-menu-btn" onclick="event.stopPropagation();toggleWsExpand('${card.id}',this)" title="Xem thêm">▼</button>`:''}
         </div>
         ${task.dang==='url'?`<div class="kb-ws-expand" id="wsexp-${card.id}">${wsCardExpandItems(card.name)}</div>`:''}
-        <!-- Tooltip data only, rendered globally -->
         <span class="kb-card-tooltip-data" data-name="${(card.name||'').replace(/"/g,'&quot;').replace(/`/g,'&#96;')}" data-desc="${(card.desc||'').replace(/"/g,'&quot;').replace(/`/g,'&#96;')}" style="display:none"></span>`;
 
-      // Right: done/next tick
       const tickWrap = document.createElement('label');
       tickWrap.title = nextCol ? '→ '+nextCol.label : 'Hoàn thành';
       tickWrap.style.cssText='flex-shrink:0;width:32px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;opacity:.5;transition:opacity .15s';
@@ -3683,12 +3654,14 @@ function renderSubBoard(task){
           onchange="moveCardByCheck(event,${task.id},'${card.id}','${col.id}')" onclick="event.stopPropagation()">
         <span style="font-size:8px;color:var(--text-muted);line-height:1.1;text-align:center">${nextCol?nextCol.label.slice(0,5):'Done'}</span>`;
 
-      rowEl.appendChild(selWrap);
-      rowEl.appendChild(cardEl);
-      rowEl.appendChild(tickWrap);
+      // Mouse-based drag
+      cardEl.addEventListener('mousedown', e=>{
+        if(e.button!==0) return;
+        if(e.target.closest('input,button,a,.kb-ws-menu-btn,.kb-ws-expand')) return;
+        e.preventDefault();
+        kbDragStart(e, card.id, task, cardEl, board);
+      });
 
-      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',card.id);dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
-      cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
       cardEl.addEventListener('mouseenter',e=>{
         const data=cardEl.querySelector('.kb-card-tooltip-data');
         if(!data) return;
@@ -3698,10 +3671,97 @@ function renderSubBoard(task){
       });
       cardEl.addEventListener('mousemove',e=>moveKbTooltip(e));
       cardEl.addEventListener('mouseleave',()=>hideKbTooltip());
+
+      rowEl.appendChild(selWrap);
+      rowEl.appendChild(cardEl);
+      rowEl.appendChild(tickWrap);
       cardsEl.appendChild(rowEl);
     });
   });
 }
+
+// ===== MOUSE-BASED KANBAN DRAG =====
+let _kbDrag = null;
+
+function kbDragStart(e, cardId, task, cardEl, board){
+  const rect = cardEl.getBoundingClientRect();
+  const ghost = cardEl.cloneNode(true);
+  ghost.style.cssText=`position:fixed;z-index:9999;width:${rect.width}px;opacity:0.75;pointer-events:none;background:#fff;border-radius:8px;border:2px solid var(--red);padding:10px 12px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);left:${rect.left}px;top:${rect.top}px`;
+  document.body.appendChild(ghost);
+  cardEl.style.opacity='0.3';
+
+  _kbDrag = {
+    cardId, task, cardEl, ghost, board,
+    offsetX: e.clientX - rect.left,
+    offsetY: e.clientY - rect.top,
+    startCol: cardEl.dataset.colId,
+  };
+
+  document.addEventListener('mousemove', kbDragMove);
+  document.addEventListener('mouseup',   kbDragEnd);
+}
+
+function kbDragMove(e){
+  if(!_kbDrag) return;
+  const {ghost, offsetX, offsetY} = _kbDrag;
+  ghost.style.left = (e.clientX - offsetX) + 'px';
+  ghost.style.top  = (e.clientY - offsetY) + 'px';
+
+  // Highlight target col
+  _kbDrag.board.querySelectorAll('[data-col-id]').forEach(col=>{
+    const r = col.getBoundingClientRect();
+    const over = e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
+    col.style.background = over ? '#fde8e8' : 'var(--gray-light)';
+    col.style.outline = over ? '2px solid var(--red)' : '';
+  });
+}
+
+function kbDragEnd(e){
+  if(!_kbDrag) return;
+  document.removeEventListener('mousemove', kbDragMove);
+  document.removeEventListener('mouseup',   kbDragEnd);
+
+  const {cardId, task, cardEl, ghost, board} = _kbDrag;
+  _kbDrag = null;
+
+  ghost.remove();
+  cardEl.style.opacity='';
+
+  // Reset highlights
+  board.querySelectorAll('[data-col-id]').forEach(col=>{
+    col.style.background='var(--gray-light)';
+    col.style.outline='';
+  });
+
+  // Find target col
+  let targetColId = null;
+  board.querySelectorAll('[data-col-id]').forEach(col=>{
+    const r = col.getBoundingClientRect();
+    if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
+      targetColId = col.dataset.colId;
+    }
+  });
+
+  if(!targetColId || targetColId === cardEl.dataset.colId) return;
+
+  const isPending = targetColId==='pending' || targetColId==='col_pending';
+  const card = (task.cards||[]).find(c=>c.id===cardId);
+  if(!card) return;
+
+  if(isPending){
+    pendingDragCard={cardId, colId:targetColId};
+    document.getElementById('pendingReason').value=card.pendingReason||'';
+    document.getElementById('pendingModal').classList.add('open');
+  } else {
+    card.colId=targetColId;
+    delete card.pendingReason;
+    saveAppData();
+    renderSubBoard(task);
+    renderTasksOverview();
+    toast('Đã chuyển thẻ');
+  }
+}
+
 
 function calcTaskAutoStatus(task){
   const cols = getProjectCols(task);
