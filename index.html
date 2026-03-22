@@ -1669,7 +1669,6 @@
     <div class="modal-body" style="gap:8px;max-height:420px;overflow-y:auto" id="trashBody">
     </div>
     <div class="modal-footer">
-      <button class="btn btn-danger btn-sm" onclick="emptyTrash()">🗑 Xoá tất cả vĩnh viễn</button>
       <button class="btn btn-outline" onclick="closeTaskTrash()">Đóng</button>
     </div>
   </div>
@@ -3199,6 +3198,19 @@ function loadAppData(){
       } catch(e){}
     }
     const dt=localStorage.getItem('wt_deleted_tasks'); if(dt) deletedTasks=JSON.parse(dt);
+    // Auto-clear trash on new day
+    (function autoCleanTrash(){
+      try{
+        const today = todayVN();
+        const lastDate = localStorage.getItem('wt_trash_last_date');
+        if(lastDate && lastDate !== today && deletedTasks.length > 0){
+          deletedTasks = [];
+          localStorage.setItem('wt_deleted_tasks', '[]');
+          try{ localStorage.setItem('wt_trash_ts', String(Date.now())); }catch(e){}
+        }
+        localStorage.setItem('wt_trash_last_date', today);
+      }catch(e){}
+    })();
     if(l) links = JSON.parse(l);
     if(lc) linkCategories = JSON.parse(lc);
     const ws = localStorage.getItem('wt_websites');
@@ -8792,11 +8804,12 @@ function submitSwitchPw(){
     document.getElementById('switchPwErr').style.display = 'block';
     inp.value = ''; inp.focus(); return;
   }
+  // Lưu target trước khi closeSwitchPwModal() null nó
+  const target = _switchPwTarget;
   closeSwitchPwModal();
-  // Cập nhật session và switch
-  try{ sessionStorage.setItem('wt_session_member', _switchPwTarget); }catch(e){}
-  try{ localStorage.setItem('wt_activeMember', _switchPwTarget); }catch(e){}
-  setMember(_switchPwTarget);
+  try{ sessionStorage.setItem('wt_session_member', target); }catch(e){}
+  try{ localStorage.setItem('wt_activeMember', target); }catch(e){}
+  setMember(target);
 }
 
 // Start Firebase real-time listener
