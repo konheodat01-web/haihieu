@@ -175,10 +175,9 @@
   .kb-col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .kb-col-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
   .kb-col-count{font-size:11px;background:#fff;border:1px solid var(--gray-border);border-radius:20px;padding:1px 8px;color:var(--text-muted)}
-  .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;-webkit-user-drag:element;position:relative}
-  .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.09)}
+  .kb-card{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:10px 12px;margin-bottom:8px;cursor:grab;transition:box-shadow .15s,transform .15s;user-select:none;position:relative}
+  .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.09);transform:translateY(-1px)}
   .kb-card.dragging{opacity:.35;cursor:grabbing}
-  .kb-card.dragging *{pointer-events:none}
   .kb-card-pending{font-size:11px;color:#e67e22;background:#fff8ee;border:1px solid #fce0b0;border-radius:4px;padding:3px 7px;margin-top:5px}
   .kb-card.card-selected{border-color:var(--red);background:#fdf9f9}
   .kb-ws-menu-btn{background:none;border:none;padding:2px 5px;cursor:pointer;font-size:11px;color:var(--text-muted);line-height:1;flex-shrink:0;transition:color .15s}
@@ -200,7 +199,7 @@
   .md-item:hover{background:var(--gray-light)}
   .md-item.active{background:#fdf2f2}
   .md-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;overflow:hidden}
-  .md-name{font-size:13px;font-weight:500;color:var(--red)}
+  .md-name{font-size:13px;font-weight:500}
   .md-role{font-size:11px;color:var(--text-muted)}
   .md-check{margin-left:auto;color:var(--red);font-size:14px}
   .link-group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 2px;margin-bottom:8px;margin-top:14px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;gap:6px}
@@ -276,7 +275,8 @@
   <div id="loginBgOverlay" style="position:absolute;inset:0;background:rgba(0,0,0,.45);pointer-events:none;z-index:0;transition:background .3s"></div>
   <div style="position:relative;z-index:1;width:100%;display:flex;flex-direction:column;align-items:center">
   <div style="text-align:center;margin-bottom:48px">
-    
+    <img src=""
+      style="width:56px;height:56px;margin-bottom:14px;filter:drop-shadow(0 4px 12px rgba(192,57,43,.5))">
     <h1 style="color:#fff;font-size:26px;font-weight:700;margin:0 0 8px 0;letter-spacing:.5px">Hải Hiếu</h1>
     <p style="color:rgba(255,255,255,.45);font-size:14px;margin:0">Vidco Group · Chọn hồ sơ để tiếp tục</p>
   </div>
@@ -286,21 +286,21 @@
     <div onclick="selectProfile('admin')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(231,76,60,.2)';this.style.borderColor='rgba(231,76,60,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div id="loginAv_admin" style="width:64px;height:64px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(0,0,0,.4);overflow:hidden"></div>
+      <div id="loginAv_admin" style="width:64px;height:64px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(0,0,0,.4);overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Admin</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Toàn quyền truy cập</div>
     </div>
     <div onclick="selectProfile('hieu')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(41,128,185,.2)';this.style.borderColor='rgba(41,128,185,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div id="loginAv_hieu" style="width:64px;height:64px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(41,128,185,.35);overflow:hidden"></div>
+      <div id="loginAv_hieu" style="width:64px;height:64px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(41,128,185,.35);overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Hiếu</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Sheet Hiếu · Tasks</div>
     </div>
     <div onclick="selectProfile('hai')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(231,76,60,.2)';this.style.borderColor='rgba(231,76,60,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div id="loginAv_hai" style="width:64px;height:64px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(192,57,43,.35);overflow:hidden"></div>
+      <div id="loginAv_hai" style="width:64px;height:64px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(192,57,43,.35);overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Hải</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Sheet Hải · Tasks</div>
     </div>
@@ -340,22 +340,22 @@
 <header>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="member-picker" id="memberPicker">
-      <div class="member-avatar" id="memberAvatar" onclick="toggleMemberDropdown()" style="overflow:hidden;padding:0"></div>
+      <div class="member-avatar" id="memberAvatar" onclick="toggleMemberDropdown()" style="overflow:hidden;padding:0"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
       <div class="member-role-label" id="memberRoleLabel">Admin</div>
       <div class="member-dropdown" id="memberDropdown">
         <div class="md-header">Xem với tư cách</div>
-        <div class="md-item active" id="mdi-admin" onclick="switchMemberWithPw('admin')">
-          <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;overflow:hidden"></div>
+        <div class="md-item active" id="mdi-admin" onclick="setMember('admin')">
+          <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
           <div><div class="md-name">Admin</div><div class="md-role">Xem toàn bộ</div></div>
           <span class="md-check" id="mdc-admin">&#10003;</span>
         </div>
-        <div class="md-item" id="mdi-hieu" onclick="switchMemberWithPw('hieu')">
-          <div class="md-avatar" id="md-avatar-hieu" style="background:#eaf4fd;overflow:hidden"></div>
+        <div class="md-item" id="mdi-hieu" onclick="setMember('hieu')">
+          <div class="md-avatar" id="md-avatar-hieu" style="background:#eaf4fd;overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
           <div><div class="md-name">Hiếu</div><div class="md-role">Sheet Hiếu + Tasks</div></div>
           <span class="md-check" id="mdc-hieu" style="display:none">&#10003;</span>
         </div>
-        <div class="md-item" id="mdi-hai" onclick="switchMemberWithPw('hai')">
-          <div class="md-avatar" id="md-avatar-hai" style="background:#fdf2f2;overflow:hidden"></div>
+        <div class="md-item" id="mdi-hai" onclick="setMember('hai')">
+          <div class="md-avatar" id="md-avatar-hai" style="background:#fdf2f2;overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
           <div><div class="md-name">Hải</div><div class="md-role">Sheet Hải + Tasks</div></div>
           <span class="md-check" id="mdc-hai" style="display:none">&#10003;</span>
         </div>
@@ -531,6 +531,18 @@
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
+  <!-- Admin toolbar -->
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:#fff;border-bottom:1px solid var(--gray-border);margin-bottom:0">
+    <span id="periodLabel" style="font-size:12px;color:var(--text-muted);margin-right:4px"></span>
+    <button id="dashEndMonthBtn" onclick="openEndMonthModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">📅 Tháng mới</button>
+    <button id="dashEditPeriodBtn" onclick="openEditPeriodModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">✎ Sửa ngày</button>
+    <button id="dashHistoryBtn" onclick="openPeriodHistoryModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">📋 Lịch sử</button>
+    <button id="dashRollbackBtn" onclick="openRollbackModal()" class="btn btn-sm btn-outline" style="font-size:11px;color:#e67e22;border-color:#e67e22;display:none">↩ Quay về</button>
+    <div style="flex:1"></div>
+    <button id="dashSalaryHaiBtn" onclick="openSalaryConfigModal('hai')" class="btn btn-sm btn-outline" style="font-size:11px;display:none">💰 Chi phí Hải</button>
+    <button id="dashSalaryHieuBtn" onclick="openSalaryConfigModal('hieu')" class="btn btn-sm btn-outline" style="font-size:11px;display:none">💰 Chi phí Hiếu</button>
+    <button id="dashRatesBtn" onclick="openSalaryRatesModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">💵 Mức lương</button>
+  </div>
   <div class="stats-grid" id="statsGrid"></div>
   <div class="report-grid" id="reportGrid"></div>
 </div>
@@ -1670,6 +1682,7 @@
     <div class="modal-body" style="gap:8px;max-height:420px;overflow-y:auto" id="trashBody">
     </div>
     <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" onclick="emptyTrash()">🗑 Xoá tất cả vĩnh viễn</button>
       <button class="btn btn-outline" onclick="closeTaskTrash()">Đóng</button>
     </div>
   </div>
@@ -1931,6 +1944,11 @@ const LOAI_CONFIG = {
   'Tinh Gọn Nhanh':{price:  7000, color: 'green'},
 };
 function loaiPrice(loai){ return (LOAI_CONFIG[loai]||{price:14000}).price; }
+function nghiemThuBadge(val){
+  const v = (val===undefined||val===null) ? 100 : Number(val);
+  const cfg = NT_CONFIG[v] || NT_CONFIG[100];
+  return `<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:700;color:${cfg.color};background:${cfg.bg};border:1px solid ${cfg.border};cursor:pointer">${cfg.label}</span>`;
+}
 function loaiBadge(loai){
   const cfg = LOAI_CONFIG[loai]||{color:'gray'};
   const cls = cfg.color==='red'?'badge-red':cfg.color==='blue'?'badge-blue':cfg.color==='green'?'badge-green':'badge-gray';
@@ -2000,41 +2018,196 @@ function fmtDate(d){
 function _currentMonthYM(){
   const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');
 }
-function totalHai(monthYM){
-  const ym=monthYM||_currentMonthYM();
-  return data.hai.filter(r=>(r.ngay||'').startsWith(ym)).reduce((a,r)=>a+loaiPrice(r.loai)+(r.chiDang||0)*4000,0);
+// ===== PERIOD START =====
+let _periodStart = '2026-03-13';
+(function loadPeriodStart(){
+  try{ const s=localStorage.getItem('wt_period_start'); if(s && /^\d{4}-\d{2}-\d{2}$/.test(s)) _periodStart=s; }catch(e){}
+})();
+function getPeriodStart(){ return _periodStart; }
+function _inCurrentPeriod(ngay){ return (ngay||'') >= _periodStart; }
+
+// ===== PERIOD HISTORY =====
+let _periodHistory = [];
+(function loadPeriodHistory(){
+  try{ const h=localStorage.getItem('wt_period_history'); if(h) _periodHistory=JSON.parse(h); }catch(e){}
+})();
+function _savePeriodHistory(){
+  try{ localStorage.setItem('wt_period_history', JSON.stringify(_periodHistory)); }catch(e){}
 }
-function totalHieu(monthYM){
-  const ym=monthYM||_currentMonthYM();
-  return data.hieu.filter(r=>(r.ngay||'').startsWith(ym)).reduce((a,r)=>a+loaiPrice(r.loai)+(r.chiDang||0)*4000,0);
+function _savePeriodToHistory(start, endDate){
+  if(!start) return;
+  const exists=_periodHistory.find(h=>h.start===start);
+  if(!exists){ _periodHistory.unshift({start, end: endDate||start}); _savePeriodHistory(); }
 }
-function totalBaiHai(monthYM){ const ym=monthYM||_currentMonthYM(); return data.hai.filter(r=>(r.ngay||'').startsWith(ym)).length; }
-function totalBaiHieu(monthYM){ const ym=monthYM||_currentMonthYM(); return data.hieu.filter(r=>(r.ngay||'').startsWith(ym)).length; }
+let _viewingPeriod = null;
+
+// ===== SALARY CONFIG =====
+let _salaryConfig = { hai: {chiPhi:[], phuCap:[]}, hieu: {chiPhi:[], phuCap:[]} };
+(function loadSalaryConfig(){
+  try{
+    const s=localStorage.getItem('wt_salary_config'); if(s) _salaryConfig=JSON.parse(s);
+    ['hai','hieu'].forEach(sh=>{
+      if(!_salaryConfig[sh]) _salaryConfig[sh]={chiPhi:[],phuCap:[]};
+      if(typeof _salaryConfig[sh].chiPhi==='number'){ const v=_salaryConfig[sh].chiPhi; _salaryConfig[sh].chiPhi=v?[{name:'Chi phí',amount:v}]:[]; }
+      if(typeof _salaryConfig[sh].phuCap==='number'){ const v=_salaryConfig[sh].phuCap; _salaryConfig[sh].phuCap=v?[{name:'Phụ cấp',amount:v}]:[]; }
+    });
+  }catch(e){}
+})();
+function getSalaryConfig(sheet){ return _salaryConfig[sheet]||{chiPhi:[],phuCap:[]}; }
+function getTotalChiPhi(sheet){ return (getSalaryConfig(sheet).chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0); }
+function getTotalPhuCap(sheet){ return (getSalaryConfig(sheet).phuCap||[]).reduce((a,x)=>a+(x.amount||0),0); }
+
+// ===== SALARY RATES =====
+let _salaryRates = { hai: {}, hieu: {} };
+(function loadSalaryRates(){
+  try{ const s=localStorage.getItem('wt_salary_rates'); if(s) _salaryRates=JSON.parse(s); ['hai','hieu'].forEach(sh=>{ if(!_salaryRates[sh]) _salaryRates[sh]={}; }); }catch(e){}
+})();
+function getLoaiPrice(loai, sheet){
+  const custom = sheet && _salaryRates[sheet] && _salaryRates[sheet][loai];
+  return custom || (LOAI_CONFIG[loai]||{price:14000}).price;
+}
+
+// ===== FLEX SALARY (THƯỞNG/PHẠT) =====
+let _flexSalary = { hai: [], hieu: [] };
+(function loadFlexSalary(){
+  try{ const s=localStorage.getItem('wt_flex_salary'); if(s) _flexSalary=JSON.parse(s); ['hai','hieu'].forEach(sh=>{ if(!_flexSalary[sh]) _flexSalary[sh]=[]; }); }catch(e){}
+})();
+function getFlexSalary(sheet){ return _flexSalary[sheet]||[]; }
+function getTotalPhat(sheet){ return getFlexSalary(sheet).filter(x=>x.loai==='phat').reduce((a,x)=>a+(x.amount||0),0); }
+function getTotalThuong(sheet){ return getFlexSalary(sheet).filter(x=>x.loai==='thuong').reduce((a,x)=>a+(x.amount||0),0); }
+let _flexNextId = { hai: 1, hieu: 1 };
+(function initFlexIds(){ ['hai','hieu'].forEach(sh=>{ _flexNextId[sh]=Math.max(1,...getFlexSalary(sh).map(x=>x.id||0))+1; }); })();
+
+// ===== NT_CONFIG =====
+const NT_CONFIG = {
+  100: {label:'100%', color:'#27ae60', bg:'#f0faf4', border:'#a8deba'},
+  80:  {label:'80%',  color:'#2980b9', bg:'#f0f7fd', border:'#b8d4ea'},
+  50:  {label:'50%',  color:'#e74c3c', bg:'#fdf2f2', border:'#f5c6c6'},
+  0:   {label:'0%',   color:'#555',    bg:'#f0f0f0', border:'#ccc'},
+};
+
+// ===== TOTALS (period-based) =====
+function totalHai(){
+  return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai')*(r.nghiemThu===undefined?1:r.nghiemThu/100)+(r.chiDang||0)*4000,0);
+}
+function totalHieu(){
+  return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu')*(r.nghiemThu===undefined?1:r.nghiemThu/100)+(r.chiDang||0)*4000,0);
+}
+function totalBaiHai(){ return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).length; }
+function totalBaiHieu(){ return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).length; }
 
 function renderDashboard(){
   const tHai = totalHai(), tHieu = totalHieu();
   const bHai = totalBaiHai(), bHieu = totalBaiHieu();
   const member = typeof currentMember!=='undefined' ? currentMember : 'admin';
+  // Show/hide end month button & period label
+  const dashBtn = document.getElementById('dashEndMonthBtn');
+  if(dashBtn) dashBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
+  const dashEditBtn = document.getElementById('dashEditPeriodBtn');
+  if(dashEditBtn) dashEditBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
+  const dashHistBtn = document.getElementById('dashHistoryBtn');
+  if(dashHistBtn) dashHistBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
+  const dashRollbackBtn = document.getElementById('dashRollbackBtn');
+  if(dashRollbackBtn) dashRollbackBtn.style.display = (member==='admin' && _periodHistory.length>0) ? 'inline-flex' : 'none';
+  const dashSHai = document.getElementById('dashSalaryHaiBtn');
+  if(dashSHai) dashSHai.style.display = member==='admin' ? 'inline-flex' : 'none';
+  const dashSHieu = document.getElementById('dashSalaryHieuBtn');
+  if(dashSHieu) dashSHieu.style.display = member==='admin' ? 'inline-flex' : 'none';
+  const dashRatesBtn = document.getElementById('dashRatesBtn');
+  if(dashRatesBtn) dashRatesBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
+  const ps = getPeriodStart();
+  const [py,pm,pd] = ps.split('-');
+  const periodEl = document.getElementById('periodLabel');
+  if(periodEl) periodEl.textContent = `Kỳ hiện tại: từ ${pd}/${pm}/${py} đến nay`;
+
+  // Build flat records for report: group by (ngay, loai, nt)
+  function buildReportData(sheet){
+    const ps = getPeriodStart();
+    const dayMap = {};
+    data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
+      const d = fmtDate(r.ngay)||'?';
+      if(!dayMap[d]) dayMap[d]={ngay:d, slots:{}, chiDang:0, totalBai:0};
+      const loai = r.loai||'Tinh Gọn';
+      const nt = r.nghiemThu===undefined ? 100 : r.nghiemThu;
+      const key = loai+'__'+nt;
+      if(!dayMap[d].slots[key]) dayMap[d].slots[key]={loai, nt, count:0, tien:0};
+      dayMap[d].slots[key].count++;
+      dayMap[d].slots[key].tien += getLoaiPrice(loai, sheet) * (nt/100);
+      dayMap[d].chiDang += (r.chiDang||0);
+      dayMap[d].totalBai++;
+    });
+    return dayMap;
+  }
 
   function buildDayRows(sheet){
-    const dayMap = {};
-    data[sheet].forEach(r=>{
-      const d = fmtDate(r.ngay)||'?';
-      if(!dayMap[d]) dayMap[d]={ngay:d,bai:0,tien:0,chiDang:0,loaiBreak:{}};
-      dayMap[d].bai++;
-      dayMap[d].tien += loaiPrice(r.loai);
-      dayMap[d].chiDang += (r.chiDang||0);
-      dayMap[d].loaiBreak[r.loai] = (dayMap[d].loaiBreak[r.loai]||0)+1;
+    const dayMap = buildReportData(sheet);
+    const rows = [];
+    Object.values(dayMap).sort((a,b)=>a.ngay.localeCompare(b.ngay)).forEach(day=>{
+      const slots = Object.values(day.slots).sort((a,b)=>a.loai.localeCompare(b.loai)||b.nt-a.nt);
+      const dayTotal = slots.reduce((a,s)=>a+s.tien,0) + day.chiDang*4000;
+      const rowspan = slots.length + (day.chiDang>0?1:0);
+
+      slots.forEach((slot, i)=>{
+        const isFirst = i===0;
+        const cfg = LOAI_CONFIG[slot.loai]||{color:'gray'};
+        const color = cfg.color==='red'?'var(--red)':cfg.color==='blue'?'var(--blue)':cfg.color==='green'?'var(--green)':'var(--text-muted)';
+        const ntc = NT_CONFIG[slot.nt]||NT_CONFIG[100];
+        const ntBadge = slot.nt!==100
+          ? `<span style="font-size:10px;color:${ntc.color};background:${ntc.bg};border:1px solid ${ntc.border};border-radius:10px;padding:1px 6px;margin-left:5px;font-weight:700">${slot.nt}%</span>`
+          : '';
+        rows.push(`<tr>
+          ${isFirst?`<td rowspan="${rowspan}" style="vertical-align:top;padding-top:8px;font-weight:500;white-space:nowrap;border-right:1px solid var(--gray-border)">
+            ${day.ngay}<br><span style="font-size:10px;color:var(--text-muted);font-weight:400">${day.totalBai} bài</span>
+          </td>`:''}
+          <td style="font-size:12px;padding-left:12px">
+            <span style="color:${color}">${slot.count}× ${slot.loai}</span>${ntBadge}
+          </td>
+          <td class="num money" style="font-size:12px">${fmt(slot.tien)}</td>
+          ${isFirst?`<td class="num money" rowspan="${rowspan}" style="vertical-align:middle;font-weight:600;border-left:1px solid var(--gray-border)">${fmt(dayTotal)}</td>`:''}
+        </tr>`);
+      });
+      if(day.chiDang>0){
+        rows.push(`<tr>
+          <td style="color:#e67e22;font-size:12px;padding-left:12px">${day.chiDang}× Chỉ Đăng (tự)</td>
+          <td class="num money" style="font-size:12px">${fmt(day.chiDang*4000)}</td>
+        </tr>`);
+      }
     });
-    return Object.values(dayMap).sort((a,b)=>a.ngay.localeCompare(b.ngay)).map(r=>{
-      const total = r.tien + r.chiDang*4000;
-      const loaiHtml = Object.entries(r.loaiBreak).map(([l,n])=>`<span style="font-size:10px;color:var(--text-muted)">${n} ${l}</span>`).join(' · ');
+    return rows.join('');
+  }
+
+  function buildTotalRows(sheet){
+    // Aggregate across all days: group by (loai, nt)
+    const dayMap = buildReportData(sheet);
+    const totals = {}; // key = loai__nt
+    let totalChiDang = 0;
+    Object.values(dayMap).forEach(day=>{
+      Object.entries(day.slots).forEach(([key, slot])=>{
+        if(!totals[key]) totals[key]={loai:slot.loai, nt:slot.nt, count:0, tien:0};
+        totals[key].count += slot.count;
+        totals[key].tien += slot.tien;
+      });
+      totalChiDang += day.chiDang;
+    });
+    const sorted = Object.values(totals).sort((a,b)=>a.loai.localeCompare(b.loai)||b.nt-a.nt);
+    const grandTotal = sorted.reduce((a,s)=>a+s.tien,0) + totalChiDang*4000;
+    const grandBai = sorted.reduce((a,s)=>a+s.count,0);
+
+    const rows = sorted.map((slot,i)=>{
+      const cfg = LOAI_CONFIG[slot.loai]||{color:'gray'};
+      const color = cfg.color==='red'?'var(--red)':cfg.color==='blue'?'var(--blue)':cfg.color==='green'?'var(--green)':'var(--text-muted)';
+      const ntc = NT_CONFIG[slot.nt]||NT_CONFIG[100];
+      const ntBadge = `<span style="font-size:11px;color:${ntc.color};background:${ntc.bg};border:1px solid ${ntc.border};border-radius:10px;padding:1px 7px;margin-left:5px;font-weight:700">${slot.nt}%</span>`;
       return `<tr>
-        <td>${r.ngay}</td>
-        <td class="num">${r.bai}<div style="font-size:10px;text-align:right;color:var(--text-muted);margin-top:1px">${loaiHtml}</div></td>
-        <td class="num money">${total>0?fmt(total):'—'}</td>
+        ${i===0?`<td rowspan="${sorted.length+(totalChiDang>0?1:0)+(sorted.length>0?1:0)}" style="font-weight:600;vertical-align:top;padding-top:8px;border-right:1px solid var(--gray-border)">Tổng kỳ<br><span style="font-size:10px;color:var(--text-muted);font-weight:400">${grandBai} bài</span></td>`:''}
+        <td style="font-size:13px;padding-left:12px"><span style="color:${color};font-weight:600">${slot.count}× ${slot.loai}</span>${ntBadge}</td>
+        <td class="num money">${fmt(slot.tien)}</td>
+        ${i===0?`<td class="num money" rowspan="${sorted.length+(totalChiDang>0?1:0)+1}" style="vertical-align:middle;font-weight:700;font-size:14px;border-left:1px solid var(--gray-border)">${fmt(grandTotal)}</td>`:''}
       </tr>`;
-    }).join('');
+    });
+    if(totalChiDang>0) rows.push(`<tr><td style="color:#e67e22;font-size:13px;padding-left:12px">${totalChiDang}× Chỉ Đăng (tự)</td><td class="num money">${fmt(totalChiDang*4000)}</td></tr>`);
+
+    return rows.join('');
   }
 
   // ---- MEMBER VIEW: Hải hoặc Hiếu ----
@@ -2053,7 +2226,7 @@ function renderDashboard(){
         <div class="label">${l}</div>
         <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
           <div class="value" style="font-size:20px">${n}</div>
-          <div style="font-size:12px;color:var(--text-muted)">= ${fmt(n*loaiPrice(l))}</div>
+          <div style="font-size:12px;color:var(--text-muted)">= ${fmt(n*getLoaiPrice(l,sheet))}</div>
         </div>
       </div>`).join('');
 
@@ -2070,30 +2243,43 @@ function renderDashboard(){
       ${loaiRows}
     `;
 
+    const sc = getSalaryConfig(sheet);
+    const netTotal = total - getTotalChiPhi(sheet) + getTotalPhuCap(sheet) - getTotalPhat(sheet) + getTotalThuong(sheet);
+    const hasExtra = (sc.chiPhi||[]).length||(sc.phuCap||[]).length;
     document.getElementById('reportGrid').innerHTML = `
       <div class="report-card ${sheet}" style="grid-column:1/-1">
         <div class="rh">&#128100; BÁO CÁO LƯƠNG — ${name.toUpperCase()}</div>
         <table class="report-table">
-          <thead><tr><th>Ngày</th><th>Số bài / Loại</th><th>Thành tiền</th></tr></thead>
+          <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
           <tbody>${buildDayRows(sheet)}</tbody>
-          <tfoot><tr class="total-row">
-            <td><b>Tổng</b></td>
-            <td class="num"><b>${bai}</b></td>
-            
-            <td class="num money"><b>${fmt(total)}</b></td>
-          </tr></tfoot>
+          <tfoot>${buildTotalRows(sheet)}</tfoot>
         </table>
-      </div>`;
+      </div>
+      ${hasExtra?`<div class="report-card ${sheet}" style="grid-column:1/-1">
+        <div class="rh">💰 THỰC NHẬN — ${name.toUpperCase()}</div>
+        <table class="report-table">
+          <tbody>
+            <tr><td>Lương bài</td><td></td><td class="num money">${fmt(total)}</td></tr>
+            ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
+            ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
+          </tbody>
+          <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(netTotal)}</b></td></tr></tfoot>
+        </table>
+      </div>`:''}
+    `;
     return;
   }
 
   // ---- ADMIN VIEW: tổng cả hai ----
+  const scHai = getSalaryConfig('hai'), scHieu = getSalaryConfig('hieu');
+  const netHai = tHai - getTotalChiPhi('hai') + getTotalPhuCap('hai') - getTotalPhat('hai') + getTotalThuong('hai');
+  const netHieu = tHieu - getTotalChiPhi('hieu') + getTotalPhuCap('hieu') - getTotalPhat('hieu') + getTotalThuong('hieu');
   document.getElementById('statsGrid').innerHTML = `
     <div class="stat-card"><div class="label">Tổng bài Hải</div><div class="value red">${bHai}</div></div>
-    <div class="stat-card"><div class="label">Lương Hải (tháng)</div><div class="value green">${fmt(tHai)}</div></div>
+    <div class="stat-card"><div class="label">Thực nhận Hải</div><div class="value green">${fmt(netHai)}</div></div>
     <div class="stat-card"><div class="label">Tổng bài Hiếu</div><div class="value blue">${bHieu}</div></div>
-    <div class="stat-card"><div class="label">Lương Hiếu (tháng)</div><div class="value green">${fmt(tHieu)}</div></div>
-    <div class="stat-card"><div class="label">Tổng chi trả</div><div class="value">${fmt(tHai+tHieu)}</div></div>
+    <div class="stat-card"><div class="label">Thực nhận Hiếu</div><div class="value green">${fmt(netHieu)}</div></div>
+    <div class="stat-card"><div class="label">Tổng chi trả</div><div class="value">${fmt(netHai+netHieu)}</div></div>
     <div class="stat-card"><div class="label">Đơn giá</div><div class="value" style="font-size:13px;line-height:1.6">
       <span style="color:var(--red)">■</span> TG 14k &nbsp;
       <span style="color:var(--blue)">■</span> CV/CĐ 4k &nbsp;
@@ -2101,24 +2287,229 @@ function renderDashboard(){
     </div></div>
   `;
 
+  // Build bar chart + flex salary panel
+  function buildChartAndFlex(sheet, luongBai){
+    const ps = getPeriodStart(), today = todayVN();
+    const d0 = new Date(ps+'T12:00:00'), d1 = new Date(today+'T12:00:00');
+    const allDays = [];
+    for(let d=new Date(d0); d<=d1; d.setDate(d.getDate()+1))
+      allDays.push(d.toISOString().split('T')[0]);
+    const dayTotals = {};
+    data[sheet].filter(r=>r.ngay>=ps).forEach(r=>{
+      const nt = r.nghiemThu===undefined?100:r.nghiemThu;
+      dayTotals[r.ngay] = (dayTotals[r.ngay]||0) + getLoaiPrice(r.loai,sheet)*(nt/100) + (r.chiDang||0)*4000;
+    });
+    const maxVal = Math.max(1,...allDays.map(d=>dayTotals[d]||0));
+    const barH = 80;
+    const bars = allDays.map(iso=>{
+      const v = dayTotals[iso]||0;
+      const h = v>0 ? Math.max(3,Math.round(v/maxVal*barH)) : 0;
+      const d = fmtDate(iso);
+      return `<div title="${d}: ${v>0?fmt(v):'0đ'}" style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:12px">
+        <div style="width:100%;max-width:28px;height:${barH}px;display:flex;align-items:flex-end;margin:0 auto">
+          <div style="width:100%;height:${h}px;background:${v>0?'var(--green)':'#e0e0e0'};border-radius:2px 2px 0 0"></div>
+        </div>
+        <div style="font-size:8px;color:var(--text-muted);margin-top:3px;white-space:nowrap">${d}</div>
+      </div>`;
+    }).join('');
+    const flexItems = getFlexSalary(sheet);
+    const flexRows = flexItems.length
+      ? flexItems.map((x,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--gray-border)">
+          <div style="flex:1;min-width:0">
+            <span style="font-size:11px;font-weight:700;color:${x.loai==='thuong'?'var(--green)':'var(--red)'}">${x.loai==='thuong'?'🟢':'🔴'}</span>
+            <span style="font-size:12px;margin-left:3px">${x.lydo||'—'}</span>
+            <span style="font-size:11px;color:var(--text-muted);margin-left:4px">${x.ngay?fmtDate(x.ngay):''}</span>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:${x.loai==='thuong'?'var(--green)':'var(--red)'}">
+            ${x.loai==='thuong'?'+':'-'}${fmt(x.amount)}
+          </span>
+          <button onclick="event.stopPropagation();_flexModalSheet='${sheet}';editFlexItem(${i})" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:1px 6px;font-size:11px;cursor:pointer;color:var(--text-muted)">✎</button>
+          <button onclick="event.stopPropagation();_flexModalSheet='${sheet}';deleteFlexItem(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px">✕</button>
+        </div>`).join('')
+      : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Chưa có khoản nào.</div>';
+    return `<div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div class="report-card" style="padding:14px 16px">
+        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">📊 Thu nhập theo ngày</div>
+        <div style="display:flex;align-items:flex-end;gap:3px;overflow-x:auto;padding-bottom:4px">
+          ${bars}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:6px;border-top:1px solid var(--gray-border);padding-top:4px">
+          <span>Cao nhất: ${fmt(maxVal)}</span>
+          <span>Tổng lương bài: ${fmt(luongBai)}</span>
+        </div>
+      </div>
+      <div class="report-card" style="padding:14px 16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">🎁 Thưởng / Phạt</div>
+          <div style="display:flex;gap:6px">
+            <button onclick="_flexModalSheet='${sheet}';addFlexItem('thuong');renderDashboard()" style="background:#f0faf4;border:1px solid var(--green);color:var(--green);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:600">+ Thưởng</button>
+            <button onclick="_flexModalSheet='${sheet}';addFlexItem('phat');renderDashboard()" style="background:#fdf2f2;border:1px solid var(--red);color:var(--red);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:600">+ Phạt</button>
+          </div>
+        </div>
+        <div>${flexRows}</div>
+      </div>
+    </div>`;
+  }
+
+  function buildSalaryExtraFull(name, sc, net, sheet){
+    const totalThuong = getTotalThuong(sheet);
+    const totalPhat   = getTotalPhat(sheet);
+    const luongBai = net + (sc.chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0) - (sc.phuCap||[]).reduce((a,x)=>a+(x.amount||0),0) + totalPhat - totalThuong;
+    return `<div class="report-card ${sheet}" style="align-self:start">
+      <div class="rh"><span>💰 THỰC NHẬN — ${name.toUpperCase()}</span></div>
+      <table class="report-table">
+        <tbody>
+          <tr><td>Lương bài</td><td></td><td class="num money">${fmt(luongBai)}</td></tr>
+          ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
+          ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
+          <tr><td style="color:var(--green)">+ Tổng thưởng</td><td></td><td class="num money">+${fmt(totalThuong)}</td></tr>
+          <tr><td style="color:var(--red)">− Tổng phạt</td><td></td><td class="num money-red">−${fmt(totalPhat)}</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(net)}</b></td></tr></tfoot>
+      </table>
+    </div>`;
+  }
+
+  // Build avg label helper
+  const avgLabel = (avg) => {
+    const label = avg<200000?'Lôi ra ngoài, trảm!':avg<300000?'Trẫm khen!':'Người đâu, ban thưởng!';
+    return `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:#f1c40f;font-weight:600">${label}</span><span style="font-size:12px;opacity:.9">~${avg.toLocaleString('vi-VN')} đ/ngày</span></div>`;
+  };
+  const calcAvg = (t) => {
+    const ps=getPeriodStart(), today=todayVN();
+    const d0=new Date(ps+'T12:00:00'), d1=new Date(today+'T12:00:00');
+    const days=Math.max(1,Math.round((d1-d0)/(1000*60*60*24))+1);
+    return Math.round(t/days);
+  };
+  const buildChart = (sheet, luong) => {
+    const ps = getPeriodStart(), today = todayVN();
+    const allDates = [];
+    let d = new Date(ps+'T12:00:00');
+    const dEnd = new Date(today+'T12:00:00');
+    while(d <= dEnd){ allDates.push(d.toISOString().split('T')[0]); d.setDate(d.getDate()+1); }
+    const earMap = {};
+    data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
+      const nt = r.nghiemThu===undefined?100:r.nghiemThu;
+      earMap[r.ngay] = (earMap[r.ngay]||0) + getLoaiPrice(r.loai,sheet)*(nt/100);
+    });
+    const maxEar = Math.max(1, ...allDates.map(d=>earMap[d]||0));
+    const barW = Math.max(20, Math.min(40, Math.floor(700/allDates.length)));
+    const name = sheet==='hai'?'Hải':'Hiếu';
+    const bars = allDates.map(d=>{
+      const val = earMap[d]||0;
+      const pct = Math.round((val/maxEar)*80);
+      const color = val===0?'#ddd':sheet==='hai'?'var(--red)':'var(--blue)';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;width:${barW}px">
+        <div style="font-size:9px;color:var(--text-muted);height:16px;display:flex;align-items:flex-end">${val>0?Math.round(val/1000)+'k':''}</div>
+        <div style="width:${barW-4}px;height:${pct||3}px;background:${color};border-radius:2px 2px 0 0;min-height:3px"></div>
+        <div style="font-size:9px;color:var(--text-muted);writing-mode:vertical-lr;transform:rotate(180deg);height:26px;overflow:hidden">${fmtDate(d)}</div>
+      </div>`;
+    }).join('');
+    return `<div class="rh">
+        <span>📈 THU NHẬP THEO NGÀY — ${name.toUpperCase()}</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="display:flex;align-items:flex-end;gap:1px;overflow-x:auto;padding-bottom:4px;min-height:110px">${bars}</div>
+      </div>`;
+  };
+  const buildFlexPanel = (sheet) => {
+    const flexItems = getFlexSalary(sheet);
+    const flexRows = flexItems.length ? flexItems.map((item,i)=>{
+      const isThuong = item.loai==='thuong';
+      return `<tr>
+        <td style="font-size:11px">${item.ngay?fmtDate(item.ngay):''}</td>
+        <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.lydo||''}">${item.lydo||'—'}</td>
+        <td class="num" style="font-size:11px;color:${isThuong?'var(--green)':'var(--red)'};font-weight:600">${isThuong?'+':'-'}${fmt(item.amount)}</td>
+        <td style="padding:2px 4px;white-space:nowrap">
+          <button onclick="event.stopPropagation();_editFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:11px;padding:1px 4px">✎</button>
+          <button onclick="event.stopPropagation();_deleteFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:1px 3px">✕</button>
+        </td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px">Chưa có khoản nào</td></tr>`;
+    return `<div class="report-card ${sheet}" style="align-self:start">
+      <div class="rh" style="justify-content:space-between">
+        <span>🎁 THƯỞNG / PHẠT — ${sheet==='hai'?'HẢI':'HIẾU'}</span>
+        <div style="display:flex;gap:4px">
+          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','thuong')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Thưởng</button>
+          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','phat')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Phạt</button>
+        </div>
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Ngày</th><th>Lý do</th><th>Giá trị</th><th></th></tr></thead>
+        <tbody>${flexRows}</tbody>
+      </table>
+    </div>`;
+  };
+  const buildSalaryExtra2 = (name, sc, net, sheet) => `
+    <div class="report-card ${sheet}" style="align-self:start">
+      <div class="rh"><span>💰 THỰC NHẬN — ${name.toUpperCase()}</span></div>
+      <table class="report-table">
+        <tbody>
+          <tr><td>Lương bài</td><td></td><td class="num money">${fmt(net+(sc.chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0)-(sc.phuCap||[]).reduce((a,x)=>a+(x.amount||0),0)+getTotalPhat(sheet)-getTotalThuong(sheet))}</td></tr>
+          ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
+          ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
+          <tr><td style="color:var(--green)">🟢 Tổng thưởng</td><td></td><td class="num money">+${fmt(getTotalThuong(sheet))}</td></tr>
+          <tr><td style="color:var(--red)">🔴 Tổng phạt</td><td></td><td class="num money-red">−${fmt(getTotalPhat(sheet))}</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(net)}</b></td></tr></tfoot>
+      </table>
+    </div>`;
+
   document.getElementById('reportGrid').innerHTML = `
-    <div class="report-card hai">
-      <div class="rh">&#128100; BÁO CÁO CV HẢI</div>
-      <table class="report-table">
-        <thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th></tr></thead>
-        <tbody>${buildDayRows('hai')}</tbody>
-        <tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${bHai}</b></td><td class="num money"><b>${fmt(tHai)}</b></td></tr></tfoot>
-      </table>
+    <!-- HAI SECTION -->
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
+      <div class="report-card hai">
+        <div class="rh">
+          <span>&#128100; BÁO CÁO CV HẢI</span>
+          ${avgLabel(calcAvg(tHai))}
+        </div>
+        <table class="report-table">
+          <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
+        </table>
+        <div style="height:320px;overflow-y:auto">
+          <table class="report-table" style="border-top:none">
+            <tbody>${buildDayRows('hai')}</tbody>
+          </table>
+        </div>
+        <table class="report-table" style="border-top:2px solid var(--gray-border)">
+          <tfoot>${buildTotalRows('hai')}</tfoot>
+        </table>
+      </div>
+      ${buildSalaryExtra2('Hải', scHai, netHai, 'hai')}
     </div>
-    <div class="report-card hieu">
-      <div class="rh">&#128100; BÁO CÁO CV HIẾU</div>
-      <table class="report-table">
-        <thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th></tr></thead>
-        <tbody>${buildDayRows('hieu')}</tbody>
-        <tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${bHieu}</b></td><td class="num money"><b>${fmt(tHieu)}</b></td></tr></tfoot>
-      </table>
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
+      ${buildFlexPanel('hai')}
+      <div class="report-card hai">${buildChart('hai', tHai)}</div>
+    </div>
+    <!-- HIẾU SECTION -->
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
+      <div class="report-card hieu">
+        <div class="rh">
+          <span>&#128100; BÁO CÁO CV HIẾU</span>
+          ${avgLabel(calcAvg(tHieu))}
+        </div>
+        <table class="report-table">
+          <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
+        </table>
+        <div style="height:320px;overflow-y:auto">
+          <table class="report-table" style="border-top:none">
+            <tbody>${buildDayRows('hieu')}</tbody>
+          </table>
+        </div>
+        <table class="report-table" style="border-top:2px solid var(--gray-border)">
+          <tfoot>${buildTotalRows('hieu')}</tfoot>
+        </table>
+      </div>
+      ${buildSalaryExtra2('Hiếu', scHieu, netHieu, 'hieu')}
+    </div>
+    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
+      ${buildFlexPanel('hieu')}
+      <div class="report-card hieu">${buildChart('hieu', tHieu)}</div>
     </div>
   `;
+  window._addFlexInline = (sheet, loai) => { _flexModalSheet=sheet; addFlexItem(loai); renderDashboard(); };
+  window._editFlexInline = (sheet, idx) => { _flexModalSheet=sheet; editFlexItem(idx); };
+  window._deleteFlexInline = (sheet, idx) => { _flexModalSheet=sheet; deleteFlexItem(idx); };
 }
 
 function statusBadge(s){
@@ -3018,6 +3409,11 @@ function fbPayload(ts){
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
+    _period_start: _periodStart,
+    _period_history: _periodHistory,
+    _salary_config: _salaryConfig,
+    _salary_rates: _salaryRates,
+    _flex_salary: _flexSalary,
     _ts: ts, _sid: _sessionId
   };
 }
@@ -3113,6 +3509,11 @@ function initFirebaseListener(){
       }
       // Update local trash_ts to whichever is newer
       if(fbTrashTs > localTrashTs) localStorage.setItem('wt_trash_ts', String(fbTrashTs));
+      if(r._period_start&&typeof r._period_start==='string'){ _periodStart=r._period_start; try{localStorage.setItem('wt_period_start',_periodStart);}catch(e){} }
+      if(Array.isArray(r._period_history)&&r._period_history.length>_periodHistory.length){ _periodHistory=r._period_history; try{localStorage.setItem('wt_period_history',JSON.stringify(_periodHistory));}catch(e){} }
+      if(r._salary_config&&typeof r._salary_config==='object'){ _salaryConfig=r._salary_config; ['hai','hieu'].forEach(sh=>{if(!_salaryConfig[sh])_salaryConfig[sh]={chiPhi:[],phuCap:[]};}); try{localStorage.setItem('wt_salary_config',JSON.stringify(_salaryConfig));}catch(e){} }
+      if(r._salary_rates&&typeof r._salary_rates==='object'){ _salaryRates=r._salary_rates; ['hai','hieu'].forEach(sh=>{if(!_salaryRates[sh])_salaryRates[sh]={};}); try{localStorage.setItem('wt_salary_rates',JSON.stringify(_salaryRates));}catch(e){} }
+      if(r._flex_salary&&typeof r._flex_salary==='object'){ _flexSalary=r._flex_salary; ['hai','hieu'].forEach(sh=>{if(!_flexSalary[sh])_flexSalary[sh]=[];}); try{localStorage.setItem('wt_flex_salary',JSON.stringify(_flexSalary));}catch(e){} }
 
       links         = arr(r.links, links);
       linkCategories= r.linkCategories != null ? r.linkCategories : linkCategories;
@@ -3199,19 +3600,6 @@ function loadAppData(){
       } catch(e){}
     }
     const dt=localStorage.getItem('wt_deleted_tasks'); if(dt) deletedTasks=JSON.parse(dt);
-    // Auto-clear trash on new day
-    (function autoCleanTrash(){
-      try{
-        const today = todayVN();
-        const lastDate = localStorage.getItem('wt_trash_last_date');
-        if(lastDate && lastDate !== today && deletedTasks.length > 0){
-          deletedTasks = [];
-          localStorage.setItem('wt_deleted_tasks', '[]');
-          try{ localStorage.setItem('wt_trash_ts', String(Date.now())); }catch(e){}
-        }
-        localStorage.setItem('wt_trash_last_date', today);
-      }catch(e){}
-    })();
     if(l) links = JSON.parse(l);
     if(lc) linkCategories = JSON.parse(lc);
     const ws = localStorage.getItem('wt_websites');
@@ -3588,19 +3976,20 @@ function renderSubBoard(task){
   const board = document.getElementById('subKanbanBoard');
   const cols = getProjectCols(task);
   board.innerHTML='';
-
   cols.forEach(col=>{
     const cards = (task.cards||[]).filter(c=>{
       if(c.colId===col.id) return true;
+      // Legacy: 'todo' maps to first col
       if(col.id==='col_new' && c.colId==='todo') return true;
+      // Legacy: 'pending' maps to col_pending
       if(col.id==='col_pending' && c.colId==='pending') return true;
       return false;
     });
-    const isPending = col.id==='pending' || col.id==='col_pending';
-
     const colEl = document.createElement('div');
-    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column`;
+    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column;overflow:hidden`;
     colEl.dataset.colId = col.id;
+
+    const isPending = col.id==='pending' || col.id==='col_pending';
     colEl.innerHTML=`
       <div class="kb-col-header">
         <span class="kb-col-title" style="color:${col.color}">${col.label}</span>
@@ -3608,28 +3997,49 @@ function renderSubBoard(task){
       </div>
       <div class="kb-cards" id="subcards-${col.id}" style="overflow-y:auto;flex:1"></div>
       <button class="kb-add-btn" onclick="openAddCardModal('${col.id}')">&#43; Thêm thẻ</button>`;
+
+    colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
+    colEl.addEventListener('dragleave',()=>colEl.style.background='var(--gray-light)');
+    colEl.addEventListener('drop',e=>{
+      e.preventDefault();colEl.style.background='var(--gray-light)';
+      if(!dragCardId) return;
+      if(isPending){
+        pendingDragCard={cardId:dragCardId,colId:col.id};
+        const card = (task.cards||[]).find(c=>c.id===dragCardId);
+        document.getElementById('pendingReason').value=card?.pendingReason||'';
+        document.getElementById('pendingModal').classList.add('open');
+      } else {
+        const card=(task.cards||[]).find(c=>c.id===dragCardId);
+        if(card){card.colId=col.id;delete card.pendingReason;}
+        saveAppData();
+        renderSubBoard(task);
+        renderTasksOverview();
+        toast('Đã chuyển thẻ');
+      }
+      dragCardId=null;
+    });
     board.appendChild(colEl);
 
-    const cardsEl = document.getElementById('subcards-'+col.id);
-
+    const cardsEl=document.getElementById('subcards-'+col.id);
     cards.forEach(card=>{
       const isLastCol = col.id===cols[cols.length-1].id || col.id==='done';
       const nextCol = !isLastCol ? cols[cols.indexOf(col)+1] : null;
-
+      // Wrapper row: [select] [card] [done tick]
       const rowEl = document.createElement('div');
       rowEl.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:8px';
 
+      // Left: select checkbox
       const selWrap = document.createElement('div');
       selWrap.style.cssText='flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center';
       selWrap.innerHTML=`<input type="checkbox" class="card-chk" data-cardid="${card.id}" data-taskid="${task.id}"
         style="cursor:pointer;accent-color:var(--red);width:14px;height:14px"
         onchange="onCardCheck(event)">`;
 
+      // Center: card body
       const cardEl=document.createElement('div');
       cardEl.className='kb-card';
-      cardEl.dataset.cardId=card.id;
-      cardEl.dataset.colId=col.id;
-      cardEl.style.cssText='margin-bottom:0;flex:1;min-width:0;position:relative;cursor:grab';
+      cardEl.style.cssText='margin-bottom:0;flex:1;min-width:0;position:relative';
+      cardEl.draggable=true;
       cardEl.innerHTML=`
         <div style="display:flex;align-items:center;gap:6px">
           <div style="flex:1;min-width:0;overflow:hidden">
@@ -3639,11 +4049,15 @@ function renderSubBoard(task){
             ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer" onclick="event.stopPropagation();openAddCardModal('${col.id}','${card.id}')">${card.desc}</div>`:''}
             ${card.pendingReason?`<div class="kb-card-pending">\u2759\u2759 ${card.pendingReason}</div>`:''}
           </div>
-          ${task.dang==='url'?`<button class="kb-ws-menu-btn" onclick="event.stopPropagation();toggleWsExpand('${card.id}',this)" title="Xem thêm">▼</button>`:''}
+          ${task.dang==='url'?`
+            <button class="kb-ws-menu-btn" onclick="event.stopPropagation();toggleWsExpand('${card.id}',this)" title="Xem thêm">▼</button>
+          `:''}
         </div>
         ${task.dang==='url'?`<div class="kb-ws-expand" id="wsexp-${card.id}">${wsCardExpandItems(card.name)}</div>`:''}
+        <!-- Tooltip data only, rendered globally -->
         <span class="kb-card-tooltip-data" data-name="${(card.name||'').replace(/"/g,'&quot;').replace(/`/g,'&#96;')}" data-desc="${(card.desc||'').replace(/"/g,'&quot;').replace(/`/g,'&#96;')}" style="display:none"></span>`;
 
+      // Right: done/next tick
       const tickWrap = document.createElement('label');
       tickWrap.title = nextCol ? '→ '+nextCol.label : 'Hoàn thành';
       tickWrap.style.cssText='flex-shrink:0;width:32px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;opacity:.5;transition:opacity .15s';
@@ -3654,14 +4068,12 @@ function renderSubBoard(task){
           onchange="moveCardByCheck(event,${task.id},'${card.id}','${col.id}')" onclick="event.stopPropagation()">
         <span style="font-size:8px;color:var(--text-muted);line-height:1.1;text-align:center">${nextCol?nextCol.label.slice(0,5):'Done'}</span>`;
 
-      // Mouse-based drag
-      cardEl.addEventListener('mousedown', e=>{
-        if(e.button!==0) return;
-        if(e.target.closest('input,button,a,.kb-ws-menu-btn,.kb-ws-expand')) return;
-        e.preventDefault();
-        kbDragStart(e, card.id, task, cardEl, board);
-      });
+      rowEl.appendChild(selWrap);
+      rowEl.appendChild(cardEl);
+      rowEl.appendChild(tickWrap);
 
+      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
+      cardEl.addEventListener('dragend',()=>cardEl.classList.remove('dragging'));
       cardEl.addEventListener('mouseenter',e=>{
         const data=cardEl.querySelector('.kb-card-tooltip-data');
         if(!data) return;
@@ -3671,97 +4083,10 @@ function renderSubBoard(task){
       });
       cardEl.addEventListener('mousemove',e=>moveKbTooltip(e));
       cardEl.addEventListener('mouseleave',()=>hideKbTooltip());
-
-      rowEl.appendChild(selWrap);
-      rowEl.appendChild(cardEl);
-      rowEl.appendChild(tickWrap);
       cardsEl.appendChild(rowEl);
     });
   });
 }
-
-// ===== MOUSE-BASED KANBAN DRAG =====
-let _kbDrag = null;
-
-function kbDragStart(e, cardId, task, cardEl, board){
-  const rect = cardEl.getBoundingClientRect();
-  const ghost = cardEl.cloneNode(true);
-  ghost.style.cssText=`position:fixed;z-index:9999;width:${rect.width}px;opacity:0.75;pointer-events:none;background:#fff;border-radius:8px;border:2px solid var(--red);padding:10px 12px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.2);left:${rect.left}px;top:${rect.top}px`;
-  document.body.appendChild(ghost);
-  cardEl.style.opacity='0.3';
-
-  _kbDrag = {
-    cardId, task, cardEl, ghost, board,
-    offsetX: e.clientX - rect.left,
-    offsetY: e.clientY - rect.top,
-    startCol: cardEl.dataset.colId,
-  };
-
-  document.addEventListener('mousemove', kbDragMove);
-  document.addEventListener('mouseup',   kbDragEnd);
-}
-
-function kbDragMove(e){
-  if(!_kbDrag) return;
-  const {ghost, offsetX, offsetY} = _kbDrag;
-  ghost.style.left = (e.clientX - offsetX) + 'px';
-  ghost.style.top  = (e.clientY - offsetY) + 'px';
-
-  // Highlight target col
-  _kbDrag.board.querySelectorAll('[data-col-id]').forEach(col=>{
-    const r = col.getBoundingClientRect();
-    const over = e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom;
-    col.style.background = over ? '#fde8e8' : 'var(--gray-light)';
-    col.style.outline = over ? '2px solid var(--red)' : '';
-  });
-}
-
-function kbDragEnd(e){
-  if(!_kbDrag) return;
-  document.removeEventListener('mousemove', kbDragMove);
-  document.removeEventListener('mouseup',   kbDragEnd);
-
-  const {cardId, task, cardEl, ghost, board} = _kbDrag;
-  _kbDrag = null;
-
-  ghost.remove();
-  cardEl.style.opacity='';
-
-  // Reset highlights
-  board.querySelectorAll('[data-col-id]').forEach(col=>{
-    col.style.background='var(--gray-light)';
-    col.style.outline='';
-  });
-
-  // Find target col
-  let targetColId = null;
-  board.querySelectorAll('[data-col-id]').forEach(col=>{
-    const r = col.getBoundingClientRect();
-    if(e.clientX>=r.left && e.clientX<=r.right && e.clientY>=r.top && e.clientY<=r.bottom){
-      targetColId = col.dataset.colId;
-    }
-  });
-
-  if(!targetColId || targetColId === cardEl.dataset.colId) return;
-
-  const isPending = targetColId==='pending' || targetColId==='col_pending';
-  const card = (task.cards||[]).find(c=>c.id===cardId);
-  if(!card) return;
-
-  if(isPending){
-    pendingDragCard={cardId, colId:targetColId};
-    document.getElementById('pendingReason').value=card.pendingReason||'';
-    document.getElementById('pendingModal').classList.add('open');
-  } else {
-    card.colId=targetColId;
-    delete card.pendingReason;
-    saveAppData();
-    renderSubBoard(task);
-    renderTasksOverview();
-    toast('Đã chuyển thẻ');
-  }
-}
-
 
 function calcTaskAutoStatus(task){
   const cols = getProjectCols(task);
@@ -4424,28 +4749,14 @@ function setMember(m){
   const activePage = document.querySelector('.page.active');
   const activeId = activePage?.id?.replace('page-','');
 
-  // Khi switch member: nếu đang mở project board không thuộc member mới → đóng board + clear storage
-  if(activeId === 'tasks'){
-    const memberFilter = m==='hai'?'Hải':m==='hieu'?'Hiếu':null;
-    const savedPid = parseInt(localStorage.getItem('wt_activeProject')||'');
-    const openedTask = savedPid ? tasks.find(x=>x.id===savedPid) : null;
-    if(openedTask && memberFilter && openedTask.person !== memberFilter){
-      try{ localStorage.removeItem('wt_activeProject'); }catch(e){}
-      const subBoard = document.getElementById('taskSubBoard');
-      const overview = document.getElementById('tasksOverview');
-      if(subBoard) subBoard.style.display='none';
-      if(overview) overview.style.display='block';
-      const main = document.querySelector('main');
-      if(main) main.classList.remove('board-mode');
-    }
-  }
-
   let targetPage = activeId;
   if(m==='hai'){
+    // If on hieu sheet → jump to hai; if on hidden page → jump to hai
     if(activeId==='hieu' || !cfg.pages.includes(activeId)) targetPage='hai';
   } else if(m==='hieu'){
     if(activeId==='hai' || !cfg.pages.includes(activeId)) targetPage='hieu';
   } else {
+    // admin: stay, but if page is hidden for some reason go to dashboard
     if(!cfg.pages.includes(activeId)) targetPage='dashboard';
   }
 
@@ -4509,10 +4820,7 @@ function hideLoginScreen(){
 }
 
 // ===== AVATAR =====
-function openAvatarSettings(){}
-function closeAvatarSettings(){}
-function handleAvatarUpload(){}
-function removeAvatar(){}
+let _pendingAvatar = undefined;
 function applyAllAvatars(){
   const avs = _settings.avatars || {};
   ['admin','hai','hieu'].forEach(m=>{
@@ -6779,9 +7087,9 @@ let _aimTeam = 'Team 01';
 let _aimPerson = 'Hải';
 
 // Generate task ID: MM + team_num + stt  e.g. "020101-99"
-function genIndexTaskId(dateStr, team, stt){
+function genIndexTaskId(dateStr, team, stt, mmOverride){
   const d = dateStr || todayVN();
-  const mm = d.split('-')[1] || String(new Date().getMonth()+1).padStart(2,'0');
+  const mm = mmOverride || d.split('-')[1] || String(new Date().getMonth()+1).padStart(2,'0');
   const tNum = team === 'Team 02' ? '02' : '01';
   // If single number → expand to X-X range: "1" → "1-1"
   const normalizedStt = /^\d+$/.test(stt.trim()) ? `${stt.trim()}-${stt.trim()}` : stt;
@@ -6971,9 +7279,24 @@ function renderIndexDueBanner(){
 }
 
 // ---- ADD MODAL ----
+function _populateAimMonths(){
+  const sel = document.getElementById('aim_month');
+  if(!sel) return;
+  const now = new Date();
+  const options = [];
+  for(let i=0; i<6; i++){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const label = `Tháng ${d.getMonth()+1}/${d.getFullYear()}${i===0?' (hiện tại)':i===1?' (tháng trước)':''}`;
+    options.push(`<option value="${mm}">${label}</option>`);
+  }
+  sel.innerHTML = options.join('');
+}
+
 function openAddIndexModal(){
   _aimTeam = 'Team 01';
   _aimPerson = currentMember==='hai' ? 'Hải' : currentMember==='hieu' ? 'Hiếu' : 'Hải';
+  _populateAimMonths();
   document.getElementById('aim_date').value = todayVN();
   document.getElementById('aim_stt').value = '';
   document.getElementById('aim_name').value = '';
@@ -7037,10 +7360,11 @@ function aimSetPerson(person){
 function updateAimPreview(){
   const dateVal = document.getElementById('aim_date')?.value || todayVN();
   const sttVal = (document.getElementById('aim_stt')?.value||'').trim();
+  const mmVal = document.getElementById('aim_month')?.value || '';
   const prev = document.getElementById('aim_preview_id');
   const prevDue = document.getElementById('aim_preview_due');
   if(!sttVal){ if(prev) prev.textContent='—'; if(prevDue) prevDue.textContent='—'; return; }
-  const id = genIndexTaskId(dateVal, _aimTeam, sttVal);
+  const id = genIndexTaskId(dateVal, _aimTeam, sttVal, mmVal||undefined);
   const due = indexDueDate(dateVal);
   const dp = due.split('-');
   if(prev) prev.innerHTML = renderItId(id);
@@ -7055,12 +7379,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 function saveAddIndexTask(){
   const dateVal = document.getElementById('aim_date').value || todayVN();
+  const mmVal = document.getElementById('aim_month')?.value || '';
   const sttVal = (document.getElementById('aim_stt').value||'').trim();
   if(!sttVal){ toast('Vui lòng nhập STT!','#e74c3c'); return; }
   if(!/^\d+-\d+$/.test(sttVal) && !/^\d+$/.test(sttVal)){
     toast('STT không hợp lệ! Dùng dạng 1-99 hoặc 01','#e74c3c'); return;
   }
-  const taskId = genIndexTaskId(dateVal, _aimTeam, sttVal);
+  const taskId = genIndexTaskId(dateVal, _aimTeam, sttVal, mmVal||undefined);
   if(indexTasks.find(t=>t.taskId===taskId)){
     const msg = `⚠️ Thêm task thất bại!\n\nID "${taskId}" đã tồn tại trong hệ thống.\n\nVui lòng kiểm tra lại STT hoặc ngày ép index.`;
     alert(msg);
@@ -7348,7 +7673,7 @@ function switchTasksTab(tab){
   document.getElementById('panel-mytasks').style.display = tab==='mytasks' ? 'block' : 'none';
   document.getElementById('panel-giaoviec').style.display = tab==='giaoviec' ? 'block' : 'none';
   document.getElementById('tab-mytasks').classList.toggle('active', tab==='mytasks');
-  document.getElementById('tabGiaoViec').classList.toggle('active', tab==='giaoviec');
+  document.getElementById('tab-giaoviec').classList.toggle('active', tab==='giaoviec');
   if(tab==='giaoviec') renderGiaoViec();
 }
 
@@ -7516,7 +7841,7 @@ function renderGvKanban(tempTask){
       <div id="gvcards-${col.id}" style="flex:1;overflow-y:auto"></div>`;
     // Drop target
     colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
-    colEl.addEventListener('dragleave',e=>{if(!colEl.contains(e.relatedTarget))colEl.style.background='var(--gray-light)';});
+    colEl.addEventListener('dragleave',()=>colEl.style.background='var(--gray-light)');
     colEl.addEventListener('drop',e=>{
       e.preventDefault(); colEl.style.background='var(--gray-light)';
       if(!dragCardId) return;
@@ -7555,7 +7880,7 @@ function renderGvKanban(tempTask){
             ${nextCol&&!isLastCol?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px">Tick → ${nextCol.label}</div>`:''}
           </div>
         </div>`;
-      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',card.id);dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
+      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
       cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
       cardsEl.appendChild(cardEl);
     });
@@ -8587,9 +8912,9 @@ function qi_onDangChange(){
   if(hint) hint.style.display=dang==='url'?'block':'none';
   if(btnParse) btnParse.style.display=dang==='url'?'none':'inline-flex';
   if(btnParseUrl) btnParseUrl.style.display=dang==='url'?'inline-flex':'none';
-  // Always show steps textarea regardless of mode
+  // Hide steps textarea for URL mode
   const stepsArea=document.getElementById('qi_steps')?.closest('.form-group');
-  if(stepsArea) stepsArea.style.display='block';
+  if(stepsArea) stepsArea.style.display=dang==='url'?'none':'block';
 }
 
 function qi_parseUrl(){
@@ -8612,17 +8937,13 @@ function qi_parseUrl(){
   const priority=document.getElementById('qi_priority')?.value||'Bình thường';
   const team=document.getElementById('qi_team')?.value||'Team 01';
 
-  const manualSteps=(document.getElementById('qi_steps')?.value||'').trim();
-  const cols = manualSteps ? parseSteps(manualSteps) : null;
-  const firstColId = cols ? cols[0].id : 'todo';
-
   const startId = cardNextId;
   cardNextId += urls.length;
   qi_parsedTasks=[{
     name:taskName, person, type:'SEO', dang:'url',
     from, deadline, desc:'', priority, team,
-    cols,
-    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:firstColId, name:u, desc:''}))
+    cols:null,
+    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:'todo', name:u, desc:''}))
   }];
 
   // Show preview
@@ -8662,7 +8983,6 @@ function qi_parseUrl(){
   document.getElementById('qi_preview').innerHTML=`
     <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:10px">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px">${t.name}</div>
-      ${t.cols?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Kanban: <b style="color:var(--text)">${t.cols.map(c=>c.label).join(' → ')}</b></div>`:''}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:12px;background:#f0faf4;border:1px solid #a8deba;border-radius:20px;padding:2px 10px;color:#27ae60">✅ Trong kho: ${inKho}</span>
         <span style="font-size:12px;background:#fdf2f2;border:1px solid #f5c6c6;border-radius:20px;padding:2px 10px;color:var(--red)">🔍 Chưa có: ${t.cards.length-inKho}</span>
@@ -8817,14 +9137,7 @@ window._websites = websites;
       if(savedId){
         const pid = parseInt(savedId);
         const t = tasks.find(x=>x.id===pid);
-        // Chỉ restore nếu project thuộc member hiện tại
-        const memberFilter = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':null;
-        const belongs = !memberFilter || !t?.person || t.person===memberFilter;
-        if(t && belongs){
-          openProjectBoard(pid);
-        } else {
-          localStorage.removeItem('wt_activeProject');
-        }
+        if(t) openProjectBoard(pid);
       }
     }catch(e){ localStorage.removeItem('wt_activeProject'); }
   }
@@ -8836,7 +9149,6 @@ let _switchPwTarget = null;
 
 function switchMemberWithPw(m){
   document.getElementById('memberDropdown').classList.remove('open');
-  // Nếu đang là member đó rồi thì không cần làm gì
   if(m === currentMember) return;
   _switchPwTarget = m;
   const p = PROFILE_INFO[m];
@@ -8854,12 +9166,10 @@ function switchMemberWithPw(m){
   document.getElementById('switchPwModal').style.display = 'flex';
   setTimeout(()=>document.getElementById('switchPwInput').focus(), 100);
 }
-
 function closeSwitchPwModal(){
   _switchPwTarget = null;
   document.getElementById('switchPwModal').style.display = 'none';
 }
-
 function submitSwitchPw(){
   const inp = document.getElementById('switchPwInput');
   const pw = inp?.value || '';
@@ -8868,7 +9178,6 @@ function submitSwitchPw(){
     document.getElementById('switchPwErr').style.display = 'block';
     inp.value = ''; inp.focus(); return;
   }
-  // Lưu target trước khi closeSwitchPwModal() null nó
   const target = _switchPwTarget;
   closeSwitchPwModal();
   try{ sessionStorage.setItem('wt_session_member', target); }catch(e){}
@@ -8876,10 +9185,321 @@ function submitSwitchPw(){
   setMember(target);
 }
 
+// ===== NGHIỆM THU =====
+let _ntSheet = null, _ntId = null, _ntVal = 100;
+
+function openNghiemThu(sheet, id){
+  _ntSheet = sheet; _ntId = id;
+  const r = data[sheet].find(x=>x.id===id);
+  if(!r) return;
+  const cur = r.nghiemThu===undefined ? 100 : r.nghiemThu;
+  const basePrice = getLoaiPrice(r.loai, sheet);
+  document.getElementById('ntKeyword').textContent = r.keyword;
+  document.getElementById('ntLoai').textContent = r.loai + ' — ' + fmt(basePrice) + ' đ';
+  _ntVal = cur;
+  [100,80,50,0].forEach(v=>{
+    const btn = document.getElementById('ntBtn'+v);
+    const cfg = NT_CONFIG[v];
+    if(btn){
+      btn.style.background = v===cur ? cfg.color : cfg.bg;
+      btn.style.color = v===cur ? '#fff' : cfg.color;
+      btn.style.fontWeight = v===cur ? '700' : '500';
+    }
+  });
+  document.getElementById('ntReason').value = r.nghiemThuLydo || '';
+  document.getElementById('ntReasonRow').style.display = cur===100 ? 'none' : 'flex';
+  document.getElementById('ntModal').style.display = 'flex';
+}
+function closeNghiemThu(){ document.getElementById('ntModal').style.display='none'; }
+function selectNT(val){
+  _ntVal = val;
+  [100,80,50,0].forEach(v=>{
+    const btn = document.getElementById('ntBtn'+v);
+    const cfg = NT_CONFIG[v];
+    if(btn){ btn.style.background=v===val?cfg.color:cfg.bg; btn.style.color=v===val?'#fff':cfg.color; btn.style.fontWeight=v===val?'700':'500'; }
+  });
+  document.getElementById('ntReasonRow').style.display = val===100 ? 'none' : 'flex';
+}
+function saveNT(){
+  const r = data[_ntSheet].find(x=>x.id===_ntId);
+  if(!r) return;
+  if(_ntVal !== 100){
+    const reason = document.getElementById('ntReason').value.trim();
+    if(!reason){ toast('Vui lòng nhập lý do!','#e74c3c'); return; }
+    r.nghiemThuLydo = reason;
+  } else { r.nghiemThuLydo = ''; }
+  r.nghiemThu = _ntVal;
+  saveAppData();
+  closeNghiemThu();
+  if(_ntSheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
+  toast('✅ Đã cập nhật nghiệm thu');
+}
+
+// ===== PERIOD MANAGEMENT =====
+function autoFillEndDate(newStart){
+  if(!newStart) return;
+  const d = new Date(newStart + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  const prev = d.toISOString().split('T')[0];
+  const el = document.getElementById('endMonthEndDate');
+  if(el) el.value = prev;
+}
+function openEndMonthModal(){
+  const today = todayVN();
+  const ps = getPeriodStart();
+  const [py,pm,pd] = ps.split('-');
+  const [ty,tm,td] = today.split('-');
+  const infoEl = document.getElementById('endMonthInfo');
+  if(infoEl) infoEl.innerHTML = `<b>Kỳ hiện tại:</b> từ <b>${pd}/${pm}/${py}</b> đến hôm nay (<b>${td}/${tm}/${ty}</b>)`;
+  document.getElementById('endMonthNewStart').value = today;
+  autoFillEndDate(today);
+  document.getElementById('endMonthPin').value='';
+  document.getElementById('endMonthErr').style.display='none';
+  document.getElementById('endMonthErr').textContent='Mã PIN không đúng.';
+  document.getElementById('endMonthModal').style.display='flex';
+  setTimeout(()=>document.getElementById('endMonthNewStart').focus(), 100);
+}
+function closeEndMonthModal(){ document.getElementById('endMonthModal').style.display='none'; }
+function confirmEndMonth(){
+  const pin = document.getElementById('endMonthPin').value;
+  if(pin !== ADMIN_PIN){
+    document.getElementById('endMonthErr').style.display='block';
+    document.getElementById('endMonthErr').textContent='Mã PIN không đúng.';
+    document.getElementById('endMonthPin').value='';
+    document.getElementById('endMonthPin').focus();
+    return;
+  }
+  const newStart = document.getElementById('endMonthNewStart').value;
+  if(!newStart){ alert('Vui lòng chọn ngày bắt đầu tháng mới!'); return; }
+  const endDateInput = document.getElementById('endMonthEndDate').value;
+  let endDate;
+  if(endDateInput){
+    if(endDateInput >= newStart){
+      document.getElementById('endMonthErr').style.display='block';
+      document.getElementById('endMonthErr').textContent='Ngày kết thúc tháng cũ phải trước ngày bắt đầu tháng mới.';
+      return;
+    }
+    endDate = endDateInput;
+  } else {
+    const d = new Date(newStart + 'T12:00:00');
+    d.setDate(d.getDate() - 1);
+    endDate = d.toISOString().split('T')[0];
+  }
+  document.getElementById('endMonthErr').style.display='none';
+  document.getElementById('endMonthErr').textContent='Mã PIN không đúng.';
+  const oldStart = _periodStart;
+  _savePeriodToHistory(oldStart, endDate);
+  _periodStart = newStart;
+  try{ localStorage.setItem('wt_period_start', newStart); }catch(e){}
+  saveAppData(); closeEndMonthModal(); renderDashboard();
+  const [y,m,d2] = newStart.split('-');
+  toast(`✅ Tháng mới bắt đầu từ ${d2}/${m}/${y}`);
+}
+
+function openEditPeriodModal(){
+  document.getElementById('editPeriodDate').value = _periodStart;
+  document.getElementById('editPeriodPin').value = '';
+  document.getElementById('editPeriodErr').style.display = 'none';
+  document.getElementById('editPeriodModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('editPeriodDate').focus(), 100);
+}
+function closeEditPeriodModal(){ document.getElementById('editPeriodModal').style.display='none'; }
+function confirmEditPeriod(){
+  const pin = document.getElementById('editPeriodPin').value;
+  if(pin !== ADMIN_PIN){ document.getElementById('editPeriodErr').style.display='block'; document.getElementById('editPeriodPin').value=''; document.getElementById('editPeriodPin').focus(); return; }
+  const newDate = document.getElementById('editPeriodDate').value;
+  if(!newDate){ alert('Vui lòng chọn ngày!'); return; }
+  _periodStart = newDate;
+  try{ localStorage.setItem('wt_period_start', newDate); }catch(e){}
+  saveAppData(); closeEditPeriodModal(); renderDashboard();
+  const [y,m,d] = newDate.split('-');
+  toast(`✅ Ngày bắt đầu tháng đã đổi thành ${d}/${m}/${y}`);
+}
+
+function openPeriodHistoryModal(){ renderPeriodHistoryList(); document.getElementById('periodHistoryModal').style.display='flex'; }
+function closePeriodHistoryModal(){ document.getElementById('periodHistoryModal').style.display='none'; }
+function renderPeriodHistoryList(){
+  const list = document.getElementById('periodHistoryList');
+  if(!list) return;
+  if(!_periodHistory.length){ list.innerHTML='<div style="text-align:center;padding:24px;color:var(--text-muted)">Chưa có lịch sử tháng nào.</div>'; return; }
+  list.innerHTML = _periodHistory.map((h,i)=>{
+    const [sy,sm,sd]=h.start.split('-'); const [ey,em,ed]=h.end.split('-');
+    const isViewing = _viewingPeriod && _viewingPeriod.start===h.start;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--gray-border);${isViewing?'background:#fdf2f2':''}">
+      <div><div style="font-size:13px;font-weight:600">${sd}/${sm}/${sy} → ${ed}/${em}/${ey}</div>
+      <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${_calcPeriodStats(h.start,h.end)}</div></div>
+      <button onclick="viewPeriod(${i})" class="btn btn-sm ${isViewing?'btn-primary':'btn-outline'}" style="font-size:11px">${isViewing?'✓ Đang xem':'Xem báo cáo'}</button>
+    </div>`;
+  }).join('');
+}
+function _calcPeriodStats(start, end){
+  const hBai=data.hai.filter(r=>r.ngay>=start&&r.ngay<=end).length;
+  const hieuBai=data.hieu.filter(r=>r.ngay>=start&&r.ngay<=end).length;
+  const hTien=data.hai.filter(r=>r.ngay>=start&&r.ngay<=end).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  const hieuTien=data.hieu.filter(r=>r.ngay>=start&&r.ngay<=end).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  return `Hải: ${hBai} bài — ${fmt(hTien)} · Hiếu: ${hieuBai} bài — ${fmt(hieuTien)}`;
+}
+function viewPeriod(idx){ const h=_periodHistory[idx]; _viewingPeriod=h; closePeriodHistoryModal(); renderDashboardForPeriod(h.start,h.end); }
+function backToCurrentPeriod(){ _viewingPeriod=null; renderDashboard(); }
+function renderDashboardForPeriod(start,end){
+  const [sy,sm,sd]=start.split('-'); const [ey,em,ed]=end.split('-');
+  const periodEl=document.getElementById('periodLabel');
+  if(periodEl) periodEl.innerHTML=`<span style="color:var(--red);font-weight:600">📋 Đang xem: ${sd}/${sm}/${sy} → ${ed}/${em}/${ey}</span><button onclick="backToCurrentPeriod()" style="margin-left:8px;background:none;border:1px solid var(--gray-border);border-radius:5px;padding:1px 8px;font-size:11px;cursor:pointer;color:var(--text-muted)">← Về tháng hiện tại</button>`;
+  const filterFn=r=>r.ngay>=start&&r.ngay<=end;
+  const hBai=data.hai.filter(filterFn).length, hieuBai=data.hieu.filter(filterFn).length;
+  const hTien=data.hai.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  const hieuTien=data.hieu.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div class="label">Tổng bài Hải</div><div class="value red">${hBai}</div></div><div class="stat-card"><div class="label">Lương Hải</div><div class="value green">${fmt(hTien)}</div></div><div class="stat-card"><div class="label">Tổng bài Hiếu</div><div class="value blue">${hieuBai}</div></div><div class="stat-card"><div class="label">Lương Hiếu</div><div class="value green">${fmt(hieuTien)}</div></div><div class="stat-card"><div class="label">Tổng chi trả</div><div class="value">${fmt(hTien+hieuTien)}</div></div>`;
+  function buildRows(sheet){ const dm={}; data[sheet].filter(filterFn).forEach(r=>{const d=fmtDate(r.ngay)||'?';if(!dm[d])dm[d]={ngay:d,bai:0,tien:0};dm[d].bai++;dm[d].tien+=getLoaiPrice(r.loai,sheet)*(r.nghiemThu===undefined?1:r.nghiemThu/100);}); return Object.values(dm).sort((a,b)=>a.ngay.localeCompare(b.ngay)).map(r=>`<tr><td>${r.ngay}</td><td class="num">${r.bai}</td><td class="num money">${fmt(r.tien)}</td><td></td></tr>`).join(''); }
+  document.getElementById('reportGrid').innerHTML=`<div class="report-card hai"><div class="rh">👤 BÁO CÁO CV HẢI</div><table class="report-table"><thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th><th></th></tr></thead><tbody>${buildRows('hai')}</tbody><tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${hBai}</b></td><td class="num money"><b>${fmt(hTien)}</b></td><td></td></tr></tfoot></table></div><div class="report-card hieu"><div class="rh">👤 BÁO CÁO CV HIẾU</div><table class="report-table"><thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th><th></th></tr></thead><tbody>${buildRows('hieu')}</tbody><tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${hieuBai}</b></td><td class="num money"><b>${fmt(hieuTien)}</b></td><td></td></tr></tfoot></table></div>`;
+}
+
+function openRollbackModal(){
+  if(!_periodHistory.length){ toast('Không có tháng trước để quay về.','#e74c3c'); return; }
+  const prev=_periodHistory[0];
+  const [sy,sm,sd]=prev.start.split('-'); const [ey,em,ed]=prev.end.split('-'); const [py,pm,pd]=_periodStart.split('-');
+  const infoEl=document.getElementById('rollbackInfo');
+  if(infoEl) infoEl.innerHTML=`Hủy lệnh bắt đầu tháng mới, quay về kỳ trước:<br><b>${sd}/${sm}/${sy}</b> → <b>${ed}/${em}/${ey}</b><br><span style="font-size:12px;color:var(--text-muted)">Kỳ hiện tại (<b>${pd}/${pm}/${py}</b> đến nay) sẽ bị xóa khỏi lịch sử.</span>`;
+  document.getElementById('rollbackPin').value=''; document.getElementById('rollbackErr').style.display='none';
+  document.getElementById('rollbackModal').style.display='flex';
+  setTimeout(()=>document.getElementById('rollbackPin').focus(),100);
+}
+function closeRollbackModal(){ document.getElementById('rollbackModal').style.display='none'; }
+function confirmRollback(){
+  const pin=document.getElementById('rollbackPin').value;
+  if(pin!==ADMIN_PIN){ document.getElementById('rollbackErr').style.display='block'; document.getElementById('rollbackPin').value=''; document.getElementById('rollbackPin').focus(); return; }
+  const prev=_periodHistory[0]; if(!prev){closeRollbackModal();return;}
+  _periodStart=prev.start; _periodHistory.shift();
+  try{localStorage.setItem('wt_period_start',_periodStart);}catch(e){}
+  _savePeriodHistory(); saveAppData(); closeRollbackModal(); renderDashboard();
+  const [y,m,d]=prev.start.split('-');
+  toast(`↩ Đã quay về kỳ từ ${d}/${m}/${y}`);
+}
+
+// ===== CẤU HÌNH CHI PHÍ / PHỤ CẤP =====
+let _salaryConfigTarget = null;
+let _scTempChiPhi = [], _scTempPhuCap = [];
+function openSalaryConfigModal(sheet){
+  _salaryConfigTarget = sheet;
+  const name = sheet==='hai'?'Hải':'Hiếu';
+  const sc = getSalaryConfig(sheet);
+  _scTempChiPhi = JSON.parse(JSON.stringify(sc.chiPhi||[]));
+  _scTempPhuCap = JSON.parse(JSON.stringify(sc.phuCap||[]));
+  document.getElementById('scTitle').textContent = `⚙ Chi phí / Phụ cấp — ${name}`;
+  document.getElementById('scPin').value=''; document.getElementById('scErr').style.display='none';
+  renderScLists();
+  document.getElementById('salaryConfigModal').style.display='flex';
+}
+function closeSalaryConfigModal(){ document.getElementById('salaryConfigModal').style.display='none'; }
+function _fmtVND(n){ if(!n&&n!==0)return''; return Number(n).toLocaleString('vi-VN')+' đ'; }
+function _parseVND(s){ return parseInt((s||'').replace(/[^\d]/g,''))||0; }
+function _scAmountInput(input,type,idx){
+  const raw=_parseVND(input.value); _scTempList(type,idx,'amount',raw);
+  const formatted=raw?raw.toLocaleString('vi-VN'):'';
+  if(input.value!==formatted&&raw>0){input.value=formatted;input.setSelectionRange(formatted.length,formatted.length);}
+}
+function renderScLists(){
+  const renderList=(list,type)=>{
+    const wrap=document.getElementById(`sc_${type}_list`);if(!wrap)return;
+    wrap.innerHTML=list.length?list.map((item,i)=>`<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+      <input type="text" value="${_fmtVND(item.amount||0)}" style="width:130px;font-size:12px;height:32px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px;text-align:right"
+        oninput="_scAmountInput(this,'${type}',${i})" onfocus="this.value=_parseVND(this.value)||'';this.select()" onblur="this.value=_fmtVND(_parseVND(this.value))">
+      <input type="text" value="${(item.name||'').replace(/"/g,'&quot;')}" placeholder="Tên..."
+        style="flex:1;font-size:12px;height:32px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px"
+        oninput="_scTempList('${type}',${i},'name',this.value)">
+      <button onclick="_scRemove('${type}',${i})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:16px;padding:0 2px">✕</button>
+    </div>`).join(''):`<div style="font-size:12px;color:var(--text-muted);padding:6px 0">Chưa có. Nhấn + để thêm.</div>`;
+  };
+  renderList(_scTempChiPhi,'chiPhi'); renderList(_scTempPhuCap,'phuCap');
+}
+function _scTempList(type,idx,field,val){ const list=type==='chiPhi'?_scTempChiPhi:_scTempPhuCap; if(list[idx])list[idx][field]=val; }
+function _scRemove(type,idx){ if(type==='chiPhi')_scTempChiPhi.splice(idx,1);else _scTempPhuCap.splice(idx,1); renderScLists(); }
+function _scAdd(type){ if(type==='chiPhi')_scTempChiPhi.push({name:'',amount:0});else _scTempPhuCap.push({name:'',amount:0}); renderScLists(); const list=document.getElementById(`sc_${type}_list`); const inputs=list?.querySelectorAll('input[type=text]'); if(inputs?.length)inputs[inputs.length-1].focus(); }
+function saveSalaryConfig(){
+  const pin=document.getElementById('scPin').value;
+  if(pin!==ADMIN_PIN){document.getElementById('scErr').style.display='block';document.getElementById('scPin').value='';document.getElementById('scPin').focus();return;}
+  _salaryConfig[_salaryConfigTarget]={chiPhi:_scTempChiPhi.filter(x=>x.amount>0||x.name),phuCap:_scTempPhuCap.filter(x=>x.amount>0||x.name)};
+  try{localStorage.setItem('wt_salary_config',JSON.stringify(_salaryConfig));}catch(e){}
+  closeSalaryConfigModal(); renderDashboard();
+  toast(`✅ Đã cập nhật chi phí/phụ cấp cho ${_salaryConfigTarget==='hai'?'Hải':'Hiếu'}`);
+}
+
+// ===== SỬA MỨC LƯƠNG THEO LOẠI BÀI =====
+function openSalaryRatesModal(){ renderSalaryRatesForm(); document.getElementById('salaryRatesPin').value=''; document.getElementById('salaryRatesErr').style.display='none'; document.getElementById('salaryRatesModal').style.display='flex'; }
+function closeSalaryRatesModal(){ document.getElementById('salaryRatesModal').style.display='none'; }
+function renderSalaryRatesForm(){
+  const loais=Object.keys(LOAI_CONFIG);
+  const tbody=document.getElementById('salaryRatesTbody'); if(!tbody)return;
+  tbody.innerHTML=loais.map(loai=>{
+    const def=LOAI_CONFIG[loai].price, hai=_salaryRates.hai[loai]||def, hieu=_salaryRates.hieu[loai]||def;
+    return `<tr><td style="font-size:13px;font-weight:500">${loai}</td>
+      <td><input type="text" data-sheet="hai" data-loai="${loai}" value="${hai.toLocaleString('vi-VN')}" style="width:110px;font-size:12px;height:30px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px;text-align:right" oninput="_rateInput(this)" onfocus="this.value=_parseVND(this.value)||'';this.select()" onblur="this.value=(_parseVND(this.value)||0).toLocaleString('vi-VN')"></td>
+      <td><input type="text" data-sheet="hieu" data-loai="${loai}" value="${hieu.toLocaleString('vi-VN')}" style="width:110px;font-size:12px;height:30px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px;text-align:right" oninput="_rateInput(this)" onfocus="this.value=_parseVND(this.value)||'';this.select()" onblur="this.value=(_parseVND(this.value)||0).toLocaleString('vi-VN')"></td>
+      <td style="font-size:11px;color:var(--text-muted)">${def.toLocaleString('vi-VN')} đ</td></tr>`;
+  }).join('');
+}
+function _rateInput(input){ const raw=_parseVND(input.value); if(raw>0){const f=raw.toLocaleString('vi-VN');if(input.value!==f)input.value=f;} }
+function saveSalaryRates(){
+  const pin=document.getElementById('salaryRatesPin').value;
+  if(pin!==ADMIN_PIN){document.getElementById('salaryRatesErr').style.display='block';document.getElementById('salaryRatesPin').value='';document.getElementById('salaryRatesPin').focus();return;}
+  document.querySelectorAll('#salaryRatesTbody input').forEach(inp=>{
+    const sheet=inp.dataset.sheet, loai=inp.dataset.loai;
+    _salaryRates[sheet][loai]=_parseVND(inp.value)||LOAI_CONFIG[loai]?.price||14000;
+  });
+  try{localStorage.setItem('wt_salary_rates',JSON.stringify(_salaryRates));}catch(e){}
+  saveAppData(); closeSalaryRatesModal(); renderDashboard(); toast('✅ Đã cập nhật mức lương');
+}
+
+// ===== THƯỞNG / PHẠT LINH HOẠT =====
+let _flexModalSheet = null;
+function openFlexSalaryModal(sheet){
+  if(sheet){ _flexModalSheet=sheet; }
+  else if(currentMember==='admin'){ document.getElementById('flexSheetPicker').style.display='flex'; document.getElementById('flexSheetBody').style.display='none'; document.getElementById('flexSalaryModal').style.display='flex'; return; }
+  else { _flexModalSheet=currentMember; }
+  _renderFlexModal();
+}
+function _renderFlexModal(){
+  const name=_flexModalSheet==='hai'?'Hải':'Hiếu';
+  document.getElementById('flexSalaryTitle').textContent=`🎁 Thưởng / Phạt — ${name}`;
+  document.getElementById('flexSheetPicker').style.display='none';
+  document.getElementById('flexSheetBody').style.display='block';
+  renderFlexList();
+  document.getElementById('flexSalaryModal').style.display='flex';
+}
+function closeFlexSalaryModal(){ document.getElementById('flexSalaryModal').style.display='none'; }
+function renderFlexList(){
+  const list=getFlexSalary(_flexModalSheet);
+  const wrap=document.getElementById('flexList'); if(!wrap)return;
+  if(!list.length){wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:13px">Chưa có khoản nào.</div>';return;}
+  wrap.innerHTML=list.map((item,i)=>{
+    const isThuong=item.loai==='thuong';
+    return `<div style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-bottom:1px solid var(--gray-border);background:${isThuong?'#f6fff9':'#fff8f8'}">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:700;color:${isThuong?'var(--green)':'var(--red)'}">${isThuong?'🟢 Thưởng':'🔴 Phạt'}</span>
+          <span style="font-size:12px;color:var(--text-muted)">${item.ngay?fmtDate(item.ngay):''}</span>
+        </div>
+        <div style="font-size:13px;font-weight:600">${item.lydo||'—'}</div>
+        <div style="font-size:13px;color:${isThuong?'var(--green)':'var(--red)'}">${isThuong?'+':'-'}${fmt(item.amount)}</div>
+      </div>
+      <button onclick="editFlexItem(${i})" style="background:none;border:1px solid var(--gray-border);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;color:var(--text-muted)">✎</button>
+      <button onclick="deleteFlexItem(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:16px;padding:0 2px">✕</button>
+    </div>`;
+  }).join('');
+}
+function addFlexItem(loai){ const list=_flexSalary[_flexModalSheet]; list.push({id:_flexNextId[_flexModalSheet]++,loai,ngay:todayVN(),amount:0,lydo:''}); _saveFlexSalary(); renderFlexList(); editFlexItem(list.length-1); }
+function editFlexItem(idx){ const item=getFlexSalary(_flexModalSheet)[idx]; if(!item)return; document.getElementById('flexEditIdx').value=idx; document.getElementById('flexEditLoai').value=item.loai; document.getElementById('flexEditNgay').value=item.ngay||todayVN(); document.getElementById('flexEditAmount').value=item.amount?item.amount.toLocaleString('vi-VN'):''; document.getElementById('flexEditLydo').value=item.lydo||''; document.getElementById('flexEditModal').style.display='flex'; setTimeout(()=>document.getElementById('flexEditLydo').focus(),100); }
+function closeFlexEditModal(){ document.getElementById('flexEditModal').style.display='none'; }
+function saveFlexItem(){ const idx=parseInt(document.getElementById('flexEditIdx').value); const item=_flexSalary[_flexModalSheet][idx]; if(!item)return; item.ngay=document.getElementById('flexEditNgay').value; item.amount=_parseVND(document.getElementById('flexEditAmount').value)||0; item.lydo=document.getElementById('flexEditLydo').value.trim(); item.loai=document.getElementById('flexEditLoai').value; _saveFlexSalary(); closeFlexEditModal(); renderFlexList(); renderDashboard(); }
+function deleteFlexItem(idx){ if(!confirm('Xóa khoản này?'))return; _flexSalary[_flexModalSheet].splice(idx,1); _saveFlexSalary(); renderFlexList(); renderDashboard(); }
+function _saveFlexSalary(){ try{localStorage.setItem('wt_flex_salary',JSON.stringify(_flexSalary));}catch(e){} saveAppData(); }
+
 // Start Firebase real-time listener
 setTimeout(initFirebaseListener, 1000);
 
 </script>
+
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
   <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
@@ -8946,6 +9566,10 @@ setTimeout(initFirebaseListener, 1000);
           <label>STT <span style="font-size:11px;color:var(--text-muted)">(dạng 1-99)</span></label>
           <input type="text" id="aim_stt" style="width:100%" placeholder="VD: 1-99" maxlength="20" oninput="updateAimPreview()">
         </div>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Tháng của ID <span style="font-size:11px;color:var(--text-muted)">— chọn tháng khác nếu muốn tạo ID cho tháng trước</span></label>
+        <select id="aim_month" style="width:100%;height:36px;font-size:13px" onchange="updateAimPreview()"></select>
       </div>
       <div class="form-group" id="aim_team_row" style="width:100%">
         <label>Team</label>
@@ -9238,6 +9862,54 @@ setTimeout(initFirebaseListener, 1000);
   </div>
 </div>
 
+<!-- AVATAR SETTINGS MODAL -->
+<div class="modal-overlay" id="avatarSettingsModal" onclick="if(event.target===this)closeAvatarSettings()">
+  <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>🖼️ Ảnh đại diện sảnh chờ</h3>
+      <button class="modal-close" onclick="closeAvatarSettings()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:16px">
+      <p style="font-size:13px;color:var(--text-muted);margin:0">Tải ảnh lên để hiển thị trong sảnh chọn hồ sơ. Ảnh sẽ đồng bộ qua Firebase.</p>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center">
+        <!-- Admin -->
+        <div style="text-align:center">
+          <div id="avPreview_admin" style="width:80px;height:80px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 8px;overflow:hidden;border:2px solid var(--gray-border)">⚙</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Admin</div>
+          <label style="cursor:pointer;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:11px;display:inline-block">
+            📁 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event,'admin')">
+          </label>
+          <button onclick="removeAvatar('admin')" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer">✕ Xóa</button>
+        </div>
+        <!-- Hiếu -->
+        <div style="text-align:center">
+          <div id="avPreview_hieu" style="width:80px;height:80px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 8px;overflow:hidden;border:2px solid var(--gray-border)">H</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Hiếu</div>
+          <label style="cursor:pointer;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:11px;display:inline-block">
+            📁 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event,'hieu')">
+          </label>
+          <button onclick="removeAvatar('hieu')" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer">✕ Xóa</button>
+        </div>
+        <!-- Hải -->
+        <div style="text-align:center">
+          <div id="avPreview_hai" style="width:80px;height:80px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin:0 auto 8px;overflow:hidden;border:2px solid var(--gray-border)">H</div>
+          <div style="font-size:12px;font-weight:600;margin-bottom:6px">Hải</div>
+          <label style="cursor:pointer;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:4px 10px;font-size:11px;display:inline-block">
+            📁 Chọn ảnh
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event,'hai')">
+          </label>
+          <button onclick="removeAvatar('hai')" style="display:block;margin:4px auto 0;background:none;border:none;color:var(--text-muted);font-size:11px;cursor:pointer">✕ Xóa</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAvatarSettings()">Đóng</button>
+    </div>
+  </div>
+</div>
+
 <!-- RESET PASSWORD MODAL (Admin only) -->
 <div class="modal-overlay" id="resetPwModal" onclick="if(event.target===this)closeResetPwModal()">
   <div class="modal" style="max-width:380px" onclick="event.stopPropagation()">
@@ -9371,15 +10043,11 @@ setTimeout(initFirebaseListener, 1000);
     <div class="modal-body" style="gap:10px">
       <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
         <div id="switchPwAvatar" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;overflow:hidden"></div>
-        <div>
-          <div id="switchPwName" style="font-weight:600;font-size:14px"></div>
-          <div style="font-size:12px;color:var(--text-muted)">Nhập mật khẩu để chuyển</div>
-        </div>
+        <div><div id="switchPwName" style="font-weight:600;font-size:14px"></div><div style="font-size:12px;color:var(--text-muted)">Nhập mật khẩu để chuyển</div></div>
       </div>
       <div class="form-group" style="width:100%">
         <label>Mật khẩu</label>
-        <input type="password" id="switchPwInput" style="width:100%" placeholder="Nhập mật khẩu..."
-          onkeydown="if(event.key==='Enter')submitSwitchPw()">
+        <input type="password" id="switchPwInput" style="width:100%" placeholder="Nhập mật khẩu..." onkeydown="if(event.key==='Enter')submitSwitchPw()">
       </div>
       <div id="switchPwErr" style="display:none;color:#e74c3c;font-size:12px">Mật khẩu không đúng.</div>
     </div>
@@ -9390,5 +10058,147 @@ setTimeout(initFirebaseListener, 1000);
   </div>
 </div>
 
-</body></html>
+<!-- END MONTH MODAL -->
+<div class="modal-overlay" id="endMonthModal" onclick="if(event.target===this)closeEndMonthModal()" style="display:none">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>📅 Bắt đầu tháng mới</h3><button class="modal-close" onclick="closeEndMonthModal()">&times;</button></div>
+    <div class="modal-body" style="gap:12px">
+      <div id="endMonthInfo" style="font-size:13px;line-height:1.7;background:#f8f9fa;border-radius:8px;padding:12px;color:var(--text)"></div>
+      <div class="form-group" style="width:100%"><label>Ngày bắt đầu tháng mới *</label><input type="date" id="endMonthNewStart" style="width:100%" oninput="autoFillEndDate(this.value)"></div>
+      <div class="form-group" style="width:100%"><label>Ngày kết thúc tháng cũ <span style="font-weight:400;color:var(--text-muted)">(để trống = ngày bắt đầu tháng mới − 1)</span></label><input type="date" id="endMonthEndDate" style="width:100%"></div>
+      <div class="form-group" style="width:100%"><label>Mã PIN hệ thống *</label><input type="password" id="endMonthPin" style="width:100%" placeholder="Nhập mã PIN..." onkeydown="if(event.key==='Enter')confirmEndMonth()"></div>
+      <div id="endMonthErr" style="display:none;color:#e74c3c;font-size:12px">Mã PIN không đúng.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeEndMonthModal()">Huỷ</button><button class="btn btn-primary" onclick="confirmEndMonth()">✓ Bắt đầu tháng mới</button></div>
+  </div>
+</div>
 
+<!-- EDIT PERIOD START MODAL -->
+<div class="modal-overlay" id="editPeriodModal" onclick="if(event.target===this)closeEditPeriodModal()" style="display:none">
+  <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>✎ Sửa ngày bắt đầu tháng</h3><button class="modal-close" onclick="closeEditPeriodModal()">&times;</button></div>
+    <div class="modal-body" style="gap:12px">
+      <div class="form-group" style="width:100%"><label>Ngày bắt đầu tháng *</label><input type="date" id="editPeriodDate" style="width:100%"></div>
+      <div class="form-group" style="width:100%"><label>Mã PIN xác nhận *</label><input type="password" id="editPeriodPin" style="width:100%" placeholder="Nhập mã PIN..." onkeydown="if(event.key==='Enter')confirmEditPeriod()"></div>
+      <div id="editPeriodErr" style="display:none;color:#e74c3c;font-size:12px">Mã PIN không đúng.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeEditPeriodModal()">Huỷ</button><button class="btn btn-primary" onclick="confirmEditPeriod()">✓ Lưu</button></div>
+  </div>
+</div>
+
+<!-- PERIOD HISTORY MODAL -->
+<div class="modal-overlay" id="periodHistoryModal" onclick="if(event.target===this)closePeriodHistoryModal()" style="display:none">
+  <div class="modal" style="max-width:520px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>📋 Lịch sử các tháng</h3><button class="modal-close" onclick="closePeriodHistoryModal()">&times;</button></div>
+    <div class="modal-body" style="padding:0;gap:0;max-height:460px;overflow-y:auto" id="periodHistoryList"></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closePeriodHistoryModal()">Đóng</button></div>
+  </div>
+</div>
+
+<!-- ROLLBACK MODAL -->
+<div class="modal-overlay" id="rollbackModal" onclick="if(event.target===this)closeRollbackModal()" style="display:none">
+  <div class="modal" style="max-width:380px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>↩ Quay về tháng trước</h3><button class="modal-close" onclick="closeRollbackModal()">&times;</button></div>
+    <div class="modal-body" style="gap:12px">
+      <div id="rollbackInfo" style="font-size:13px;line-height:1.7;background:#fff8ee;border:1px solid #fce0b0;border-radius:8px;padding:12px;color:var(--text)"></div>
+      <div class="form-group" style="width:100%"><label>Mã PIN xác nhận *</label><input type="password" id="rollbackPin" style="width:100%" placeholder="Nhập mã PIN..." onkeydown="if(event.key==='Enter')confirmRollback()"></div>
+      <div id="rollbackErr" style="display:none;color:#e74c3c;font-size:12px">Mã PIN không đúng.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeRollbackModal()">Huỷ</button><button class="btn btn-danger" onclick="confirmRollback()">↩ Xác nhận quay về</button></div>
+  </div>
+</div>
+
+<!-- SALARY CONFIG MODAL -->
+<div class="modal-overlay" id="salaryConfigModal" onclick="if(event.target===this)closeSalaryConfigModal()" style="display:none">
+  <div class="modal" style="max-width:460px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3 id="scTitle">⚙ Chi phí / Phụ cấp</h3><button class="modal-close" onclick="closeSalaryConfigModal()">&times;</button></div>
+    <div class="modal-body" style="gap:14px">
+      <div style="font-size:12px;color:var(--text-muted);background:#f8f9fa;padding:8px 12px;border-radius:6px"><b>Thực nhận</b> = Lương bài − Tổng chi phí + Tổng phụ cấp</div>
+      <div class="form-group" style="width:100%">
+        <label style="display:flex;align-items:center;justify-content:space-between"><span style="color:var(--red)">− Chi phí (trừ đi)</span><button onclick="_scAdd('chiPhi')" class="btn btn-sm btn-outline" style="height:24px;font-size:11px">+ Thêm</button></label>
+        <div id="sc_chiPhi_list" style="margin-top:6px"></div>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label style="display:flex;align-items:center;justify-content:space-between"><span style="color:var(--green)">+ Phụ cấp (cộng thêm)</span><button onclick="_scAdd('phuCap')" class="btn btn-sm btn-outline" style="height:24px;font-size:11px">+ Thêm</button></label>
+        <div id="sc_phuCap_list" style="margin-top:6px"></div>
+      </div>
+      <div class="form-group" style="width:100%"><label>Mã PIN xác nhận *</label><input type="password" id="scPin" style="width:100%" placeholder="Nhập mã PIN..." onkeydown="if(event.key==='Enter')saveSalaryConfig()"></div>
+      <div id="scErr" style="display:none;color:#e74c3c;font-size:12px">Mã PIN không đúng.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeSalaryConfigModal()">Huỷ</button><button class="btn btn-primary" onclick="saveSalaryConfig()">✓ Lưu</button></div>
+  </div>
+</div>
+
+<!-- SALARY RATES MODAL -->
+<div class="modal-overlay" id="salaryRatesModal" onclick="if(event.target===this)closeSalaryRatesModal()" style="display:none">
+  <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>💵 Mức lương theo loại bài</h3><button class="modal-close" onclick="closeSalaryRatesModal()">&times;</button></div>
+    <div class="modal-body" style="gap:12px">
+      <div style="font-size:12px;color:var(--text-muted);background:#f8f9fa;padding:8px 12px;border-radius:6px">Mức lương riêng cho từng người. Cột <b>Mặc định</b> là giá chung của hệ thống.</div>
+      <table class="report-table" style="font-size:13px">
+        <thead><tr><th>Loại bài</th><th style="text-align:center">Hải (đ)</th><th style="text-align:center">Hiếu (đ)</th><th>Mặc định</th></tr></thead>
+        <tbody id="salaryRatesTbody"></tbody>
+      </table>
+      <div class="form-group" style="width:100%"><label>Mã PIN xác nhận *</label><input type="password" id="salaryRatesPin" style="width:100%" placeholder="Nhập mã PIN..." onkeydown="if(event.key==='Enter')saveSalaryRates()"></div>
+      <div id="salaryRatesErr" style="display:none;color:#e74c3c;font-size:12px">Mã PIN không đúng.</div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeSalaryRatesModal()">Huỷ</button><button class="btn btn-primary" onclick="saveSalaryRates()">✓ Lưu</button></div>
+  </div>
+</div>
+
+<!-- NGHIỆM THU MODAL -->
+<div class="modal-overlay" id="ntModal" onclick="if(event.target===this)closeNghiemThu()" style="display:none">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>✅ Nghiệm thu bài viết</h3><button class="modal-close" onclick="closeNghiemThu()">&times;</button></div>
+    <div class="modal-body" style="gap:12px">
+      <div style="background:#f8f9fa;border-radius:8px;padding:10px 12px">
+        <div id="ntKeyword" style="font-weight:600;font-size:13px;margin-bottom:4px"></div>
+        <div id="ntLoai" style="font-size:12px;color:var(--text-muted)"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button id="ntBtn100" onclick="selectNT(100)" style="padding:12px;border-radius:8px;border:2px solid #a8deba;cursor:pointer;font-size:15px;font-weight:700;background:#f0faf4;color:#27ae60">100%<div style="font-size:11px;font-weight:400;margin-top:2px">Đầy đủ</div></button>
+        <button id="ntBtn80" onclick="selectNT(80)" style="padding:12px;border-radius:8px;border:2px solid #b8d4ea;cursor:pointer;font-size:15px;font-weight:700;background:#f0f7fd;color:#2980b9">80%<div style="font-size:11px;font-weight:400;margin-top:2px">Khá</div></button>
+        <button id="ntBtn50" onclick="selectNT(50)" style="padding:12px;border-radius:8px;border:2px solid #f5c6c6;cursor:pointer;font-size:15px;font-weight:700;background:#fdf2f2;color:#e74c3c">50%<div style="font-size:11px;font-weight:400;margin-top:2px">Trung bình</div></button>
+        <button id="ntBtn0" onclick="selectNT(0)" style="padding:12px;border-radius:8px;border:2px solid #ccc;cursor:pointer;font-size:15px;font-weight:700;background:#f0f0f0;color:#555">0%<div style="font-size:11px;font-weight:400;margin-top:2px">Không đạt</div></button>
+      </div>
+      <div class="form-group" id="ntReasonRow" style="width:100%;display:none"><label>Lý do <span style="color:var(--red)">*</span></label><textarea id="ntReason" rows="2" style="width:100%" placeholder="Nhập lý do..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeNghiemThu()">Huỷ</button><button class="btn btn-primary" onclick="saveNT()">✓ Xác nhận</button></div>
+  </div>
+</div>
+
+<!-- FLEX SALARY MODAL -->
+<div class="modal-overlay" id="flexSalaryModal" onclick="if(event.target===this)closeFlexSalaryModal()" style="display:none">
+  <div class="modal" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3 id="flexSalaryTitle">🎁 Thưởng / Phạt</h3><button class="modal-close" onclick="closeFlexSalaryModal()">&times;</button></div>
+    <div id="flexSheetPicker" style="padding:20px;display:flex;gap:12px;justify-content:center">
+      <button onclick="_flexModalSheet='hai';_renderFlexModal()" style="flex:1;padding:14px;border-radius:8px;border:2px solid var(--red);cursor:pointer;background:#fdf2f2;color:var(--red);font-size:14px;font-weight:600">👤 Hải</button>
+      <button onclick="_flexModalSheet='hieu';_renderFlexModal()" style="flex:1;padding:14px;border-radius:8px;border:2px solid var(--blue);cursor:pointer;background:#f0f7fd;color:var(--blue);font-size:14px;font-weight:600">👤 Hiếu</button>
+    </div>
+    <div id="flexSheetBody" style="display:none">
+      <div style="display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--gray-border)">
+        <button onclick="addFlexItem('thuong')" class="btn btn-sm btn-outline" style="color:var(--green);border-color:var(--green);flex:1">🟢 + Thêm thưởng</button>
+        <button onclick="addFlexItem('phat')" class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red);flex:1">🔴 + Thêm phạt</button>
+      </div>
+      <div id="flexList" style="max-height:400px;overflow-y:auto"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeFlexSalaryModal()">Đóng</button></div>
+  </div>
+</div>
+
+<!-- FLEX EDIT MODAL -->
+<div class="modal-overlay" id="flexEditModal" onclick="if(event.target===this)closeFlexEditModal()" style="display:none">
+  <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+    <div class="modal-header"><h3>✎ Sửa khoản thưởng/phạt</h3><button class="modal-close" onclick="closeFlexEditModal()">&times;</button></div>
+    <div class="modal-body" style="gap:10px">
+      <input type="hidden" id="flexEditIdx">
+      <div class="form-group" style="width:100%"><label>Loại</label><select id="flexEditLoai" style="width:100%"><option value="thuong">🟢 Thưởng</option><option value="phat">🔴 Phạt</option></select></div>
+      <div class="form-group" style="width:100%"><label>Ngày</label><input type="date" id="flexEditNgay" style="width:100%"></div>
+      <div class="form-group" style="width:100%"><label>Giá trị (đ)</label><input type="text" id="flexEditAmount" style="width:100%;text-align:right" placeholder="0" onfocus="this.value=_parseVND(this.value)||'';;this.select()" oninput="if(_parseVND(this.value)>0)this.value=_parseVND(this.value).toLocaleString('vi-VN')" onblur="this.value=_fmtVND(_parseVND(this.value))"></div>
+      <div class="form-group" style="width:100%"><label>Lý do <span style="color:var(--red)">*</span></label><textarea id="flexEditLydo" rows="2" style="width:100%" placeholder="Nhập lý do..."></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeFlexEditModal()">Huỷ</button><button class="btn btn-primary" onclick="saveFlexItem()">✓ Lưu</button></div>
+  </div>
+</div>
+
+</body></html>
