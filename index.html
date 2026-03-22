@@ -3125,13 +3125,16 @@ function initFirebaseListener(){
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
       if(Array.isArray(r.prompts)){      prompts=r.prompts;           promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
       if(r.passwords && typeof r.passwords==='object') localStorage.setItem('wt_passwords', JSON.stringify(r.passwords));
-      if(r.avatars && typeof r.avatars==='object'){
-        if(r.settings && typeof r.settings==='object'){
+      if(r.settings && typeof r.settings==='object'){
+        // Merge: keep local avatars if Firebase doesn't have them
+        const localAvatars = _settings.avatars || {};
         _settings = r.settings;
+        if(!_settings.avatars || Object.keys(_settings.avatars).length===0){
+          _settings.avatars = localAvatars;
+        }
         applyLoginBg(_settings.loginBg);
         applyAllAvatars();
         localStorage.setItem('wt_settings', JSON.stringify(_settings));
-      }
       }
 
       // Mirror everything to localStorage
