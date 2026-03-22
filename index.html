@@ -343,17 +343,17 @@
       <div class="member-role-label" id="memberRoleLabel">Admin</div>
       <div class="member-dropdown" id="memberDropdown">
         <div class="md-header">Xem với tư cách</div>
-        <div class="md-item active" id="mdi-admin" onclick="setMember('admin')">
+        <div class="md-item active" id="mdi-admin" onclick="switchMemberWithPw('admin')">
           <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;overflow:hidden"></div>
           <div><div class="md-name">Admin</div><div class="md-role">Xem toàn bộ</div></div>
           <span class="md-check" id="mdc-admin">&#10003;</span>
         </div>
-        <div class="md-item" id="mdi-hieu" onclick="setMember('hieu')">
+        <div class="md-item" id="mdi-hieu" onclick="switchMemberWithPw('hieu')">
           <div class="md-avatar" id="md-avatar-hieu" style="background:#eaf4fd;overflow:hidden"></div>
           <div><div class="md-name">Hiếu</div><div class="md-role">Sheet Hiếu + Tasks</div></div>
           <span class="md-check" id="mdc-hieu" style="display:none">&#10003;</span>
         </div>
-        <div class="md-item" id="mdi-hai" onclick="setMember('hai')">
+        <div class="md-item" id="mdi-hai" onclick="switchMemberWithPw('hai')">
           <div class="md-avatar" id="md-avatar-hai" style="background:#fdf2f2;overflow:hidden"></div>
           <div><div class="md-name">Hải</div><div class="md-role">Sheet Hải + Tasks</div></div>
           <span class="md-check" id="mdc-hai" style="display:none">&#10003;</span>
@@ -8754,6 +8754,51 @@ window._websites = websites;
   }
 })();
 
+
+// ===== SWITCH MEMBER WITH PASSWORD =====
+let _switchPwTarget = null;
+
+function switchMemberWithPw(m){
+  document.getElementById('memberDropdown').classList.remove('open');
+  // Nếu đang là member đó rồi thì không cần làm gì
+  if(m === currentMember) return;
+  _switchPwTarget = m;
+  const p = PROFILE_INFO[m];
+  const avSrc = _settings.avatars?.[m] || null;
+  const avEl = document.getElementById('switchPwAvatar');
+  if(avEl){
+    avEl.innerHTML = avSrc
+      ? `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;display:block">`
+      : `<div style="${p.avatarStyle};width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${p.fontSize};font-weight:700">${p.icon}</div>`;
+  }
+  document.getElementById('switchPwName').textContent = p.name;
+  document.getElementById('switchPwInput').value = '';
+  document.getElementById('switchPwErr').style.display = 'none';
+  document.getElementById('switchPwTitle').textContent = `🔑 Chuyển sang ${p.name}`;
+  document.getElementById('switchPwModal').style.display = 'flex';
+  setTimeout(()=>document.getElementById('switchPwInput').focus(), 100);
+}
+
+function closeSwitchPwModal(){
+  _switchPwTarget = null;
+  document.getElementById('switchPwModal').style.display = 'none';
+}
+
+function submitSwitchPw(){
+  const inp = document.getElementById('switchPwInput');
+  const pw = inp?.value || '';
+  const correct = getProfilePassword(_switchPwTarget);
+  if(pw !== correct){
+    document.getElementById('switchPwErr').style.display = 'block';
+    inp.value = ''; inp.focus(); return;
+  }
+  closeSwitchPwModal();
+  // Cập nhật session và switch
+  try{ sessionStorage.setItem('wt_session_member', _switchPwTarget); }catch(e){}
+  try{ localStorage.setItem('wt_activeMember', _switchPwTarget); }catch(e){}
+  setMember(_switchPwTarget);
+}
+
 // Start Firebase real-time listener
 setTimeout(initFirebaseListener, 1000);
 
@@ -9234,6 +9279,36 @@ setTimeout(initFirebaseListener, 1000);
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeWsImportModal()">Huỷ</button>
       <button class="btn btn-primary" onclick="wsImportRun()">⬆ Import tất cả</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- SWITCH MEMBER PASSWORD MODAL -->
+<div class="modal-overlay" id="switchPwModal" onclick="if(event.target===this)closeSwitchPwModal()" style="display:none">
+  <div class="modal" style="max-width:320px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="switchPwTitle">🔑 Xác nhận chuyển hồ sơ</h3>
+      <button class="modal-close" onclick="closeSwitchPwModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+        <div id="switchPwAvatar" style="width:48px;height:48px;border-radius:50%;flex-shrink:0;overflow:hidden"></div>
+        <div>
+          <div id="switchPwName" style="font-weight:600;font-size:14px"></div>
+          <div style="font-size:12px;color:var(--text-muted)">Nhập mật khẩu để chuyển</div>
+        </div>
+      </div>
+      <div class="form-group" style="width:100%">
+        <label>Mật khẩu</label>
+        <input type="password" id="switchPwInput" style="width:100%" placeholder="Nhập mật khẩu..."
+          onkeydown="if(event.key==='Enter')submitSwitchPw()">
+      </div>
+      <div id="switchPwErr" style="display:none;color:#e74c3c;font-size:12px">Mật khẩu không đúng.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeSwitchPwModal()">Huỷ</button>
+      <button class="btn btn-primary" onclick="submitSwitchPw()">✓ Chuyển</button>
     </div>
   </div>
 </div>
