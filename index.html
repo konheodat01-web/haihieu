@@ -3107,10 +3107,14 @@ function initFirebaseListener(){
         }
       } catch(e){}
 
-      // deletedTasks — respect trash timestamp
-      const trashTs = Math.max(parseInt(localStorage.getItem('wt_trash_ts')||'0'), r._trash_ts||0);
-      if(Array.isArray(r.deletedTasks) && (r._ts||0) >= trashTs) deletedTasks = r.deletedTasks;
-      if((r._trash_ts||0) > parseInt(localStorage.getItem('wt_trash_ts')||'0')) localStorage.setItem('wt_trash_ts', String(r._trash_ts));
+      // deletedTasks — only accept if Firebase trash is NOT older than local permanent-delete
+      const localTrashTs = parseInt(localStorage.getItem('wt_trash_ts')||'0');
+      const fbTrashTs = r._trash_ts||0;
+      if(Array.isArray(r.deletedTasks) && fbTrashTs >= localTrashTs){
+        deletedTasks = r.deletedTasks;
+      }
+      // Update local trash_ts to whichever is newer
+      if(fbTrashTs > localTrashTs) localStorage.setItem('wt_trash_ts', String(fbTrashTs));
 
       links         = arr(r.links, links);
       linkCategories= r.linkCategories != null ? r.linkCategories : linkCategories;
@@ -4633,7 +4637,10 @@ function pqGetInput(){ return document.getElementById('uniInput')?.value||''; }
 
 // ===== PROFILE AVATARS =====
 function getProfileAvatars(){
-  try{ return JSON.parse(localStorage.getItem('wt_avatars')||'{}'); }catch(e){ return {}; }
+  try{
+    const s = JSON.parse(localStorage.getItem('wt_settings')||'{}');
+    return s.avatars || {};
+  }catch(e){ return {}; }
 }
 
 function openAvatarSettings(){
