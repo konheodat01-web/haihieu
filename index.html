@@ -3633,6 +3633,9 @@ function renderSubBoard(task){
     board.appendChild(colEl);
 
     const cardsEl=document.getElementById('subcards-'+col.id);
+    cardsEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
+    cardsEl.addEventListener('dragleave',e=>{if(!colEl.contains(e.relatedTarget))colEl.style.background='var(--gray-light)';});
+    cardsEl.addEventListener('drop',e=>{e.preventDefault();e.stopPropagation();colEl.style.background='var(--gray-light)';if(!dragCardId)return;if(isPending){pendingDragCard={cardId:dragCardId,colId:col.id};const card=(task.cards||[]).find(c=>c.id===dragCardId);document.getElementById('pendingReason').value=card?.pendingReason||'';document.getElementById('pendingModal').classList.add('open');}else{const card=(task.cards||[]).find(c=>c.id===dragCardId);if(card){card.colId=col.id;delete card.pendingReason;}saveAppData();renderSubBoard(task);renderTasksOverview();toast('Đã chuyển thẻ');}dragCardId=null;});
     cards.forEach(card=>{
       const isLastCol = col.id===cols[cols.length-1].id || col.id==='done';
       const nextCol = !isLastCol ? cols[cols.indexOf(col)+1] : null;
@@ -3684,7 +3687,7 @@ function renderSubBoard(task){
       rowEl.appendChild(cardEl);
       rowEl.appendChild(tickWrap);
 
-      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
+      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',card.id);dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
       cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
       cardEl.addEventListener('mouseenter',e=>{
         const data=cardEl.querySelector('.kb-card-tooltip-data');
@@ -7492,7 +7495,7 @@ function renderGvKanban(tempTask){
             ${nextCol&&!isLastCol?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px">Tick → ${nextCol.label}</div>`:''}
           </div>
         </div>`;
-      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
+      cardEl.addEventListener('dragstart',e=>{e.stopPropagation();e.dataTransfer.setData('text/plain',card.id);dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
       cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
       cardsEl.appendChild(cardEl);
     });
