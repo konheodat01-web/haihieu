@@ -7272,7 +7272,7 @@ function switchTasksTab(tab){
   document.getElementById('panel-mytasks').style.display = tab==='mytasks' ? 'block' : 'none';
   document.getElementById('panel-giaoviec').style.display = tab==='giaoviec' ? 'block' : 'none';
   document.getElementById('tab-mytasks').classList.toggle('active', tab==='mytasks');
-  document.getElementById('tab-giaoviec').classList.toggle('active', tab==='giaoviec');
+  document.getElementById('tabGiaoViec').classList.toggle('active', tab==='giaoviec');
   if(tab==='giaoviec') renderGiaoViec();
 }
 
@@ -8511,9 +8511,9 @@ function qi_onDangChange(){
   if(hint) hint.style.display=dang==='url'?'block':'none';
   if(btnParse) btnParse.style.display=dang==='url'?'none':'inline-flex';
   if(btnParseUrl) btnParseUrl.style.display=dang==='url'?'inline-flex':'none';
-  // Hide steps textarea for URL mode
+  // Always show steps textarea regardless of mode
   const stepsArea=document.getElementById('qi_steps')?.closest('.form-group');
-  if(stepsArea) stepsArea.style.display=dang==='url'?'none':'block';
+  if(stepsArea) stepsArea.style.display='block';
 }
 
 function qi_parseUrl(){
@@ -8536,13 +8536,17 @@ function qi_parseUrl(){
   const priority=document.getElementById('qi_priority')?.value||'Bình thường';
   const team=document.getElementById('qi_team')?.value||'Team 01';
 
+  const manualSteps=(document.getElementById('qi_steps')?.value||'').trim();
+  const cols = manualSteps ? parseSteps(manualSteps) : null;
+  const firstColId = cols ? cols[0].id : 'todo';
+
   const startId = cardNextId;
   cardNextId += urls.length;
   qi_parsedTasks=[{
     name:taskName, person, type:'SEO', dang:'url',
     from, deadline, desc:'', priority, team,
-    cols:null,
-    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:'todo', name:u, desc:''}))
+    cols,
+    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:firstColId, name:u, desc:''}))
   }];
 
   // Show preview
@@ -8582,6 +8586,7 @@ function qi_parseUrl(){
   document.getElementById('qi_preview').innerHTML=`
     <div style="background:#f8f9fa;border-radius:8px;padding:12px 14px;margin-bottom:10px">
       <div style="font-size:13px;font-weight:600;margin-bottom:8px">${t.name}</div>
+      ${t.cols?`<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Kanban: <b style="color:var(--text)">${t.cols.map(c=>c.label).join(' → ')}</b></div>`:''}
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
         <span style="font-size:12px;background:#f0faf4;border:1px solid #a8deba;border-radius:20px;padding:2px 10px;color:#27ae60">✅ Trong kho: ${inKho}</span>
         <span style="font-size:12px;background:#fdf2f2;border:1px solid #f5c6c6;border-radius:20px;padding:2px 10px;color:var(--red)">🔍 Chưa có: ${t.cards.length-inKho}</span>
