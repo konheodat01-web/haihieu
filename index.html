@@ -516,7 +516,6 @@
     onmouseleave="document.getElementById('navBottomPopup').style.display='none'">
     <div id="navBottomPopup" style="display:none;position:absolute;bottom:100%;left:0;right:0;background:rgba(192,57,43,.1);backdrop-filter:blur(12px);border-radius:8px 8px 0 0;overflow:hidden;border:1px solid rgba(192,57,43,.2);border-bottom:none">
       <button id="navSettingsBtn"  onclick="openSettings()"       class="nb-btn" style="display:none"><span style="width:18px;text-align:center">⚙</span> Cài đặt giao diện</button>
-      <button id="navAvatarBtn"    onclick="openAvatarModal()"    class="nb-btn"><span style="width:18px;text-align:center">🖼</span> Đổi ảnh đại diện</button>
       <button id="navResetPwBtn"   onclick="openResetPwModal()"   class="nb-btn" style="display:none"><span style="width:18px;text-align:center">🔒</span> Cấp lại mật khẩu</button>
       <button                      onclick="openChangePassword()"  class="nb-btn"><span style="width:18px;text-align:center">🔑</span> Đổi mật khẩu</button>
     </div>
@@ -3133,7 +3132,6 @@ function initFirebaseListener(){
         applyAllAvatars();
         localStorage.setItem('wt_settings', JSON.stringify(_settings));
       }
-        applyLoginAvatars();
       }
 
       // Mirror everything to localStorage
@@ -4417,77 +4415,16 @@ function hideLoginScreen(){
 // ===== AVATAR =====
 let _pendingAvatar = undefined; // undefined=no change, null=remove, string=base64
 
-function openAvatarModal(){
-  _pendingAvatar = undefined;
-  const m = currentMember;
-  const cur = _settings.avatars?.[m] || null;
-  const preview = document.getElementById('avModalPreview');
-  _renderAvPreview(preview, m, cur);
-  document.getElementById('avErr').style.display='none';
-  // Bind file input fresh each open to avoid stale handlers
-  const inp = document.getElementById('avFileInput');
-  if(inp){
-    const newInp = inp.cloneNode(true);
-    inp.parentNode.replaceChild(newInp, inp);
-    newInp.addEventListener('change', handleAvatarUpload);
-  }
-  document.getElementById('avatarModal').classList.add('open');
-}
-function closeAvatarModal(){ document.getElementById('avatarModal').classList.remove('open'); }
 
-function _renderAvPreview(el, member, src){
-  if(!el) return;
-  if(src){
-    el.innerHTML=`<img src="${src}" style="width:100%;height:100%;object-fit:cover">`;
-    el.style.background='#f0f0f0';
-  } else {
-    const styles = { admin:'background:#2c3e50;color:#fff', hieu:'background:#eaf4fd;color:#2980b9', hai:'background:#fdf2f2;color:#c0392b' };
-    el.setAttribute('style', el.getAttribute('style').replace(/background:[^;]+;color:[^;]+/,'') + ';' + (styles[member]||'background:#eee;color:#333'));
-    el.innerHTML = member==='admin'?'⚙':'H';
-  }
-}
 
-function handleAvatarUpload(event){
-  const file = event.target.files[0];
-  console.log('Avatar file selected:', file?.name, file?.size);
-  if(!file) return;
-  const err = document.getElementById('avErr');
-  if(file.size > 3*1024*1024){ err.textContent='Ảnh quá lớn (tối đa 3MB)'; err.style.display='block'; return; }
-  err.style.display='none';
-  const reader = new FileReader();
-  reader.onload = function(e){
-    console.log('FileReader loaded, length:', e.target.result?.length);
-    _pendingAvatar = e.target.result;
-    const preview = document.getElementById('avModalPreview');
-    if(preview){
-      preview.style.background = 'transparent';
-      preview.innerHTML = `<img src="${_pendingAvatar}" style="width:100%;height:100%;object-fit:cover;display:block;border-radius:50%">`;
-      console.log('Preview updated');
-    } else {
-      console.error('avModalPreview not found');
-    }
-  };
-  reader.onerror = function(){ err.textContent='Lỗi đọc file.'; err.style.display='block'; };
-  reader.readAsDataURL(file);
-}
 
-function removeAvatar(){
-  _pendingAvatar = null;
-  _renderAvPreview(document.getElementById('avModalPreview'), currentMember, null);
-}
 
-function saveAvatar(){
-  console.log('saveAvatar called, _pendingAvatar:', _pendingAvatar === undefined ? 'undefined' : _pendingAvatar === null ? 'null' : 'has data ('+(_pendingAvatar?.length||0)+' chars)');
-  if(_pendingAvatar === undefined){ closeAvatarModal(); return; }
-  if(!_settings.avatars) _settings.avatars = {};
-  if(_pendingAvatar === null) delete _settings.avatars[currentMember];
-  else _settings.avatars[currentMember] = _pendingAvatar;
-  console.log('Saving avatar for', currentMember, 'avatars keys:', Object.keys(_settings.avatars));
-  applyAllAvatars();
-  saveAppData();
-  closeAvatarModal();
-  toast('✓ Đã cập nhật ảnh đại diện');
-}
+
+
+
+
+
+
 
 function applyAllAvatars(){
   const avs = _settings.avatars || {};
@@ -4637,90 +4574,7 @@ function pqGetInput(){ return document.getElementById('uniInput')?.value||''; }
 
 // ===== PROFILE AVATARS =====
 function getProfileAvatars(){
-  try{
-    const s = JSON.parse(localStorage.getItem('wt_settings')||'{}');
-    return s.avatars || {};
-  }catch(e){ return {}; }
-}
-
-function openAvatarSettings(){
-  document.getElementById('navBottomPopup').style.display='none';
-  // Populate previews with current avatars
-  ['admin','hai','hieu'].forEach(m => refreshAvPreview(m));
-  document.getElementById('avatarSettingsModal').classList.add('open');
-}
-function closeAvatarSettings(){ document.getElementById('avatarSettingsModal').classList.remove('open'); }
-
-function refreshAvPreview(member){
-  const el = document.getElementById('avPreview_'+member);
-  if(!el) return;
-  const avatars = getProfileAvatars();
-  if(avatars[member]){
-    el.innerHTML=`<img src="${avatars[member]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-  } else {
-    const defaults = {admin:'⚙', hieu:'H', hai:'H'};
-    el.innerHTML = defaults[member]||'?';
-  }
-}
-
-function handleAvatarUpload(event, member){
-  const file = event.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    // Compress to ~200x200 via canvas
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const size = 200;
-      canvas.width = size; canvas.height = size;
-      const ctx = canvas.getContext('2d');
-      // Crop to square from center
-      const s = Math.min(img.width, img.height);
-      const sx = (img.width-s)/2, sy = (img.height-s)/2;
-      ctx.drawImage(img, sx, sy, s, s, 0, 0, size, size);
-      const base64 = canvas.toDataURL('image/jpeg', 0.8);
-      const avatars = getProfileAvatars();
-      avatars[member] = base64;
-      localStorage.setItem('wt_avatars', JSON.stringify(avatars));
-      refreshAvPreview(member);
-      applyLoginAvatars();
-      saveAppData();
-      toast('✓ Đã cập nhật ảnh đại diện');
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-  event.target.value=''; // allow re-upload same file
-}
-
-function removeAvatar(member){
-  const avatars = getProfileAvatars();
-  delete avatars[member];
-  localStorage.setItem('wt_avatars', JSON.stringify(avatars));
-  refreshAvPreview(member);
-  applyLoginAvatars();
-  saveAppData();
-}
-
-function applyLoginAvatars(){
-  const avatars = getProfileAvatars();
-  const MAP = {
-    admin: { fallbackHtml:'⚙', fallbackStyle:'background:#2c3e50;color:#fff' },
-    hieu:  { fallbackHtml:'H', fallbackStyle:'background:#eaf4fd;color:#2980b9' },
-    hai:   { fallbackHtml:'H', fallbackStyle:'background:#fdf2f2;color:#c0392b' },
-  };
-  ['admin','hai','hieu'].forEach(m=>{
-    const el = document.getElementById('loginAv_'+m);
-    if(!el) return;
-    if(avatars[m]){
-      el.style.cssText = el.style.cssText.replace(/background:[^;]+;|color:[^;]+;/g,'');
-      el.innerHTML = `<img src="${avatars[m]}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-    } else {
-      el.style.background = MAP[m].fallbackStyle.split(';')[0].split(':')[1].trim();
-      el.innerHTML = MAP[m].fallbackHtml;
-    }
-  });
+  try{ const s=JSON.parse(localStorage.getItem('wt_settings')||'{}'); return s.avatars||{}; }catch(e){ return {}; }
 }
 
 // ===== GLOBAL KB CARD TOOLTIP =====
@@ -8860,7 +8714,6 @@ loadAppData();
     applyAllAvatars();
   }catch(e){}
 })();
-applyLoginAvatars();
 renderDashboard();
 renderHai();
 renderHieu();
@@ -9218,36 +9071,6 @@ setTimeout(initFirebaseListener, 1000);
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeManageAssignees()">Đóng</button>
-    </div>
-  </div>
-</div>
-
-<!-- AVATAR MODAL -->
-<div class="modal-overlay" id="avatarModal" onclick="if(event.target===this)closeAvatarModal()">
-  <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h3>🖼 Đổi ảnh đại diện</h3>
-      <button class="modal-close" onclick="closeAvatarModal()">&times;</button>
-    </div>
-    <div class="modal-body" style="gap:14px;align-items:center">
-      <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%">
-        <div id="avModalPreview" style="width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:700;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.12);border:3px solid var(--gray-border)"></div>
-        <div style="font-size:12px;color:var(--text-muted);text-align:center">
-          <span style="color:#2980b9;font-weight:500">Kích thước chuẩn: 200 × 200 px</span> (vuông). Tối đa 3MB.
-        </div>
-      </div>
-      <div style="width:100%">
-        <input type="file" id="avFileInput" accept="image/jpeg,image/png,image/webp,image/gif"
-          style="width:100%;font-size:13px;padding:6px;border:1px solid var(--gray-border);border-radius:6px;cursor:pointer;background:#f8f9fa">
-      </div>
-      <div style="display:flex;gap:8px;width:100%">
-        <button onclick="removeAvatar()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6">🗑 Xoá ảnh hiện tại</button>
-      </div>
-      <div id="avErr" style="display:none;color:#e74c3c;font-size:12px;width:100%"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeAvatarModal()">Huỷ</button>
-      <button class="btn btn-primary" onclick="saveAvatar()">✓ Lưu</button>
     </div>
   </div>
 </div>
