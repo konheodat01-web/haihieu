@@ -3525,7 +3525,17 @@ function initFirebaseListener(){
     if(!r) return;
     console.log('Firebase received, _sid=', r._sid, 'mySession=', _sessionId, 'tasks=', (r.tasks||[]).length);
     // Only skip pushes from THIS session (to avoid echo)
-    if(r._sid && r._sid === _sessionId){ console.log('Skipped own push'); return; }
+    if(r._sid && r._sid === _sessionId){
+      // Own push — skip data reload but still update badges and active renders
+      console.log('Skipped own push');
+      updateNavBadges();
+      renderTasksOverview();
+      if(document.querySelector('.page.active')?.id==='page-tasks'){
+        const gvPanel = document.getElementById('panel-giaoviec');
+        if(gvPanel && gvPanel.style.display!=='none') renderGiaoViec();
+      }
+      return;
+    }
 
     // Skip if Firebase data is OLDER than our local save — but ONLY within 5s of page load
     // After that, always accept Firebase to allow cross-device sync
@@ -4000,20 +4010,48 @@ function renderTasksOverview(){
     </div>`;
   };
 
+  // Separate done vs active
+  const isTaskDone = t => calcProjectProgress(t)>=100 || calcTaskAutoStatus(t)==='Hoàn thành';
+  const activeList = list.filter(t=>!isTaskDone(t));
+  const doneList   = list.filter(t=>isTaskDone(t));
+
+  const withDeadlineActive = activeList.filter(t=>t.deadline);
+  const noDeadlineActive   = activeList.filter(t=>!t.deadline);
+
   let html = '';
-  if(withDeadline.length){
-    // Sort by deadline asc
-    const sorted = [...withDeadline].sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  if(withDeadlineActive.length){
+    const sorted = [...withDeadlineActive].sort((a,b)=>a.deadline.localeCompare(b.deadline));
     html += `<div class="task-group-label">&#128198; Có deadline <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(${sorted.length})</span></div>`;
     html += sorted.map(renderRow).join('');
   }
-  if(noDeadline.length){
-    html += `<div class="task-group-label" style="margin-top:${withDeadline.length?16:0}px">&#8734; Không có deadline <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(${noDeadline.length})</span></div>`;
-    html += noDeadline.map(renderRow).join('');
+  if(noDeadlineActive.length){
+    html += `<div class="task-group-label" style="margin-top:${withDeadlineActive.length?16:0}px">&#8734; Không có deadline <span style="font-size:11px;font-weight:400;color:var(--text-muted)">(${noDeadlineActive.length})</span></div>`;
+    html += noDeadlineActive.map(renderRow).join('');
   }
+
+  // Done section — collapsible
+  if(doneList.length){
+    const doneOpen = (localStorage.getItem('tk_done_open')||'0')==='1';
+    html += `<div onclick="toggleTaskDoneSection()" style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:#f0faf4;border-top:2px solid #a8deba;border-radius:6px;margin-top:16px;user-select:none">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#27ae60">✅ Đã hoàn thành (${doneList.length})</span>
+      <span id="tkDoneChevron" style="font-size:11px;color:#27ae60;margin-left:auto;transition:transform .2s;display:inline-block;transform:${doneOpen?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+    </div>`;
+    if(doneOpen){
+      html += `<div id="tkDoneList">${doneList.map(renderRow).join('')}</div>`;
+    } else {
+      html += `<div id="tkDoneList" style="display:none"></div>`;
+    }
+  }
+
   grid.innerHTML = html;
   initTaskGridDrag();
   updateNavBadges();
+}
+
+function toggleTaskDoneSection(){
+  const cur = (localStorage.getItem('tk_done_open')||'0')==='1';
+  localStorage.setItem('tk_done_open', cur?'0':'1');
+  renderTasksOverview();
 }
 
 function openProjectBoard(id){
