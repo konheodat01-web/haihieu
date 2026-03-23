@@ -4844,7 +4844,7 @@ function setMember(m){
   if(settingsBtn) settingsBtn.style.display=m==='admin'?'flex':'none';
   applyAllAvatars();
   updateNavBadges();
-  showPage('dashboard');
+  if(window._memberSwitching){ showPage('dashboard'); window._memberSwitching=false; }
 }
 
 // Patch renders to respect member filter
@@ -9545,6 +9545,7 @@ window._websites = websites;
 let _switchPwTarget = null;
 
 function switchMemberWithPw(m){
+  window._memberSwitching = true;
   document.getElementById('memberDropdown').classList.remove('open');
   if(m === currentMember) return;
   _switchPwTarget = m;
