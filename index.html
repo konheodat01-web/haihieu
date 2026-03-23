@@ -1652,7 +1652,7 @@
         <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
           <input type="hidden" id="wf_id">
           <div class="form-group"><label>Tên brand *</label><input type="text" id="wf_brand" style="width:100%" placeholder="VD: Debet, CafeLegend..."></div>
-          <div class="form-group"><label>URL *</label><input type="text" id="wf_url" style="width:100%" placeholder="https://debets.sbs"></div>
+          <div class="form-group"><label>URL *</label><input type="text" id="wf_url" style="width:100%" placeholder="debets.sbs" oninput="this.value=normalizeUrl(this.value)"></div>
           <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="wp-admin, admin..." oninput="this.value=this.value.replace(/^\/+/,'')" onblur="this.value=this.value.replace(/\/+$/,'')"></div>
           <div class="form-group"><label>Tài khoản</label>
             <div style="display:flex;gap:4px">
@@ -6129,11 +6129,12 @@ function clearWebsiteForm(){
 }
 
 function normalizeAdmin(v){ return (v||'').trim().replace(/^\/+|\/+$/g,''); }
+function normalizeUrl(v){ return (v||'').trim().replace(/^https?:\/\//i,'').replace(/[\/\\:]+$/g,''); }
 function joinAdminUrl(url, admin){ let u=(url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; const a=normalizeAdmin(admin); return a ? u+'/'+a : u; }
 
 function saveWebsite(){
   const brand=(document.getElementById('wf_brand')?.value||'').trim();
-  const url=(document.getElementById('wf_url')?.value||'').trim();
+  const url=normalizeUrl(document.getElementById('wf_url')?.value||'');
   if(!brand){toast('Vui lòng nhập tên brand!','#e74c3c');return;}
   const newId = editingWsId ? editingWsId : wsNextId++;
   const obj={
@@ -6669,7 +6670,7 @@ function wsImportParseLines(){
     const parts = line.split(sep).map(p=>p.trim());
     if(parts.length>=2){
       const urlRaw = parts[0]||'';
-      const url = /^https?:\/\//i.test(urlRaw) ? urlRaw : ('https://'+urlRaw.replace(/\/$/,'')+'/');
+      const url = normalizeUrl(urlRaw);
       return {
         brand: parts[1]||urlRaw.replace(/https?:\/\//,'').split('.')[0],
         url,
@@ -6685,7 +6686,7 @@ function wsImportParseLines(){
     } else {
       // Plain URL only - derive brand
       const urlRaw = parts[0];
-      const url = /^https?:\/\//i.test(urlRaw) ? urlRaw : ('https://'+urlRaw.replace(/\/$/,'')+'/');
+      const url = normalizeUrl(urlRaw);
       let brand = urlRaw.replace(/https?:\/\//,'').replace(/^www\./,'').split('/')[0].split('.')[0];
       brand = brand.charAt(0).toUpperCase()+brand.slice(1);
       return { brand, url, admin:'wp-admin', account:'', password:'', status, team, owner, group:'', note:'' };
@@ -6712,8 +6713,7 @@ function wsImportRun(){
   items.forEach(w=>{
     if(!w.url && !w.brand) return;
     const dup = websites.find(x=>
-      (w.url && x.url && x.url.replace(/\/$/,'')===w.url.replace(/\/$/,'')) ||
-      (x.brand.toLowerCase()===w.brand.toLowerCase())
+      w.url && x.url && x.url.replace(/\/$/,'')===w.url.replace(/\/$/,'')
     );
     if(dup) toDup.push({item:w, dup});
     else toAdd.push(w);
