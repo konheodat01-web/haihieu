@@ -286,21 +286,21 @@
     <div onclick="selectProfile('admin')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(231,76,60,.2)';this.style.borderColor='rgba(231,76,60,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div id="loginAv_admin" style="width:64px;height:64px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(0,0,0,.4);overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+      <div id="loginAv_admin" style="width:64px;height:64px;border-radius:50%;background:#2c3e50;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px;box-shadow:0 4px 16px rgba(0,0,0,.4);overflow:hidden">⚙</div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Admin</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Toàn quyền truy cập</div>
     </div>
     <div onclick="selectProfile('hieu')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(41,128,185,.2)';this.style.borderColor='rgba(41,128,185,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div id="loginAv_hieu" style="width:64px;height:64px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(41,128,185,.35);overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+      <div id="loginAv_hieu" style="width:64px;height:64px;border-radius:50%;background:#eaf4fd;color:#2980b9;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(41,128,185,.35);overflow:hidden">H</div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Hiếu</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Sheet Hiếu · Tasks</div>
     </div>
     <div onclick="selectProfile('hai')" style="width:180px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:28px 20px;text-align:center;cursor:pointer;transition:all .2s"
       onmouseover="this.style.background='rgba(231,76,60,.2)';this.style.borderColor='rgba(231,76,60,.6)';this.style.transform='translateY(-4px)'"
       onmouseout="this.style.background='rgba(255,255,255,.06)';this.style.borderColor='rgba(255,255,255,.12)';this.style.transform=''">
-      <div id="loginAv_hai" style="width:64px;height:64px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(192,57,43,.35);overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+      <div id="loginAv_hai" style="width:64px;height:64px;border-radius:50%;background:#fdf2f2;color:#c0392b;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 16px;box-shadow:0 4px 16px rgba(192,57,43,.35);overflow:hidden">H</div>
       <div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:6px">Hải</div>
       <div style="color:rgba(255,255,255,.4);font-size:12px">Sheet Hải · Tasks</div>
     </div>
@@ -340,22 +340,22 @@
 <header>
   <div style="display:flex;align-items:center;gap:12px">
     <div class="member-picker" id="memberPicker">
-      <div class="member-avatar" id="memberAvatar" onclick="toggleMemberDropdown()" style="overflow:hidden;padding:0"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+      <div class="member-avatar" id="memberAvatar" onclick="toggleMemberDropdown()" style="overflow:hidden;padding:0"></div>
       <div class="member-role-label" id="memberRoleLabel">Admin</div>
       <div class="member-dropdown" id="memberDropdown">
         <div class="md-header">Xem với tư cách</div>
-        <div class="md-item active" id="mdi-admin" onclick="setMember('admin')">
-          <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+        <div class="md-item active" id="mdi-admin" onclick="switchMemberWithPw('admin')">
+          <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;overflow:hidden"></div>
           <div><div class="md-name">Admin</div><div class="md-role">Xem toàn bộ</div></div>
           <span class="md-check" id="mdc-admin">&#10003;</span>
         </div>
-        <div class="md-item" id="mdi-hieu" onclick="setMember('hieu')">
-          <div class="md-avatar" id="md-avatar-hieu" style="background:#eaf4fd;overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+        <div class="md-item" id="mdi-hieu" onclick="switchMemberWithPw('hieu')">
+          <div class="md-avatar" id="md-avatar-hieu" style="background:#eaf4fd;overflow:hidden"></div>
           <div><div class="md-name">Hiếu</div><div class="md-role">Sheet Hiếu + Tasks</div></div>
           <span class="md-check" id="mdc-hieu" style="display:none">&#10003;</span>
         </div>
-        <div class="md-item" id="mdi-hai" onclick="setMember('hai')">
-          <div class="md-avatar" id="md-avatar-hai" style="background:#fdf2f2;overflow:hidden"><img src="data:image/png;base64," style="width:100%;height:100%;object-fit:cover;display:block"></div>
+        <div class="md-item" id="mdi-hai" onclick="switchMemberWithPw('hai')">
+          <div class="md-avatar" id="md-avatar-hai" style="background:#fdf2f2;overflow:hidden"></div>
           <div><div class="md-name">Hải</div><div class="md-role">Sheet Hải + Tasks</div></div>
           <span class="md-check" id="mdc-hai" style="display:none">&#10003;</span>
         </div>
@@ -759,7 +759,7 @@
   <!-- TAB BAR -->
   <div style="display:flex;background:#fff;border-radius:8px 8px 0 0;border:1px solid var(--gray-border);border-bottom:none;width:fit-content;margin-bottom:0;overflow:hidden">
     <button class="gv-tab active" id="tab-mytasks" onclick="switchTasksTab('mytasks')">📋 Task của tôi</button>
-    <button class="gv-tab" id="tabGiaoViec" onclick="switchTasksTab('giaoviec')">📤 Giao việc <span id="gvBadge" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px"></span></button>
+    <button class="gv-tab" id="tab-giaoviec" onclick="switchTasksTab('giaoviec')">📤 Giao việc <span id="gvBadge" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px"></span></button>
   </div>
 
   <!-- PANEL: TASK CỦA TÔI -->
@@ -2210,6 +2210,90 @@ function renderDashboard(){
     return rows.join('');
   }
 
+  const avgLabel = (avg) => {
+    const label = avg<200000?'Lôi ra ngoài, trảm!':avg<300000?'Trẫm khen!':'Người đâu, ban thưởng!';
+    return `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:#f1c40f;font-weight:600">${label}</span><span style="font-size:12px;opacity:.9">~${avg.toLocaleString('vi-VN')} đ/ngày</span></div>`;
+  };
+  const calcAvg = (t) => {
+    const ps=getPeriodStart(), today=todayVN();
+    const d0=new Date(ps+'T12:00:00'), d1=new Date(today+'T12:00:00');
+    const days=Math.max(1,Math.round((d1-d0)/(1000*60*60*24))+1);
+    return Math.round(t/days);
+  };
+  const buildChart = (sheet, luong) => {
+    const ps = getPeriodStart(), today = todayVN();
+    const allDates = [];
+    let d = new Date(ps+'T12:00:00');
+    const dEnd = new Date(today+'T12:00:00');
+    while(d <= dEnd){ allDates.push(d.toISOString().split('T')[0]); d.setDate(d.getDate()+1); }
+    const earMap = {};
+    data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
+      const nt = r.nghiemThu===undefined?100:r.nghiemThu;
+      earMap[r.ngay] = (earMap[r.ngay]||0) + getLoaiPrice(r.loai,sheet)*(nt/100);
+    });
+    const maxEar = Math.max(1, ...allDates.map(d=>earMap[d]||0));
+    const barW = Math.max(20, Math.min(40, Math.floor(700/allDates.length)));
+    const name = sheet==='hai'?'Hải':'Hiếu';
+    const bars = allDates.map(d=>{
+      const val = earMap[d]||0;
+      const pct = Math.round((val/maxEar)*80);
+      const color = val===0?'#ddd':sheet==='hai'?'var(--red)':'var(--blue)';
+      return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;width:${barW}px">
+        <div style="font-size:9px;color:var(--text-muted);height:16px;display:flex;align-items:flex-end">${val>0?Math.round(val/1000)+'k':''}</div>
+        <div style="width:${barW-4}px;height:${pct||3}px;background:${color};border-radius:2px 2px 0 0;min-height:3px"></div>
+        <div style="font-size:9px;color:var(--text-muted);writing-mode:vertical-lr;transform:rotate(180deg);height:26px;overflow:hidden">${fmtDate(d)}</div>
+      </div>`;
+    }).join('');
+    return `<div class="rh">
+        <span>📈 THU NHẬP THEO NGÀY — ${name.toUpperCase()}</span>
+      </div>
+      <div style="padding:12px 16px">
+        <div style="display:flex;align-items:flex-end;gap:1px;overflow-x:auto;padding-bottom:4px;min-height:110px">${bars}</div>
+      </div>`;
+  };
+  const buildFlexPanel = (sheet) => {
+    const flexItems = getFlexSalary(sheet);
+    const flexRows = flexItems.length ? flexItems.map((item,i)=>{
+      const isThuong = item.loai==='thuong';
+      return `<tr>
+        <td style="font-size:11px">${item.ngay?fmtDate(item.ngay):''}</td>
+        <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.lydo||''}">${item.lydo||'—'}</td>
+        <td class="num" style="font-size:11px;color:${isThuong?'var(--green)':'var(--red)'};font-weight:600">${isThuong?'+':'-'}${fmt(item.amount)}</td>
+        <td style="padding:2px 4px;white-space:nowrap">
+          <button onclick="event.stopPropagation();_editFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:11px;padding:1px 4px">✎</button>
+          <button onclick="event.stopPropagation();_deleteFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:1px 3px">✕</button>
+        </td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px">Chưa có khoản nào</td></tr>`;
+    return `<div class="report-card ${sheet}" style="align-self:start">
+      <div class="rh" style="justify-content:space-between">
+        <span>🎁 THƯỞNG / PHẠT — ${sheet==='hai'?'HẢI':'HIẾU'}</span>
+        <div style="display:flex;gap:4px">
+          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','thuong')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Thưởng</button>
+          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','phat')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Phạt</button>
+        </div>
+      </div>
+      <table class="report-table">
+        <thead><tr><th>Ngày</th><th>Lý do</th><th>Giá trị</th><th></th></tr></thead>
+        <tbody>${flexRows}</tbody>
+      </table>
+    </div>`;
+  };
+  const buildSalaryExtra2 = (name, sc, net, sheet) => `
+    <div class="report-card ${sheet}" style="align-self:start">
+      <div class="rh"><span>💰 THỰC NHẬN — ${name.toUpperCase()}</span></div>
+      <table class="report-table">
+        <tbody>
+          <tr><td>Lương bài</td><td></td><td class="num money">${fmt(net+(sc.chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0)-(sc.phuCap||[]).reduce((a,x)=>a+(x.amount||0),0)+getTotalPhat(sheet)-getTotalThuong(sheet))}</td></tr>
+          ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
+          ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
+          <tr><td style="color:var(--green)">🟢 Tổng thưởng</td><td></td><td class="num money">+${fmt(getTotalThuong(sheet))}</td></tr>
+          <tr><td style="color:var(--red)">🔴 Tổng phạt</td><td></td><td class="num money-red">−${fmt(getTotalPhat(sheet))}</td></tr>
+        </tbody>
+        <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(net)}</b></td></tr></tfoot>
+      </table>
+    </div>`;
+
   // ---- MEMBER VIEW: Hải hoặc Hiếu ----
   if(member==='hai'||member==='hieu'){
     const sheet = member;
@@ -2245,27 +2329,31 @@ function renderDashboard(){
 
     const sc = getSalaryConfig(sheet);
     const netTotal = total - getTotalChiPhi(sheet) + getTotalPhuCap(sheet) - getTotalPhat(sheet) + getTotalThuong(sheet);
-    const hasExtra = (sc.chiPhi||[]).length||(sc.phuCap||[]).length;
     document.getElementById('reportGrid').innerHTML = `
-      <div class="report-card ${sheet}" style="grid-column:1/-1">
-        <div class="rh">&#128100; BÁO CÁO LƯƠNG — ${name.toUpperCase()}</div>
-        <table class="report-table">
-          <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
-          <tbody>${buildDayRows(sheet)}</tbody>
-          <tfoot>${buildTotalRows(sheet)}</tfoot>
-        </table>
+      <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
+        <div class="report-card ${sheet}">
+          <div class="rh">
+            <span>&#128100; BÁO CÁO CV ${name.toUpperCase()}</span>
+            ${avgLabel(calcAvg(total))}
+          </div>
+          <table class="report-table">
+            <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
+          </table>
+          <div style="height:320px;overflow-y:auto">
+            <table class="report-table" style="border-top:none">
+              <tbody>${buildDayRows(sheet)}</tbody>
+            </table>
+          </div>
+          <table class="report-table" style="border-top:2px solid var(--gray-border)">
+            <tfoot>${buildTotalRows(sheet)}</tfoot>
+          </table>
+        </div>
+        ${buildSalaryExtra2(name, sc, netTotal, sheet)}
       </div>
-      ${hasExtra?`<div class="report-card ${sheet}" style="grid-column:1/-1">
-        <div class="rh">💰 THỰC NHẬN — ${name.toUpperCase()}</div>
-        <table class="report-table">
-          <tbody>
-            <tr><td>Lương bài</td><td></td><td class="num money">${fmt(total)}</td></tr>
-            ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
-            ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
-          </tbody>
-          <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(netTotal)}</b></td></tr></tfoot>
-        </table>
-      </div>`:''}
+      <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
+        ${buildFlexPanel(sheet)}
+        <div class="report-card ${sheet}">${buildChart(sheet, total)}</div>
+      </div>
     `;
     return;
   }
@@ -2371,90 +2459,6 @@ function renderDashboard(){
   }
 
   // Build avg label helper
-  const avgLabel = (avg) => {
-    const label = avg<200000?'Lôi ra ngoài, trảm!':avg<300000?'Trẫm khen!':'Người đâu, ban thưởng!';
-    return `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:#f1c40f;font-weight:600">${label}</span><span style="font-size:12px;opacity:.9">~${avg.toLocaleString('vi-VN')} đ/ngày</span></div>`;
-  };
-  const calcAvg = (t) => {
-    const ps=getPeriodStart(), today=todayVN();
-    const d0=new Date(ps+'T12:00:00'), d1=new Date(today+'T12:00:00');
-    const days=Math.max(1,Math.round((d1-d0)/(1000*60*60*24))+1);
-    return Math.round(t/days);
-  };
-  const buildChart = (sheet, luong) => {
-    const ps = getPeriodStart(), today = todayVN();
-    const allDates = [];
-    let d = new Date(ps+'T12:00:00');
-    const dEnd = new Date(today+'T12:00:00');
-    while(d <= dEnd){ allDates.push(d.toISOString().split('T')[0]); d.setDate(d.getDate()+1); }
-    const earMap = {};
-    data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
-      const nt = r.nghiemThu===undefined?100:r.nghiemThu;
-      earMap[r.ngay] = (earMap[r.ngay]||0) + getLoaiPrice(r.loai,sheet)*(nt/100);
-    });
-    const maxEar = Math.max(1, ...allDates.map(d=>earMap[d]||0));
-    const barW = Math.max(20, Math.min(40, Math.floor(700/allDates.length)));
-    const name = sheet==='hai'?'Hải':'Hiếu';
-    const bars = allDates.map(d=>{
-      const val = earMap[d]||0;
-      const pct = Math.round((val/maxEar)*80);
-      const color = val===0?'#ddd':sheet==='hai'?'var(--red)':'var(--blue)';
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;width:${barW}px">
-        <div style="font-size:9px;color:var(--text-muted);height:16px;display:flex;align-items:flex-end">${val>0?Math.round(val/1000)+'k':''}</div>
-        <div style="width:${barW-4}px;height:${pct||3}px;background:${color};border-radius:2px 2px 0 0;min-height:3px"></div>
-        <div style="font-size:9px;color:var(--text-muted);writing-mode:vertical-lr;transform:rotate(180deg);height:26px;overflow:hidden">${fmtDate(d)}</div>
-      </div>`;
-    }).join('');
-    return `<div class="rh">
-        <span>📈 THU NHẬP THEO NGÀY — ${name.toUpperCase()}</span>
-      </div>
-      <div style="padding:12px 16px">
-        <div style="display:flex;align-items:flex-end;gap:1px;overflow-x:auto;padding-bottom:4px;min-height:110px">${bars}</div>
-      </div>`;
-  };
-  const buildFlexPanel = (sheet) => {
-    const flexItems = getFlexSalary(sheet);
-    const flexRows = flexItems.length ? flexItems.map((item,i)=>{
-      const isThuong = item.loai==='thuong';
-      return `<tr>
-        <td style="font-size:11px">${item.ngay?fmtDate(item.ngay):''}</td>
-        <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.lydo||''}">${item.lydo||'—'}</td>
-        <td class="num" style="font-size:11px;color:${isThuong?'var(--green)':'var(--red)'};font-weight:600">${isThuong?'+':'-'}${fmt(item.amount)}</td>
-        <td style="padding:2px 4px;white-space:nowrap">
-          <button onclick="event.stopPropagation();_editFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:11px;padding:1px 4px">✎</button>
-          <button onclick="event.stopPropagation();_deleteFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:1px 3px">✕</button>
-        </td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px">Chưa có khoản nào</td></tr>`;
-    return `<div class="report-card ${sheet}" style="align-self:start">
-      <div class="rh" style="justify-content:space-between">
-        <span>🎁 THƯỞNG / PHẠT — ${sheet==='hai'?'HẢI':'HIẾU'}</span>
-        <div style="display:flex;gap:4px">
-          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','thuong')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Thưởng</button>
-          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','phat')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Phạt</button>
-        </div>
-      </div>
-      <table class="report-table">
-        <thead><tr><th>Ngày</th><th>Lý do</th><th>Giá trị</th><th></th></tr></thead>
-        <tbody>${flexRows}</tbody>
-      </table>
-    </div>`;
-  };
-  const buildSalaryExtra2 = (name, sc, net, sheet) => `
-    <div class="report-card ${sheet}" style="align-self:start">
-      <div class="rh"><span>💰 THỰC NHẬN — ${name.toUpperCase()}</span></div>
-      <table class="report-table">
-        <tbody>
-          <tr><td>Lương bài</td><td></td><td class="num money">${fmt(net+(sc.chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0)-(sc.phuCap||[]).reduce((a,x)=>a+(x.amount||0),0)+getTotalPhat(sheet)-getTotalThuong(sheet))}</td></tr>
-          ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
-          ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
-          <tr><td style="color:var(--green)">🟢 Tổng thưởng</td><td></td><td class="num money">+${fmt(getTotalThuong(sheet))}</td></tr>
-          <tr><td style="color:var(--red)">🔴 Tổng phạt</td><td></td><td class="num money-red">−${fmt(getTotalPhat(sheet))}</td></tr>
-        </tbody>
-        <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(net)}</b></td></tr></tfoot>
-      </table>
-    </div>`;
-
   document.getElementById('reportGrid').innerHTML = `
     <!-- HAI SECTION -->
     <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
@@ -8248,7 +8252,8 @@ function recallGiaoViec(id){
   const g = giaoViecList.find(x=>x.id===id);
   if(!g) return;
   if(!confirm(`Thu hồi "${g.taskName}"?\nTask sẽ trở về tab "Task của tôi".`)) return;
-  // Restore to tasks
+  // Person: giao lại cho người thu hồi (Hiếu/admin), không phải Hải
+  const recallPerson = currentMember==='hieu' ? 'Hiếu' : currentMember==='admin' ? (g.taskPerson==='Hải'?'Hiếu':g.taskPerson||'') : g.taskPerson||'';
   const restored = {
     id: g.taskId || (taskNextId++),
     name: g.taskName,
@@ -8256,7 +8261,7 @@ function recallGiaoViec(id){
     desc: g.taskDesc||'',
     deadline: g.taskDeadline||'',
     priority: g.taskPriority||'Bình thường',
-    person: g.taskPerson||'',
+    person: recallPerson,
     team: g.taskTeam||'Team 01',
     from: g.taskFrom||todayVN(),
     cols: g.taskCols||null,
