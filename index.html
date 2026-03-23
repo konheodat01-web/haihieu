@@ -640,6 +640,7 @@
             <th class="fh" onclick="openFilter('hai','anchor',this)">Anchor <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','chuyenMuc',this)">Chuyên mục <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
+            <th style="width:56px;text-align:center">NT</th>
             <th>Xem</th><th></th>
           </tr>
         </thead>
@@ -743,6 +744,7 @@
             <th class="fh" onclick="openFilter('hieu','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','spin',this)">Spin <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hieu','index',this)">Index <span class="fh-ic">&#9660;</span></th>
+            <th style="width:56px;text-align:center">NT</th>
             <th>Xem</th><th></th>
           </tr>
         </thead>
@@ -3123,6 +3125,7 @@ function renderHai(){
       <td class="ec" onclick="editCell('hai',${r.id},'anchor',this)" style="color:var(--text-muted);max-width:100px">${r.anchor||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
       <td class="ec" onclick="editCell('hai',${r.id},'link',this)" style="max-width:140px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.link||''}">${r.link||'<span style=color:var(--text-muted)>—</span>'}</span></td>
+      <td style="text-align:center;cursor:pointer" onclick="openNghiemThu('hai',${r.id})">${nghiemThuBadge(r.nghiemThu===undefined?100:r.nghiemThu)}</td>
       <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hai',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hai',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hai',${r.id})">&#128465;</button></td>
     </tr>`;}).join('');
@@ -3169,6 +3172,7 @@ function renderHieu(){
       <td class="ec" onclick="editCell('hieu',${r.id},'link',this)" style="max-width:130px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.link||''}">${r.link||'<span style=color:var(--text-muted)>—</span>'}</span></td>
       <td class="ec" onclick="editCell('hieu',${r.id},'spin',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.spin||''}">${r.spin||'<span style=color:var(--text-muted)>—</span>'}</span></td>
       <td class="ec" onclick="editCell('hieu',${r.id},'index',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.index||''}">${r.index||'<span style=color:var(--text-muted)>—</span>'}</span></td>
+      <td style="text-align:center;cursor:pointer" onclick="openNghiemThu('hieu',${r.id})">${nghiemThuBadge(r.nghiemThu===undefined?100:r.nghiemThu)}</td>
       <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hieu',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hieu',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hieu',${r.id})">&#128465;</button></td>
     </tr>`;}).join('');
@@ -7821,9 +7825,26 @@ function gvCalcStatus(g){
   const firstColId = cols ? cols[0].id : 'col_new';
   const allDone = g.taskCards.every(c=>c.colId===lastColId||c.colId==='done');
   if(allDone) return 'Hoàn thành';
-  const allFirst = g.taskCards.every(c=>c.colId===firstColId||c.colId==='todo');
+  const allFirst = g.taskCards.every(c=>(c.colId===firstColId||c.colId==='todo'||!c.colId));
   if(allFirst) return 'Chờ làm';
   return 'Đang làm';
+}
+
+// Gọi sau mỗi thay đổi card GV: tự cập nhật status và thông báo khi done
+function gvSyncStatus(g){
+  const prev = g.status;
+  const next = gvCalcStatus(g);
+  if(next === prev) return;
+  g.status = next;
+  if(next === 'Hoàn thành' && prev !== 'Hoàn thành'){
+    // Notify người giao và admin
+    const who = g.assignee || 'Người thực hiện';
+    const fromName = g.from || 'Admin';
+    toast(`✅ "${g.taskName}" đã hoàn thành bởi ${who}!`, '#27ae60', 5000);
+    // Lưu vào gv_notifications để admin/người giao thấy khi mở app
+    if(!window._gvNotifs) window._gvNotifs=[];
+    window._gvNotifs.unshift({id:Date.now(), gvId:g.id, taskName:g.taskName, assignee:who, time:new Date().toISOString(), type:'done'});
+  }
 }
 
 // GV: open kanban board for a giao viec item
@@ -7898,7 +7919,7 @@ function renderGvKanban(tempTask){
       } else {
         const card=(tempTask.cards||[]).find(c=>c.id===dragCardId);
         if(card){card.colId=col.id; delete card.pendingReason;}
-        if(g){g.taskCards=tempTask.cards;}
+        if(g){g.taskCards=tempTask.cards; gvSyncStatus(g);}
         saveAppData();
         renderGvKanban(tempTask);
         renderGiaoViec();
@@ -8031,6 +8052,7 @@ function saveGvCard(gvId){
     if(!g.taskCards) g.taskCards=[];
     g.taskCards.push({id:'gvc'+cardNextId++, colId, name, desc});
   }
+  gvSyncStatus(g);
   saveAppData();
   closeAddCardModal();
   renderGvKanban({id:gvId, name:g.taskName, cols:g.taskCols, cards:g.taskCards});
@@ -8150,6 +8172,7 @@ function gvBulkCardMove(){
     const next = cols[curIdx+1];
     if(next && next.id!=='pending' && next.id!=='col_pending') card.colId=next.id;
   });
+  gvSyncStatus(g);
   saveAppData();
   gvClearCardSelection();
   renderGvKanban({id:g.id, name:g.taskName, cols:g.taskCols, cards:g.taskCards});
@@ -8204,6 +8227,7 @@ function gvMoveCard(event, gvId, cardId, currentColId){
   const nextCol=cols[curIdx+1];
   if(!nextCol){
     if(!event.target.checked&&curIdx>0) card.colId=cols[curIdx-1].id;
+    gvSyncStatus(g);
     saveAppData(); renderGvKanban({id:gvId,cols:g.taskCols,cards:g.taskCards}); renderGiaoViec(); return;
   }
   if(nextCol.id==='pending'||nextCol.id==='col_pending'){
@@ -8216,6 +8240,7 @@ function gvMoveCard(event, gvId, cardId, currentColId){
     delete card.pendingReason;
     const _g=giaoViecList.find(x=>x.id===gvId);
     if(_g) _g.taskCards=g.taskCards;
+    gvSyncStatus(g);
     saveAppData();
     renderGvKanban({id:gvId,name:g.taskName,cols:g.taskCols,cards:g.taskCards});
     renderGiaoViec();
