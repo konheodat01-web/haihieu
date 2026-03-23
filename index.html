@@ -426,9 +426,10 @@
         <div class="form-group"><label>Ghi chú</label><input type="text" id="ql_note_work" style="width:100%"></div>
         <div class="form-group"><label>Hiển thị cho</label>
           <select id="ql_owner_work" style="width:100%">
-            <option value="admin">Chung</option>
+<option value="admin">Chung (tất cả)</option>
             <option value="Hải">Hải</option>
             <option value="Hiếu">Hiếu</option>
+            
           </select>
         </div>
         <div class="form-group">
@@ -641,7 +642,7 @@
             <th class="fh" onclick="openFilter('hai','chuyenMuc',this)">Chuyên mục <span class="fh-ic">&#9660;</span></th>
             <th class="fh" onclick="openFilter('hai','link',this)">Link bài <span class="fh-ic">&#9660;</span></th>
             <th style="width:56px;text-align:center">NT</th>
-            <th style="width:80px;text-align:center">INDEX</th>
+            <th style="width:90px;text-align:center;white-space:nowrap">INDEX</th>
             <th>Xem</th><th></th>
           </tr>
         </thead>
@@ -936,7 +937,12 @@
     <div id="cardBulkBar" style="display:none;background:#2c3e50;color:#fff;border-radius:8px;padding:10px 16px;margin-bottom:10px;align-items:center;gap:8px;flex-wrap:wrap">
       <span id="cardBulkCount" style="font-size:13px;font-weight:600"></span>
       <div style="width:1px;height:18px;background:rgba(255,255,255,.2)"></div>
-      <button onclick="bulkCardMove('next')" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">→ Chuyển cột tiếp</button>
+      <button onclick="bulkCardMove('next')" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">→ Cột tiếp</button>
+      <div style="position:relative;display:inline-block">
+        <button onclick="toggleBulkMoveToMenu()" class="btn btn-sm" style="background:#16a085;color:#fff;border:none">⇒ Chuyển tới ▾</button>
+        <div id="bulkMoveToMenu" style="display:none;position:absolute;top:100%;left:0;margin-top:4px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:400;min-width:160px;overflow:hidden" onmousedown="event.stopPropagation()">
+        </div>
+      </div>
       <button onclick="bulkCardCopyUrls(this)" class="btn btn-sm" style="background:#2980b9;color:#fff;border:none">🔗 Copy URL</button>
       <button onclick="bulkCardCopyVidco(this)" class="btn btn-sm" style="background:#555;color:#fff;border:none">📋 Copy VIDCO</button>
       <button onclick="bulkCardDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá thẻ</button>
@@ -1447,7 +1453,16 @@
       <div class="toolbar" style="flex:1">
         <input type="text" id="linkSearch" placeholder="&#128269; Tìm link..." oninput="renderLinks()" style="width:180px;height:32px;font-size:12px">
         <select id="linkFilterOwner" onchange="renderLinks()" style="height:32px;font-size:12px">
-          <option value="">Tất cả</option><option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
+          <option value="">Tất cả người dùng</option><option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
+        </select>
+        <select id="linkFilterGroup" onchange="renderLinks()" style="height:32px;font-size:12px">
+          <option value="">Tất cả nhóm</option>
+          <option value="Khác">Khác</option>
+        </select>
+        <select id="linkFilterAccount" onchange="renderLinks()" style="height:32px;font-size:12px">
+          <option value="">Tất cả</option>
+          <option value="has_account">Có tài khoản</option>
+          <option value="no_account">Không có TK</option>
         </select>
       </div>
     </div>
@@ -1480,7 +1495,7 @@
             </div>
             <div class="form-group"><label>Hiển thị cho</label>
               <select id="lf_owner" style="width:100%">
-                <option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
+                <option value="admin">Chung (tất cả)</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
               </select>
             </div>
           </div>
@@ -3188,7 +3203,7 @@ function renderHieu(){
       <td class="ec" onclick="editCell('hieu',${r.id},'chuyenMuc',this)">${r.chuyenMuc||'—'}</td>
       <td class="ec" onclick="editCell('hieu',${r.id},'link',this)" style="max-width:130px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.link||''}">${r.link||'<span style=color:var(--text-muted)>—</span>'}</span></td>
       <td class="ec" onclick="editCell('hieu',${r.id},'spin',this)" style="max-width:100px"><span style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block" title="${r.spin||''}">${r.spin||'<span style=color:var(--text-muted)>—</span>'}</span></td>
-      <td style="text-align:center">${getIndexStatusBadge(r)}</td>
+      <td style="text-align:center;min-width:80px;padding:4px 6px">${getIndexStatusBadge(r)}</td>
       <td style="text-align:center;cursor:pointer" onclick="openNghiemThu('hieu',${r.id})">${nghiemThuBadge(r.nghiemThu===undefined?100:r.nghiemThu)}</td>
       <td style="white-space:nowrap"><button class="btn btn-sm btn-outline" onclick="openLinkViewer('hieu',${r.id})" style="font-size:11px;padding:3px 8px">&#128279; Xem</button> <button class="btn btn-sm btn-outline" onclick="copyExcelSingleRow('hieu',${r.id})" style="font-size:11px;padding:3px 6px" title="Copy dòng này sang Excel">📊</button></td>
       <td><button class="btn btn-sm btn-danger" onclick="deleteEntry('hieu',${r.id})">&#128465;</button></td>
@@ -5259,12 +5274,15 @@ function getVisibleLinks(){
 function renderLinkSection(type, gridId, emptyId, cntId){
   const q=(document.getElementById('linkSearch')||{}).value?.toLowerCase()||'';
   const fo=(document.getElementById('linkFilterOwner')||{}).value||'';
+  const fg=(document.getElementById('linkFilterGroup')||{}).value||'';
+  const fa=(document.getElementById('linkFilterAccount')||{}).value||'';
   let list=getVisibleLinks().filter(l=>{
     if(l.type!==type) return false;
     if(q && !l.name.toLowerCase().includes(q) && !l.url.toLowerCase().includes(q) && !(l.desc||'').toLowerCase().includes(q)) return false;
-    if(fo==='admin'&&l.owner!=='admin') return false;
-    if(fo==='Hải'&&l.owner!=='Hải') return false;
-    if(fo==='Hiếu'&&l.owner!=='Hiếu') return false;
+    if(fo && l.owner!==fo) return false;
+    if(fg && (l.group||'Khác')!==fg) return false;
+    if(fa==='has_account' && !l.account) return false;
+    if(fa==='no_account' && l.account) return false;
     return true;
   });
   document.getElementById(cntId).textContent=list.length;
@@ -5297,6 +5315,14 @@ function renderLinkSection(type, gridId, emptyId, cntId){
 }
 
 function renderLinks(){
+  // Populate group filter dynamically
+  const gSel = document.getElementById('linkFilterGroup');
+  if(gSel){
+    const allLinks = getVisibleLinks();
+    const groups = [...new Set(allLinks.map(l=>l.group||'Khác').filter(Boolean))].sort();
+    const cur = gSel.value;
+    gSel.innerHTML = '<option value="">Tất cả nhóm</option>' + groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
+  }
   renderLinkSection('work','workLinksGrid','emptyWorkLinks','cntWorkLinks');
 }
 
@@ -6820,7 +6846,7 @@ function updateOwnerFilters(m){
     const cur=linkOwner.value;
     if(m==='hai') linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung</option><option value="Hải">Hải</option>';
     else if(m==='hieu') linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung</option><option value="Hiếu">Hiếu</option>';
-    else linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
+    else linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung (tất cả)</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
     linkOwner.value=['','admin','Hải','Hiếu'].includes(cur)?cur:'';
   }
   const wsOwner=document.getElementById('websiteFilterOwner');
@@ -9216,6 +9242,57 @@ function clearCardSelection(){
   updateCardBulkBar();
 }
 
+
+function toggleBulkMoveToMenu(){
+  const menu = document.getElementById('bulkMoveToMenu');
+  if(!menu) return;
+  if(menu.style.display !== 'none'){ menu.style.display='none'; return; }
+  // Populate with current task's columns
+  const task = tasks.find(t=>t.id===currentProjectId);
+  if(!task){ menu.style.display='none'; return; }
+  const cols = getProjectCols(task);
+  menu.innerHTML = cols.map(col=>`
+    <div onclick="bulkMoveToCol('${col.id}')"
+      style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;gap:8px;color:#2c3e50"
+      onmouseover="this.style.background='#f0f7fd'" onmouseout="this.style.background=''">
+      <span style="width:8px;height:8px;border-radius:50%;background:${col.color};flex-shrink:0"></span>
+      ${col.label}
+    </div>`).join('');
+  menu.style.display='block';
+  setTimeout(()=>{
+    function outside(e){
+      if(!document.getElementById('bulkMoveToMenu')?.contains(e.target)){
+        document.getElementById('bulkMoveToMenu').style.display='none';
+        document.removeEventListener('click',outside);
+      }
+    }
+    document.addEventListener('click',outside);
+  },10);
+}
+
+function bulkMoveToCol(colId){
+  document.getElementById('bulkMoveToMenu').style.display='none';
+  const task = tasks.find(t=>t.id===currentProjectId);
+  if(!task||!_selectedCardIds.size) return;
+  const isPending = colId==='pending'||colId==='col_pending';
+  (task.cards||[]).forEach(card=>{
+    if(!_selectedCardIds.has(card.id)) return;
+    if(isPending){
+      // skip pending col for bulk — use next logic
+    } else {
+      card.colId = colId;
+      delete card.pendingReason;
+    }
+  });
+  saveAppData();
+  clearCardSelection();
+  renderSubBoard(task);
+  renderTasksOverview();
+  const cols = getProjectCols(task);
+  const col = cols.find(c=>c.id===colId);
+  toast(`⇒ Đã chuyển ${_selectedCardIds.size||'các'} thẻ → ${col?.label||colId}`);
+}
+
 function bulkCardMove(dir){
   const task = tasks.find(x=>x.id===currentProjectId);
   if(!task||!_selectedCardIds.size) return;
@@ -9518,6 +9595,22 @@ function pqOpenAdd(){
   setTimeout(()=>{ _promptTab=_pqTab; renderPrompts(); openAddPromptModal(); }, 100);
 }
 
+
+// ===== AUTO CLEAN TRASH DAILY =====
+function autoCleanTrash(){
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const before = deletedTasks.length;
+  deletedTasks = deletedTasks.filter(t => {
+    if(!t._deletedAt) return false; // no timestamp → remove
+    return (now - t._deletedAt) < DAY_MS;
+  });
+  if(deletedTasks.length < before){
+    saveAppData();
+    updateTrashBadge();
+    console.log(`🗑 Auto-cleaned ${before - deletedTasks.length} task(s) from trash`);
+  }
+}
 // ===== INIT — load after all variables declared =====
 loadAppData();
 applyAllAvatars();
@@ -9525,6 +9618,7 @@ renderDashboard();
 renderHai();
 renderHieu();
 window._appLoaded = true;
+autoCleanTrash();
 initDragSelectGlobal();
 window._appData = data;
 window._tasks = tasks;
