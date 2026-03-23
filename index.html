@@ -2294,6 +2294,11 @@ function renderDashboard(){
       </table>
     </div>`;
 
+  // Inline flex helpers - needed by both member and admin views
+  window._addFlexInline = (sheet, loai) => { _flexModalSheet=sheet; addFlexItem(loai); renderDashboard(); };
+  window._editFlexInline = (sheet, idx) => { _flexModalSheet=sheet; editFlexItem(idx); };
+  window._deleteFlexInline = (sheet, idx) => { _flexModalSheet=sheet; deleteFlexItem(idx); };
+
   // ---- MEMBER VIEW: Hải hoặc Hiếu ----
   if(member==='hai'||member==='hieu'){
     const sheet = member;
@@ -2511,9 +2516,7 @@ function renderDashboard(){
       <div class="report-card hieu">${buildChart('hieu', tHieu)}</div>
     </div>
   `;
-  window._addFlexInline = (sheet, loai) => { _flexModalSheet=sheet; addFlexItem(loai); renderDashboard(); };
-  window._editFlexInline = (sheet, idx) => { _flexModalSheet=sheet; editFlexItem(idx); };
-  window._deleteFlexInline = (sheet, idx) => { _flexModalSheet=sheet; deleteFlexItem(idx); };
+
 }
 
 function statusBadge(s){
