@@ -191,7 +191,7 @@
   .member-picker{position:relative;display:flex;align-items:center;gap:8px}
   .member-avatar{width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:rgba(255,255,255,.15);color:#fff;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;overflow:hidden}
   .member-avatar:hover{border-color:#fff;background:rgba(255,255,255,.3)}
-  .member-role-label{font-size:12px;color:rgba(255,255,255,.9);font-weight:500;white-space:nowrap}
+  .member-role-label{font-size:12px;color:var(--red);font-weight:700;white-space:nowrap;background:rgba(255,255,255,.92);padding:2px 8px;border-radius:20px}
   .member-dropdown{position:absolute;top:calc(100% + 8px);left:0;background:#fff;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);min-width:180px;overflow:hidden;z-index:200;display:none}
   .member-dropdown.open{display:block}
   .md-header{padding:10px 14px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);border-bottom:1px solid var(--gray-border)}
@@ -199,7 +199,7 @@
   .md-item:hover{background:var(--gray-light)}
   .md-item.active{background:#fdf2f2}
   .md-avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;overflow:hidden}
-  .md-name{font-size:13px;font-weight:500}
+  .md-name{font-size:13px;font-weight:700;color:var(--red)}
   .md-role{font-size:11px;color:var(--text-muted)}
   .md-check{margin-left:auto;color:var(--red);font-size:14px}
   .link-group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 2px;margin-bottom:8px;margin-top:14px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;gap:6px}
@@ -374,7 +374,7 @@
       <!-- Input -->
       <input id="uniInput" type="text" placeholder="Tìm link / website..." autocomplete="off"
         style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 8px;flex:1;font-weight:500;min-width:180px"
-        oninput="uniSearch()" onfocus="uniSearch()" onblur="setTimeout(uniClose,200)"
+        oninput="uniSearch()" onfocus="uniSearch()" onblur="setTimeout(()=>{if(!document.getElementById('uniDrop')?.matches(':hover'))uniClose();},200)"
         onkeydown="uniKeydown(event)">
       <!-- Add button -->
       <button id="uniAddBtn" onclick="uniAdd()" title="Thêm mới"
@@ -1849,11 +1849,15 @@
             <div class="ac-list" id="si_chuyenMuc_list"></div>
           </div>
         </div>
-        <div class="form-group">
-          <label>Trạng thái</label>
-          <select id="si_status" style="width:100%">
-            <option>Chưa gửi</option><option>Đã Gửi</option><option>Done</option>
-          </select>
+        <div class="form-group" id="si_team_row" style="display:none">
+          <label>Team</label>
+          <div style="display:flex;gap:8px">
+            <button type="button" id="si_team_btn1" onclick="siSetTeam('Team 01')"
+              class="btn btn-primary" style="flex:1">Team 01</button>
+            <button type="button" id="si_team_btn2" onclick="siSetTeam('Team 02')"
+              class="btn btn-outline" style="flex:1">Team 02</button>
+          </div>
+          <input type="hidden" id="si_team" value="Team 01">
         </div>
         
       </div>
@@ -4827,6 +4831,7 @@ function setMember(m){
   if(settingsBtn) settingsBtn.style.display=m==='admin'?'flex':'none';
   applyAllAvatars();
   updateNavBadges();
+  showPage('dashboard');
 }
 
 // Patch renders to respect member filter
@@ -5463,6 +5468,14 @@ function deleteCategory(type, idx){
 let siSheet = 'hai';
 let siKeywords = [];
 
+function siSetTeam(team){
+  document.getElementById('si_team').value = team;
+  const b1 = document.getElementById('si_team_btn1');
+  const b2 = document.getElementById('si_team_btn2');
+  if(b1) b1.className = 'btn ' + (team==='Team 01' ? 'btn-primary' : 'btn-outline');
+  if(b2) b2.className = 'btn ' + (team==='Team 02' ? 'btn-primary' : 'btn-outline');
+}
+
 function openSheetImport(sheet){
   siSheet = sheet;
   siKeywords = [];
@@ -5476,6 +5489,10 @@ function openSheetImport(sheet){
   document.getElementById('si_chuyenMuc').value='';
   
   document.getElementById('siFileCount').style.display='none';
+  // Team selector: show for hieu, hide+auto Team 01 for hai
+  const siTeamRow = document.getElementById('si_team_row');
+  if(siTeamRow) siTeamRow.style.display = sheet==='hieu' ? 'block' : 'none';
+  siSetTeam('Team 01'); // default
   switchSITab('paste');
   document.getElementById('sheetImportModal').classList.add('open');
   setTimeout(()=>document.getElementById('si_keywords').focus(),100);
@@ -5615,7 +5632,8 @@ function doSheetImport(){
   const defaultLoai=document.getElementById('si_loai').value;
   const defaultWebsite=document.getElementById('si_website').value.trim();
   const defaultChuyenMuc=document.getElementById('si_chuyenMuc').value.trim();
-  const defaultStatus=document.getElementById('si_status').value;
+  const defaultTeam = siSheet==='hai' ? 'Team 01' : (document.getElementById('si_team')?.value || 'Team 01');
+  const defaultStatus='Chưa gửi';
   const chiDang=0;
 
   const hasFullData = siFullRows.length === keywords.length;
@@ -5636,6 +5654,7 @@ function doSheetImport(){
       spin:      row?.spin || '',
       index:     row?.index || '',
       status:    row?.status || defaultStatus,
+      team:      row?.team || defaultTeam,
       chiDang
     };
   });
@@ -7762,8 +7781,10 @@ function renderGiaoViec(){
 
   list.innerHTML = items.map(g=>{
     const isPendingTask = !!g.pendingReason;
-    const isWaitingAccept = g.status==='Chờ nghiệm thu';
     const autoStatus = gvCalcStatus(g);
+    // Tự động nâng status nếu cards đã done hết nhưng chưa nghiệm thu
+    if(autoStatus==='Hoàn thành' && g.status!=='Đã nghiệm thu' && g.status!=='Chờ nghiệm thu') g.status='Chờ nghiệm thu';
+    const isWaitingAccept = g.status==='Chờ nghiệm thu' || (autoStatus==='Hoàn thành' && g.status!=='Đã nghiệm thu');
     const badgeCls = isPendingTask?'gv-badge-wait':isWaitingAccept?'gv-badge-wait':autoStatus==='Hoàn thành'?'gv-badge-done':autoStatus==='Đang làm'?'gv-badge-doing':'gv-badge-wait';
     const badgeLabel = isPendingTask?'⏸ Pending':isWaitingAccept?'🔔 Chờ nghiệm thu':autoStatus;
     const dlLabel = g.deadline ? `📅 ${fmtDate(g.deadline)}` : '';
@@ -7836,14 +7857,12 @@ function gvSyncStatus(g){
   const next = gvCalcStatus(g);
   if(next === prev) return;
   g.status = next;
-  if(next === 'Hoàn thành' && prev !== 'Hoàn thành'){
-    // Notify người giao và admin
+  if(next === 'Hoàn thành' && prev !== 'Hoàn thành' && prev !== 'Chờ nghiệm thu'){
+    // Tất cả cards done → chuyển sang Chờ nghiệm thu thay vì Hoàn thành
+    g.status = 'Chờ nghiệm thu';
     const who = g.assignee || 'Người thực hiện';
-    const fromName = g.from || 'Admin';
-    toast(`✅ "${g.taskName}" đã hoàn thành bởi ${who}!`, '#27ae60', 5000);
-    // Lưu vào gv_notifications để admin/người giao thấy khi mở app
-    if(!window._gvNotifs) window._gvNotifs=[];
-    window._gvNotifs.unshift({id:Date.now(), gvId:g.id, taskName:g.taskName, assignee:who, time:new Date().toISOString(), type:'done'});
+    toast(`🔔 "${g.taskName}" hoàn thành — chờ nghiệm thu!`, '#27ae60', 5000);
+    return; // status đã set riêng
   }
 }
 
