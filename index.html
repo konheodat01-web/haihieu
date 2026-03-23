@@ -3791,9 +3791,18 @@ let editingProjectId = null;
 
 function normalizeTaskCards(task){
   if(!task) return;
+  // Firebase may return cols as object instead of array
+  if(task.cols && !Array.isArray(task.cols) && typeof task.cols === 'object'){
+    const colEntries = Object.entries(task.cols);
+    // Sort by numeric key to preserve order
+    colEntries.sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+    task.cols = colEntries.map(e=>e[1]);
+  }
   // Firebase may return cards as object {0:{...},1:{...}} instead of array
-  if(task.cards && !Array.isArray(task.cards)){
-    task.cards = Object.values(task.cards);
+  if(task.cards && !Array.isArray(task.cards) && typeof task.cards === 'object'){
+    const cardEntries = Object.entries(task.cards);
+    cardEntries.sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+    task.cards = cardEntries.map(e=>e[1]);
   }
   if(!task.cards) task.cards = [];
   // Normalize each card's colId against the task's columns
@@ -4117,7 +4126,6 @@ function renderSubBoard(task){
         <span style="font-size:8px;color:var(--text-muted);line-height:1.1;text-align:center">${nextCol?nextCol.label.slice(0,5):'Done'}</span>`;
 
       rowEl.appendChild(selWrap);
-      rowEl.appendChild(gvSelWrap);
       rowEl.appendChild(cardEl);
       rowEl.appendChild(tickWrap);
 
@@ -6774,6 +6782,7 @@ function renderTrash(){
 function restoreTask(idx){
   const t={...deletedTasks[idx]};
   delete t._deletedAt;
+  normalizeTaskCards(t);
   deletedTasks.splice(idx,1);
   tasks.unshift(t);
   saveAppData();
@@ -8641,13 +8650,14 @@ function deleteGvDone(id){
 }
 
 function recallGiaoViec(id){
+  try{
   const g = giaoViecList.find(x=>x.id===id);
-  if(!g) return;
+  if(!g){ toast('Không tìm thấy task id='+id,'#e74c3c'); return; }
   if(!confirm(`Thu hồi "${g.taskName}"?\nTask sẽ trở về tab "Task của tôi".`)) return;
   // Person: giao lại cho người thu hồi (Hiếu/admin), không phải Hải
   const recallPerson = currentMember==='hieu' ? 'Hiếu' : currentMember==='admin' ? (g.taskPerson==='Hải'?'Hiếu':g.taskPerson||'') : g.taskPerson||'';
   const restored = {
-    id: g.taskId || (taskNextId++),
+    id: taskNextId++,
     name: g.taskName,
     type: g.taskType||'Khác',
     desc: g.taskDesc||'',
@@ -8659,12 +8669,24 @@ function recallGiaoViec(id){
     cols: g.taskCols||null,
     cards: g.taskCards||[],
   };
+  // Also normalize taskCols from giaoViec if it's an object
+  if(restored.cols && !Array.isArray(restored.cols) && typeof restored.cols === 'object'){
+    const e = Object.entries(restored.cols).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+    restored.cols = e.map(x=>x[1]);
+  }
+  if(restored.cards && !Array.isArray(restored.cards) && typeof restored.cards === 'object'){
+    const e = Object.entries(restored.cards).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+    restored.cards = e.map(x=>x[1]);
+  }
+  normalizeTaskCards(restored);
   tasks.push(restored);
   giaoViecList = giaoViecList.filter(x=>x.id!==id);
   saveAppData();
   renderGiaoViec();
   renderTasksOverview();
+  switchTasksTab('mytasks');
   toast('↩ Đã thu hồi: '+g.taskName);
+  }catch(e){ toast('Lỗi thu hồi: '+e.message,'#e74c3c'); console.error(e); }
 }
 
 function deleteGiaoViec(){
