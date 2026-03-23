@@ -1971,7 +1971,7 @@
 <script>
 let currentMember = 'admin'; // declared first to avoid TDZ
 let websites = [
-  {id:1, brand:'Debet', url:'https://debets.sbs', admin:'/wp-admin', account:'dybala5858585858@gmail.com', password:'Mktb2022@', status:'Tốt', note:''},
+  {id:1, brand:'Debet', url:'https://debets.sbs', admin:'wp-admin', account:'dybala5858585858@gmail.com', password:'Mktb2022@', status:'Tốt', note:''},
 ];
 let wsNextId = 2;
 const WS_STATUS_COLOR = {'Tốt':'#27ae60','Chờ cấp lại mật khẩu':'#e67e22','Lỗi web':'#e74c3c'};
@@ -6664,22 +6664,31 @@ function wsImportParseLines(){
   const owner = document.getElementById('wsImportOwner').value;
   const status = document.getElementById('wsImportStatus').value;
   return lines.map(line=>{
-    const parts = line.split(',').map(p=>p.trim());
+    // Support pipe | separator (e.g. url | brand | admin | account | password | owner | group | team)
+    const sep = line.includes('|') ? '|' : ',';
+    const parts = line.split(sep).map(p=>p.trim());
     if(parts.length>=2){
-      // CSV row
+      const urlRaw = parts[0]||'';
+      const url = /^https?:\/\//i.test(urlRaw) ? urlRaw : ('https://'+urlRaw.replace(/\/$/,'')+'/');
       return {
-        brand: parts[0]||'', url: parts[1]||'',
-        admin: normalizeAdmin(parts[2]||''), account: parts[3]||'',
-        password: parts[4]||'', status: parts[5]||status,
-        team: parts[6]||team, owner: parts[7]||owner,
-        group: parts[8]||'', note: parts[9]||''
+        brand: parts[1]||urlRaw.replace(/https?:\/\//,'').split('.')[0],
+        url,
+        admin: normalizeAdmin(parts[2]||''),
+        account: parts[3]||'',
+        password: parts[4]||'',
+        status: parts[5]||status,
+        owner: parts[6]||owner,
+        group: parts[7]||'',
+        team: parts[8]||team,
+        note: parts[9]||''
       };
     } else {
-      // Plain URL - derive brand from domain
-      const url = parts[0];
-      let brand = url.replace(/https?:\/\//,'').replace(/^www\./,'').split('/')[0].split('.')[0];
+      // Plain URL only - derive brand
+      const urlRaw = parts[0];
+      const url = /^https?:\/\//i.test(urlRaw) ? urlRaw : ('https://'+urlRaw.replace(/\/$/,'')+'/');
+      let brand = urlRaw.replace(/https?:\/\//,'').replace(/^www\./,'').split('/')[0].split('.')[0];
       brand = brand.charAt(0).toUpperCase()+brand.slice(1);
-      return { brand, url, admin:'/wp-admin', account:'', password:'', status, team, owner, group:'', note:'' };
+      return { brand, url, admin:'wp-admin', account:'', password:'', status, team, owner, group:'', note:'' };
     }
   });
 }
@@ -10084,6 +10093,30 @@ function applyBulkNT(sheet, val){
   renderDashboard();
   toast(`✓ Đã cập nhật NT ${val}% cho ${ids.size} bài`);
 }
+
+// ===== QUICK IMPORT M7 WEBSITES =====
+(function(){
+  const newItems = [{"brand": "NBET", "url": "https://nbet.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "NBET", "url": "https://nbet.us.org/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "TA88", "url": "https://ta88.ru.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "TA88", "url": "https://ta88.za.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "XO88X", "url": "https://xo88x.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "XO88X", "url": "https://xo88x.co.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "ZBETZ", "url": "https://zbetz.co.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "ZBETZ", "url": "https://zbetz.de.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "RED88A", "url": "https://red88a.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "RED88A", "url": "https://red88a.co.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "11BETT", "url": "https://11bett.us.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "11BETT", "url": "https://11bett.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}];
+  let added = 0, skipped = 0;
+  newItems.forEach(w => {
+    const dup = websites.find(x =>
+      (x.url && x.url.replace(/\/$/,'') === w.url.replace(/\/$/,'')) ||
+      x.brand.toLowerCase() === w.brand.toLowerCase()
+    );
+    if(dup) { skipped++; return; }
+    websites.push({...w, id: wsNextId++});
+    added++;
+  });
+  if(added > 0) {
+    saveAppData();
+    renderWebsites();
+    autoFillAnchors();
+    updateWsIcons();
+    toast('✓ Đã thêm ' + added + ' website M7' + (skipped ? ' (' + skipped + ' trùng bỏ qua)' : ''), '#27ae60', 4000);
+  } else {
+    toast('Tất cả ' + skipped + ' website M7 đã tồn tại.', '#e67e22', 3000);
+  }
+})();
 </script>
 
 <!-- EDIT INDEX TASK MODAL -->
