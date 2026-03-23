@@ -880,10 +880,30 @@
 
     <!-- GV KANBAN SUB BOARD -->
     <div id="gvSubBoard" style="display:none;padding:14px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:10px 16px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:10px 16px">
         <button class="btn btn-outline btn-sm" onclick="closeGvBoard()">← Quay lại</button>
-        <div style="font-weight:600;font-size:15px;flex:1" id="gvSubBoardTitle"></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddCardModal(null)">+ Thêm thẻ</button>
+        <div style="font-weight:600;font-size:15px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="gvSubBoardTitle"></div>
+        <span id="gvSubBoardPerson"></span>
+        <div class="toolbar" style="gap:6px">
+          <div style="position:relative;display:inline-block">
+            <button class="btn btn-outline btn-sm" onclick="toggleGvSelectAllMenu()">☑ Chọn ▾</button>
+            <div id="gvSelectAllMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:4px;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:300;min-width:170px;overflow:hidden">
+              <div onclick="gvSelectAllCards()" style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gray-border);font-weight:500" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">☑ Tất cả các cột</div>
+              <div id="gvSelectColItems"></div>
+              <div onclick="gvClearCardSelection()" style="padding:9px 14px;font-size:13px;cursor:pointer;border-top:1px solid var(--gray-border);color:var(--text-muted)" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">☐ Bỏ chọn tất cả</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- GV Card Bulk Bar -->
+      <div id="gvCardBulkBar" style="display:none;background:#2c3e50;color:#fff;border-radius:8px;padding:10px 16px;margin-bottom:10px;align-items:center;gap:8px;flex-wrap:wrap">
+        <span id="gvCardBulkCount" style="font-size:13px;font-weight:600"></span>
+        <div style="width:1px;height:18px;background:rgba(255,255,255,.2)"></div>
+        <button onclick="gvBulkCardMove()" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none">→ Chuyển cột tiếp</button>
+        <button onclick="gvBulkCardCopyUrls(this)" class="btn btn-sm" style="background:#2980b9;color:#fff;border:none">🔗 Copy URL</button>
+        <button onclick="gvBulkCardCopyVidco(this)" class="btn btn-sm" style="background:#555;color:#fff;border:none">📋 Copy VIDCO</button>
+        <button onclick="gvBulkCardDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá thẻ</button>
+        <button onclick="gvClearCardSelection()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px;margin-left:auto;padding:0 4px">×</button>
       </div>
       <div id="gvKanbanBoard" style="display:flex;gap:12px;align-items:start;overflow-x:auto;padding-bottom:16px;min-height:300px"></div>
     </div>
@@ -4076,6 +4096,7 @@ function renderSubBoard(task){
         <span style="font-size:8px;color:var(--text-muted);line-height:1.1;text-align:center">${nextCol?nextCol.label.slice(0,5):'Done'}</span>`;
 
       rowEl.appendChild(selWrap);
+      rowEl.appendChild(gvSelWrap);
       rowEl.appendChild(cardEl);
       rowEl.appendChild(tickWrap);
 
@@ -7681,7 +7702,15 @@ function switchTasksTab(tab){
   document.getElementById('panel-giaoviec').style.display = tab==='giaoviec' ? 'block' : 'none';
   document.getElementById('tab-mytasks').classList.toggle('active', tab==='mytasks');
   document.getElementById('tab-giaoviec').classList.toggle('active', tab==='giaoviec');
-  if(tab==='giaoviec') renderGiaoViec();
+  // Ẩn taskSubBoard khi chuyển sang giao việc
+  if(tab==='giaoviec'){
+    const sub = document.getElementById('taskSubBoard');
+    if(sub) sub.style.display='none';
+    const ov = document.getElementById('tasksOverview');
+    if(ov) ov.style.display='block';
+    document.querySelector('main')?.classList.remove('board-mode');
+    renderGiaoViec();
+  }
 }
 
 function renderGiaoViec(){
@@ -7815,19 +7844,26 @@ function openGvBoard(gvId){
   document.getElementById('gvPendingPanel').style.display='none';
   document.getElementById('gvSubBoard').style.display='block';
   document.getElementById('gvSubBoardTitle').textContent = g.taskName;
+  const gvPersonEl = document.getElementById('gvSubBoardPerson');
+  if(gvPersonEl) gvPersonEl.innerHTML = g.assignee ? `<span class="tag-person ${g.assignee==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:12px">${g.assignee}</span>` : '';
   renderGvKanban(tempTask);
 }
 
 function closeGvBoard(){
   _gvBoardId=null;
+  _currentGvBoardId=null;
+  _gvSelectedCardIds.clear();
   document.getElementById('gvSubBoard').style.display='none';
   document.getElementById('gvListWrap').style.display='block';
+  const pp = document.getElementById('gvPendingPanel');
+  if(pp) pp.style.display='none';
   renderGiaoViec();
 }
 
 function renderGvKanban(tempTask){
   const board = document.getElementById('gvKanbanBoard');
   if(!board) return;
+  const g = giaoViecList.find(x=>x.id===tempTask.id);
   const cols = getProjectCols(tempTask);
   board.innerHTML='';
   cols.forEach(col=>{
@@ -7839,13 +7875,15 @@ function renderGvKanban(tempTask){
     });
     const isPending = col.id==='pending'||col.id==='col_pending';
     const colEl=document.createElement('div');
-    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:180px;display:flex;flex-direction:column`;
+    colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 220px);display:flex;flex-direction:column;overflow:hidden`;
+    colEl.dataset.colId = col.id;
     colEl.innerHTML=`
       <div class="kb-col-header">
         <span class="kb-col-title" style="color:${col.color}">${col.label}</span>
         <span class="kb-col-count">${cards.length}</span>
       </div>
-      <div id="gvcards-${col.id}" style="flex:1;overflow-y:auto"></div>`;
+      <div class="kb-cards" id="gvcards-${col.id}" style="overflow-y:auto;flex:1"></div>
+      <button class="kb-add-btn" onclick="openGvAddCardModal('${col.id}',${tempTask.id})">&#43; Thêm thẻ</button>`;
     // Drop target
     colEl.addEventListener('dragover',e=>{e.preventDefault();colEl.style.background='#fde8e8';});
     colEl.addEventListener('dragleave',()=>colEl.style.background='var(--gray-light)');
@@ -7860,7 +7898,6 @@ function renderGvKanban(tempTask){
       } else {
         const card=(tempTask.cards||[]).find(c=>c.id===dragCardId);
         if(card){card.colId=col.id; delete card.pendingReason;}
-        const g=giaoViecList.find(x=>x.id===tempTask.id);
         if(g){g.taskCards=tempTask.cards;}
         saveAppData();
         renderGvKanban(tempTask);
@@ -7870,28 +7907,290 @@ function renderGvKanban(tempTask){
       dragCardId=null;
     });
     board.appendChild(colEl);
+
     const cardsEl=colEl.querySelector('#gvcards-'+col.id);
     const isLastCol=col.id===cols[cols.length-1].id||col.id==='done';
     cards.forEach(card=>{
       const nextCol=!isLastCol?cols[cols.indexOf(col)+1]:null;
+
+      const rowEl=document.createElement('div');
+      rowEl.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:8px';
+
+      // Left: select checkbox
+      const gvSelWrap=document.createElement('div');
+      gvSelWrap.style.cssText='flex-shrink:0;width:18px;display:flex;align-items:center;justify-content:center';
+      gvSelWrap.innerHTML=`<input type="checkbox" class="gv-card-chk" data-cardid="${card.id}" data-gvid="${tempTask.id}"
+        style="cursor:pointer;accent-color:var(--red);width:14px;height:14px"
+        onchange="onGvCardCheck(event)">`;
+
+      // Card body
       const cardEl=document.createElement('div');
       cardEl.className='kb-card';
+      cardEl.style.cssText='margin-bottom:0;flex:1;min-width:0;position:relative';
       cardEl.draggable=true;
       cardEl.innerHTML=`
-        <div style="display:flex;align-items:flex-start;gap:7px">
-          <input type="checkbox" ${isLastCol?'checked':''} style="cursor:pointer;accent-color:var(--red);margin-top:2px;flex-shrink:0;width:14px;height:14px"
-            onchange="gvMoveCard(event,${tempTask.id},'${card.id}','${col.id}')">
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500${isLastCol?';text-decoration:line-through;color:var(--text-muted)':''}">${card.name}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div style="font-size:13px;font-weight:500;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${isLastCol?'text-decoration:line-through;color:var(--text-muted)':''}">
+              <span class="kb-card-name" style="cursor:pointer"
+                onclick="event.stopPropagation();openGvEditCardModal('${col.id}','${card.id}',${tempTask.id})"
+                title="${(card.name||'').replace(/"/g,'&quot;')}">${card.name}</span>
+            </div>
+            ${card.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer"
+              onclick="event.stopPropagation();openGvEditCardModal('${col.id}','${card.id}',${tempTask.id})">${card.desc}</div>`:''}
             ${card.pendingReason?`<div class="kb-card-pending">❙❙ ${card.pendingReason}</div>`:''}
-            ${nextCol&&!isLastCol?`<div style="font-size:10px;color:var(--text-muted);margin-top:4px">Tick → ${nextCol.label}</div>`:''}
           </div>
-        </div>`;
+        </div>
+        <span class="kb-card-tooltip-data" data-name="${(card.name||'').replace(/"/g,'&quot;').replace(/\`/g,'&#96;')}" data-desc="${(card.desc||'').replace(/"/g,'&quot;').replace(/\`/g,'&#96;')}" style="display:none"></span>`;
+
+      // Right: tick to next col
+      const tickWrap=document.createElement('label');
+      tickWrap.title = nextCol ? '→ '+nextCol.label : 'Hoàn thành';
+      tickWrap.style.cssText='flex-shrink:0;width:32px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;opacity:.5;transition:opacity .15s';
+      tickWrap.onmouseover=()=>tickWrap.style.opacity='1';
+      tickWrap.onmouseout=()=>tickWrap.style.opacity='.5';
+      tickWrap.innerHTML=`
+        <input type="checkbox" ${isLastCol?'checked':''} style="cursor:pointer;accent-color:var(--red);width:14px;height:14px"
+          onchange="gvMoveCard(event,${tempTask.id},'${card.id}','${col.id}')" onclick="event.stopPropagation()">
+        <span style="font-size:8px;color:var(--text-muted);line-height:1.1;text-align:center">${nextCol?nextCol.label.slice(0,5):'Done'}</span>`;
+
+      rowEl.appendChild(gvSelWrap);
+      rowEl.appendChild(cardEl);
+      rowEl.appendChild(tickWrap);
+
       cardEl.addEventListener('dragstart',e=>{e.stopPropagation();dragCardId=card.id;setTimeout(()=>cardEl.classList.add('dragging'),0);});
       cardEl.addEventListener('dragend',()=>{cardEl.classList.remove('dragging');dragCardId=null;});
-      cardsEl.appendChild(cardEl);
+      cardEl.addEventListener('mouseenter',e=>{
+        const data=cardEl.querySelector('.kb-card-tooltip-data');
+        if(!data) return;
+        const name=data.dataset.name, desc=data.dataset.desc;
+        if(!name&&!desc) return;
+        showKbTooltip(e, name, desc);
+      });
+      cardEl.addEventListener('mousemove',e=>moveKbTooltip(e));
+      cardEl.addEventListener('mouseleave',()=>hideKbTooltip());
+
+      cardsEl.appendChild(rowEl);
     });
   });
+}
+
+// GV add/edit card modal (reuse the same modal as tasks)
+let _gvEditCardId = null;
+let _gvEditCardTaskId = null;
+let _gvEditCardColId = null;
+
+function openGvAddCardModal(colId, gvId){
+  _gvEditCardId = null; _gvEditCardTaskId = gvId; _gvEditCardColId = colId;
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  const cols = getProjectCols({cols:g.taskCols});
+  document.getElementById('acTitle').textContent = 'Thêm thẻ';
+  const sel = document.getElementById('ac_col');
+  sel.innerHTML = cols.map(c=>`<option value="${c.id}" ${c.id===colId?'selected':''}>${c.label}</option>`).join('');
+  document.getElementById('ac_name').value='';
+  document.getElementById('ac_desc').value='';
+  document.getElementById('ac_delete_btn').style.display='none';
+  // Override save/delete to target gv
+  document.getElementById('ac_delete_btn').onclick = ()=>deleteGvCard(gvId);
+  document.querySelector('#addCardModal .modal-footer .btn-primary').onclick = ()=>saveGvCard(gvId);
+  document.getElementById('addCardModal').classList.add('open');
+  setTimeout(()=>document.getElementById('ac_name').focus(),100);
+}
+
+function openGvEditCardModal(colId, cardId, gvId){
+  _gvEditCardId = cardId; _gvEditCardTaskId = gvId; _gvEditCardColId = colId;
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  const card = (g.taskCards||[]).find(c=>c.id===cardId);
+  if(!card) return;
+  const cols = getProjectCols({cols:g.taskCols});
+  document.getElementById('acTitle').textContent = '✎ Sửa thẻ';
+  const sel = document.getElementById('ac_col');
+  sel.innerHTML = cols.map(c=>`<option value="${c.id}" ${c.id===colId?'selected':''}>${c.label}</option>`).join('');
+  document.getElementById('ac_name').value = card.name||'';
+  document.getElementById('ac_desc').value = card.desc||'';
+  document.getElementById('ac_delete_btn').style.display='inline-flex';
+  document.getElementById('ac_delete_btn').onclick = ()=>deleteGvCard(gvId);
+  document.querySelector('#addCardModal .modal-footer .btn-primary').onclick = ()=>saveGvCard(gvId);
+  document.getElementById('addCardModal').classList.add('open');
+  setTimeout(()=>document.getElementById('ac_name').focus(),100);
+}
+
+function saveGvCard(gvId){
+  const name = (document.getElementById('ac_name').value||'').trim();
+  if(!name){ toast('Nhập tên thẻ!','#e74c3c'); return; }
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  const colId = document.getElementById('ac_col').value;
+  const desc = document.getElementById('ac_desc').value.trim();
+  if(_gvEditCardId){
+    const card = (g.taskCards||[]).find(c=>c.id===_gvEditCardId);
+    if(card){ card.name=name; card.colId=colId; card.desc=desc; }
+  } else {
+    if(!g.taskCards) g.taskCards=[];
+    g.taskCards.push({id:'gvc'+cardNextId++, colId, name, desc});
+  }
+  saveAppData();
+  closeAddCardModal();
+  renderGvKanban({id:gvId, name:g.taskName, cols:g.taskCols, cards:g.taskCards});
+  toast('✓ Đã lưu thẻ!');
+}
+
+function deleteGvCard(gvId){
+  if(!_gvEditCardId||!confirm('Xoá thẻ này?')) return;
+  const g = giaoViecList.find(x=>x.id===gvId);
+  if(!g) return;
+  g.taskCards = (g.taskCards||[]).filter(c=>c.id!==_gvEditCardId);
+  saveAppData();
+  closeAddCardModal();
+  renderGvKanban({id:gvId, name:g.taskName, cols:g.taskCols, cards:g.taskCards});
+  toast('Đã xoá thẻ.');
+}
+
+// ===== GV CARD BULK SELECT =====
+let _gvSelectedCardIds = new Set();
+let _currentGvBoardId = null;
+
+function onGvCardCheck(event){
+  event.stopPropagation();
+  const chk = event.target;
+  const cardId = chk.dataset.cardid;
+  const gvId = parseInt(chk.dataset.gvid);
+  _currentGvBoardId = gvId;
+  if(chk.checked) _gvSelectedCardIds.add(cardId);
+  else _gvSelectedCardIds.delete(cardId);
+  updateGvCardBulkBar();
+}
+
+function updateGvCardBulkBar(){
+  const bar = document.getElementById('gvCardBulkBar');
+  const cnt = document.getElementById('gvCardBulkCount');
+  if(!bar) return;
+  if(_gvSelectedCardIds.size > 0){
+    bar.style.display='flex';
+    cnt.textContent = _gvSelectedCardIds.size + ' thẻ đã chọn';
+  } else {
+    bar.style.display='none';
+  }
+}
+
+function gvClearCardSelection(){
+  _gvSelectedCardIds.clear();
+  document.querySelectorAll('.gv-card-chk').forEach(c=>c.checked=false);
+  updateGvCardBulkBar();
+}
+
+function toggleGvSelectAllMenu(){
+  const menu = document.getElementById('gvSelectAllMenu');
+  if(!menu) return;
+  const isOpen = menu.style.display!=='none';
+  if(isOpen){ menu.style.display='none'; return; }
+  // Populate column items
+  if(_currentGvBoardId){
+    const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+    const colItems = document.getElementById('gvSelectColItems');
+    if(g && colItems){
+      const cols = getProjectCols({cols:g.taskCols});
+      colItems.innerHTML = cols.map(col=>{
+        const cnt = (g.taskCards||[]).filter(c=>c.colId===col.id||(col.id==='col_new'&&c.colId==='todo')).length;
+        return `<div onclick="gvSelectColCards('${col.id}')"
+          style="padding:9px 14px;font-size:13px;cursor:pointer;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between"
+          onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+          <span style="color:${col.color}">${col.label}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${cnt}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+  menu.style.display='block';
+  setTimeout(()=>{
+    function outsideClick(e){
+      if(!document.getElementById('gvSelectAllMenu')?.contains(e.target)){
+        document.getElementById('gvSelectAllMenu').style.display='none';
+        document.removeEventListener('click', outsideClick);
+      }
+    }
+    document.addEventListener('click', outsideClick);
+  }, 10);
+}
+
+function gvSelectAllCards(){
+  if(!_currentGvBoardId) return;
+  const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+  if(!g) return;
+  (g.taskCards||[]).forEach(c=>_gvSelectedCardIds.add(c.id));
+  document.querySelectorAll('.gv-card-chk').forEach(chk=>{ chk.checked=true; });
+  updateGvCardBulkBar();
+}
+
+function gvSelectColCards(colId){
+  if(!_currentGvBoardId) return;
+  const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+  if(!g) return;
+  const colCards = (g.taskCards||[]).filter(c=>c.colId===colId||(colId==='col_new'&&c.colId==='todo'));
+  const ids = new Set(colCards.map(c=>c.id));
+  document.querySelectorAll('.gv-card-chk').forEach(chk=>{
+    if(!ids.has(chk.dataset.cardid)) return;
+    chk.checked=true;
+    _gvSelectedCardIds.add(chk.dataset.cardid);
+  });
+  updateGvCardBulkBar();
+  toast(`☑ Đã chọn ${colCards.length} thẻ trong cột`, '#2c3e50', 2000);
+}
+
+function gvBulkCardMove(){
+  if(!_currentGvBoardId||!_gvSelectedCardIds.size) return;
+  const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+  if(!g) return;
+  const cols = getProjectCols({cols:g.taskCols});
+  (g.taskCards||[]).forEach(card=>{
+    if(!_gvSelectedCardIds.has(card.id)) return;
+    const curIdx = cols.findIndex(c=>c.id===card.colId||(c.id==='col_new'&&card.colId==='todo'));
+    const next = cols[curIdx+1];
+    if(next && next.id!=='pending' && next.id!=='col_pending') card.colId=next.id;
+  });
+  saveAppData();
+  gvClearCardSelection();
+  renderGvKanban({id:g.id, name:g.taskName, cols:g.taskCols, cards:g.taskCards});
+  toast('→ Đã chuyển thẻ sang cột tiếp');
+}
+
+function gvBulkCardCopyUrls(btn){
+  if(!_currentGvBoardId||!_gvSelectedCardIds.size) return;
+  const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+  if(!g) return;
+  const urls = (g.taskCards||[]).filter(c=>_gvSelectedCardIds.has(c.id)).map(c=>c.name).join('\n');
+  copyText(urls, btn);
+}
+
+function gvBulkCardCopyVidco(btn){
+  if(!_currentGvBoardId||!_gvSelectedCardIds.size) return;
+  const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+  if(!g) return;
+  const selected = (g.taskCards||[]).filter(c=>_gvSelectedCardIds.has(c.id));
+  const lines = selected.map(c=>{
+    const q=c.name.toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');
+    const ws=websites.find(w=>{const wu=(w.url||'').toLowerCase().replace(/^https?:\/\//,'').replace(/\/$/,'');return wu===q||wu.includes(q)||q.includes(wu);});
+    if(!ws) return null;
+    const domain=(ws.url||'').replace(/https?:\/\//,'').replace(/\/$/,'');
+    const owner=(ws.owner&&ws.owner!=='Công ty'&&ws.owner!=='Chung')?ws.owner:'';
+    return domain+' | '+(ws.admin||'')+' | '+(ws.account||'')+' | '+(ws.password||'')+' | '+(ws.group||'')+' | '+owner;
+  }).filter(Boolean);
+  if(!lines.length){ toast('Không có URL nào nhận diện được.','#e67e22'); return; }
+  copyText(lines.join('\n'), btn);
+}
+
+function gvBulkCardDelete(){
+  if(!_currentGvBoardId||!_gvSelectedCardIds.size) return;
+  const g = giaoViecList.find(x=>x.id===_currentGvBoardId);
+  if(!g||!confirm('Xoá '+_gvSelectedCardIds.size+' thẻ đã chọn?')) return;
+  const n = _gvSelectedCardIds.size;
+  g.taskCards = (g.taskCards||[]).filter(c=>!_gvSelectedCardIds.has(c.id));
+  saveAppData();
+  gvClearCardSelection();
+  renderGvKanban({id:g.id, name:g.taskName, cols:g.taskCols, cards:g.taskCards});
+  toast('🗑 Đã xoá '+n+' thẻ');
 }
 
 function gvMoveCard(event, gvId, cardId, currentColId){
