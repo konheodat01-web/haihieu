@@ -5350,7 +5350,7 @@ function editLink(id){
   document.getElementById('linkAddPanelTitle').textContent='✎ Sửa link';
   const ownerEl=document.getElementById('lf_owner');
   ownerEl.value=l.owner;
-  ownerEl.disabled=(currentMember!=='admin');
+  ownerEl.disabled=false;
   // Auth fields
   const hasAuth = !!(l.account||l.password);
   const chk = document.getElementById('lf_has_auth');
@@ -5376,7 +5376,7 @@ function clearLinkForm(){
   document.getElementById('linkAddPanelTitle').textContent='+ Thêm link';
   const ownerEl=document.getElementById('lf_owner');
   ownerEl.value=currentMember==='admin'?'admin':currentMember==='hai'?'Hải':'Hiếu';
-  ownerEl.disabled=(currentMember!=='admin');
+  ownerEl.disabled=false;
   const chk=document.getElementById('lf_has_auth');
   if(chk){chk.checked=false; toggleLfAuth();}
   const acc=document.getElementById('lf_account'); if(acc) acc.value='';
