@@ -571,9 +571,7 @@
     <div id="bulkBarHai" class="bulk-bar bulk-bar-inactive" style="display:flex">
       <span id="bulkCountHai" style="font-weight:500;font-size:13px"></span>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <button class="btn btn-sm btn-outline" onclick="bulkStatus('hai','Đã Gửi')">&#10003; Đã Gửi</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkStatus('hai','Done')">&#9733; Done</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkStatus('hai','Chưa gửi')">&#8635; Chưa gửi</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkNghiemThu('hai')" title="Sửa nghiệm thu hàng loạt">🎯 NT hàng loạt</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <div style="position:relative">
         <button class="btn btn-sm btn-outline" onclick="toggleEditMenu('hai')" id="editMenuBtn-hai" style="display:flex;align-items:center;gap:5px">
@@ -676,9 +674,7 @@
     <div id="bulkBarHieu" class="bulk-bar bulk-bar-inactive" style="display:flex">
       <span id="bulkCountHieu" style="font-weight:500;font-size:13px"></span>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <button class="btn btn-sm btn-outline" onclick="bulkStatus('hieu','Đã Gửi')">&#10003; Đã Gửi</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkStatus('hieu','Done')">&#9733; Done</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkStatus('hieu','Chưa gửi')">&#8635; Chưa gửi</button>
+      <button class="btn btn-sm btn-outline" onclick="bulkNghiemThu('hieu')" title="Sửa nghiệm thu hàng loạt">🎯 NT hàng loạt</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <div style="position:relative">
         <button class="btn btn-sm btn-outline" onclick="toggleEditMenu('hieu')" id="editMenuBtn-hieu" style="display:flex;align-items:center;gap:5px">
@@ -3072,8 +3068,8 @@ function autoFillAnchors(){
   let changed=false;
   ['hai','hieu'].forEach(sheet=>{
     data[sheet].forEach(r=>{
-      if(r._anchorManual) return; // skip manually set
-      if(r.anchor) return;        // skip already filled (even if auto)
+      if(r._anchorManual) return; // manually set
+      if(r.anchor) return; // already filled (even if auto)
       const brand=findBrandByUrl(r.website);
       if(brand){ r.anchor=brand; changed=true; }
     });
@@ -9600,6 +9596,7 @@ function pqOpenAdd(){
 
 
 // ===== AUTO CLEAN TRASH DAILY =====
+
 function autoCleanTrash(){
   const DAY_MS = 24 * 60 * 60 * 1000;
   const now = Date.now();
@@ -10015,6 +10012,78 @@ function _saveFlexSalary(){ try{localStorage.setItem('wt_flex_salary',JSON.strin
 // Start Firebase real-time listener
 setTimeout(initFirebaseListener, 1000);
 
+
+function bulkNghiemThu(sheet){
+  const ids = selected[sheet];
+  if(!ids||!ids.size){ toast('Chưa chọn dòng nào!','#e74c3c'); return; }
+  // Show quick picker
+  const opts = [
+    {v:100, label:'100% — Đầy đủ', color:'#27ae60'},
+    {v:80,  label:'80% — Khá',     color:'#2980b9'},
+    {v:50,  label:'50% — TB',      color:'#e74c3c'},
+    {v:0,   label:'0% — Không đạt',color:'#555'},
+  ];
+  // Click 1: chọn % → hiện ô nhập lý do (bắt buộc nếu <100%)
+  const btns = opts.map(o=>`<button onclick="bulkNtSelectVal('${sheet}',${o.v},this)"
+    style="padding:10px 14px;border:2px solid ${o.color};border-radius:8px;background:#fff;color:${o.color};font-weight:700;cursor:pointer;font-size:14px;min-width:110px">${o.label}</button>`).join('');
+  const overlay = document.createElement('div');
+  overlay.id='bulkNtOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML=`<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);min-width:380px;max-width:480px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:16px">🎯 Nghiệm thu cho ${ids.size} bài</div>
+    <div id="bulkNtBtns" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${btns}</div>
+    <div id="bulkNtReasonWrap" style="display:none;margin-top:16px">
+      <label style="font-size:12px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px">Lý do nghiệm thu <span style="color:var(--red)">*</span></label>
+      <textarea id="bulkNtReason" rows="3" style="width:100%;border:1px solid var(--gray-border);border-radius:6px;padding:8px;font-size:13px;resize:vertical" placeholder="Nhập lý do..."></textarea>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px">
+      <button onclick="document.getElementById('bulkNtOverlay').remove()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:6px 16px;cursor:pointer">Huỷ</button>
+      <button id="bulkNtConfirm" style="display:none;background:var(--red);color:#fff;border:none;border-radius:6px;padding:6px 18px;cursor:pointer;font-weight:600">✓ Xác nhận</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+let _bulkNtVal = null;
+let _bulkNtSheet = null;
+
+function bulkNtSelectVal(sheet, val, btn){
+  _bulkNtVal = val;
+  _bulkNtSheet = sheet;
+  // Highlight selected button
+  document.querySelectorAll('#bulkNtBtns button').forEach(b=>b.style.opacity='.4');
+  btn.style.opacity='1';
+  btn.style.boxShadow='0 0 0 3px '+btn.style.color;
+  // Show reason field (required for <100%, optional for 100%)
+  const wrap = document.getElementById('bulkNtReasonWrap');
+  const lbl = wrap.querySelector('label');
+  if(val < 100){
+    lbl.innerHTML = 'Lý do nghiệm thu <span style="color:var(--red)">*</span>';
+  } else {
+    lbl.innerHTML = 'Lý do / ghi chú <span style="color:var(--text-muted);font-weight:400">(tuỳ chọn)</span>';
+  }
+  wrap.style.display='block';
+  document.getElementById('bulkNtConfirm').style.display='inline-block';
+  document.getElementById('bulkNtConfirm').onclick = ()=>applyBulkNT(_bulkNtSheet, _bulkNtVal);
+  setTimeout(()=>document.getElementById('bulkNtReason').focus(), 100);
+}
+
+function applyBulkNT(sheet, val){
+  const reason = (document.getElementById('bulkNtReason')?.value||'').trim();
+  if(val < 100 && !reason){ toast('Vui lòng nhập lý do!','#e74c3c'); return; }
+  const ids = selected[sheet];
+  data[sheet].forEach(r=>{
+    if(ids.has(r.id)){
+      r.nghiemThu = val;
+      r.nghiemThuLydo = reason || '';
+    }
+  });
+  saveAppData();
+  const el=document.getElementById('bulkNtOverlay'); if(el) el.remove();
+  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
+  toast(`✓ Đã cập nhật NT ${val}% cho ${ids.size} bài`);
+}
 </script>
 
 <!-- EDIT INDEX TASK MODAL -->
