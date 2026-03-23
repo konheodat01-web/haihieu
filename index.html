@@ -1349,6 +1349,7 @@
   <div style="display:flex;background:#fff;border-radius:8px 8px 0 0;border:1px solid var(--gray-border);border-bottom:none;width:fit-content;overflow:hidden">
     <button class="gv-tab active" id="ptab-viet" onclick="switchPromptTab('viet')">✍️ Prompt viết</button>
     <button class="gv-tab" id="ptab-anh" onclick="switchPromptTab('anh')">🖼️ Prompt ảnh</button>
+    <button class="gv-tab" id="ptab-note" onclick="switchPromptTab('note')">📝 Note</button>
   </div>
   <div style="border:1px solid var(--gray-border);border-radius:0 8px 8px 8px;background:#fff;display:flex;flex-direction:column;height:calc(100vh - 120px);overflow:hidden">
     <!-- TOOLBAR -->
@@ -8896,8 +8897,10 @@ let _promptTab = 'viet';
 
 function switchPromptTab(tab){
   _promptTab = tab;
-  document.getElementById('ptab-viet').classList.toggle('active', tab==='viet');
-  document.getElementById('ptab-anh').classList.toggle('active', tab==='anh');
+  ['viet','anh','note'].forEach(t=>{
+    const btn=document.getElementById('ptab-'+t);
+    if(btn) btn.classList.toggle('active',t===tab);
+  });
   renderPrompts();
 }
 
@@ -9034,7 +9037,7 @@ function openAddPromptModal(){
   document.getElementById('pm_content').value='';
   document.getElementById('pm_note').value='';
   document.getElementById('pm_cat').value='';
-  document.getElementById('pm_type').value=_promptTab;
+  document.getElementById('pm_type').value=_promptTab==='note'?'note':_promptTab;
   document.getElementById('pm_delete_btn').style.display='none';
   document.getElementById('promptModalTitle').textContent='+ Thêm prompt';
   document.getElementById('promptModal').classList.add('open');
@@ -10237,6 +10240,7 @@ setTimeout(initFirebaseListener, 1000);
           <select id="pm_type" style="width:100%" onchange="pmRenderCatTags(this.value);pmCatSearch()">
             <option value="viet">✍️ Prompt viết</option>
             <option value="anh">🖼️ Prompt ảnh</option>
+            <option value="note">📝 Note</option>
           </select>
         </div>
         <div class="form-group">
