@@ -374,7 +374,7 @@
       <!-- Input -->
       <input id="uniInput" type="text" placeholder="Tìm link / website..." autocomplete="off"
         style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 8px;flex:1;font-weight:500;min-width:180px"
-        oninput="uniSearch()" onfocus="uniSearch()" onblur="setTimeout(()=>{if(!document.getElementById('uniDrop')?.matches(':hover'))uniClose();},200)"
+        oninput="uniSearch()" onfocus="uniSearch()" onblur="setTimeout(uniClose,200)"
         onkeydown="uniKeydown(event)">
       <!-- Add button -->
       <button id="uniAddBtn" onclick="uniAdd()" title="Thêm mới"
@@ -384,7 +384,7 @@
     <!-- Dropdown: link/website results (reuse existing qlDropdown) -->
     <div id="qlDropdown" onmousedown="_qlKeepOpen=true" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:360px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:360px;overflow-y:auto"></div>
     <!-- Dropdown: prompt results (reuse existing pqDropdown) -->
-    <div id="pqDropdown" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:420px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:480px;flex-direction:column">
+    <div id="pqDropdown" onmousedown="event.preventDefault()" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:420px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:480px;flex-direction:column">
       <div style="display:flex;border-bottom:1px solid var(--gray-border);flex-shrink:0">
         <button id="pqTabViet" onclick="pqSetTab('viet')"
           style="flex:1;padding:9px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);background:#fff">✍️ Viết</button>
