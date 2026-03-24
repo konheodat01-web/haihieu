@@ -4837,7 +4837,7 @@ function saveProject(){
   if(editingProjectId){
     const t=tasks.find(x=>x.id===editingProjectId);
     if(t){
-      t.name=name;t.person=document.getElementById('npm_person').value;
+      t.name=name;t.person=currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':(document.getElementById('npm_person').value||t.person||'');
       t.type=document.getElementById('npm_type').value;
       t.priority=document.getElementById('npm_priority')?.value||t.priority||'Bình thường';
       t.dang=document.getElementById('npm_dang')?.value||t.dang||'text';
@@ -4854,7 +4854,8 @@ function saveProject(){
     }
   } else {
     const recurOn=document.getElementById('npm_recurring')?.checked;
-    const t={id:taskNextId++,name,person:document.getElementById('npm_person').value,
+    const _personVal = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':(document.getElementById('npm_person').value||'');
+    const t={id:taskNextId++,name,person:_personVal,
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
       deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
       cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01',
