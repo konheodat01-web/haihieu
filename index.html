@@ -494,7 +494,8 @@
 
   <div style="display:flex;align-items:center;gap:8px">
     <div id="syncIndicator" style="font-size:11px;opacity:0;transition:opacity .3s;color:#fff;white-space:nowrap;background:rgba(0,0,0,.2);padding:3px 8px;border-radius:4px">☁ Đã đồng bộ</div>
-    <button onclick="forceSyncToCloud()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
+    <button id="navBackupBtn" onclick="openBackupModal()" style="display:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500" title="Backup & khôi phục dữ liệu">🗃️ Backup</button>
+    <button id="navSyncBtn" onclick="forceSyncToCloud()" style="display:none;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;padding:5px 12px;font-size:12px;cursor:pointer;white-space:nowrap;font-weight:500" title="Đẩy toàn bộ dữ liệu lên đám mây">☁ Sync</button>
   </div>
 </header>
 
@@ -4903,6 +4904,10 @@ function setMember(m){
   if(resetBtn) resetBtn.style.display=m==='admin'?'flex':'none';
   const settingsBtn=document.getElementById('navSettingsBtn');
   if(settingsBtn) settingsBtn.style.display=m==='admin'?'flex':'none';
+  const backupBtn=document.getElementById('navBackupBtn');
+  if(backupBtn) backupBtn.style.display=m==='admin'?'inline-block':'none';
+  const syncBtn=document.getElementById('navSyncBtn');
+  if(syncBtn) syncBtn.style.display=m==='admin'?'inline-block':'none';
   applyAllAvatars();
   updateNavBadges();
   if(window._memberSwitching){ showPage('dashboard'); window._memberSwitching=false; }
