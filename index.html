@@ -3637,7 +3637,7 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       updateNavBadges();
 
       // Auto-clean trash only AFTER Firebase data is fully loaded
-      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); }
+      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); autoBackupDaily(); }
 
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
@@ -9661,6 +9661,91 @@ function autoCleanTrash(){
     console.log(`🗑 Auto-cleaned ${before - deletedTasks.length} task(s) from trash`);
   }
 }
+
+// ===== DAILY AUTO BACKUP =====
+function autoBackupDaily(){
+  try{
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const lastBackup = localStorage.getItem('wt_backup_date');
+    if(lastBackup === today) return; // already backed up today
+
+    const snapshot = {
+      date: today,
+      ts: Date.now(),
+      hai: data.hai,
+      hieu: data.hieu,
+      tasks: tasks,
+      giaoViecList: giaoViecList,
+      indexTasks: indexTasks,
+      websites: websites,
+      links: links,
+      prompts: prompts,
+    };
+
+    // Shift backups: keep 7 days
+    for(let i=6; i>=1; i--){
+      const prev = localStorage.getItem('wt_backup_'+(i-1));
+      if(prev) localStorage.setItem('wt_backup_'+i, prev);
+    }
+    localStorage.setItem('wt_backup_0', JSON.stringify(snapshot));
+    localStorage.setItem('wt_backup_date', today);
+    console.log('✅ Auto backup saved for', today);
+  } catch(e){ console.warn('Backup failed:', e); }
+}
+
+function restoreFromBackup(dateKey){
+  if(!confirm('Khôi phục backup ngày '+dateKey+'?\nDữ liệu hiện tại sẽ bị ghi đè.')) return;
+  window._fbDb.ref('backups/'+dateKey).once('value', snap=>{
+    const s = snap.val();
+    if(!s){ toast('Không tìm thấy backup '+dateKey,'#e74c3c'); return; }
+    if(Array.isArray(s.hai))  data.hai  = s.hai;
+    if(Array.isArray(s.hieu)) data.hieu = s.hieu;
+    if(Array.isArray(s.tasks)) tasks = s.tasks;
+    if(Array.isArray(s.giaoViecList)) giaoViecList = s.giaoViecList;
+    if(Array.isArray(s.indexTasks))   indexTasks   = s.indexTasks;
+    if(Array.isArray(s.websites))     websites     = s.websites;
+    if(Array.isArray(s.links))        links        = s.links;
+    if(Array.isArray(s.prompts))      prompts      = s.prompts;
+    saveAppData();
+    renderDashboard(); renderHai(); renderHieu(); renderTasksOverview();
+    const el=document.getElementById('backupOverlay'); if(el) el.remove();
+    toast('✅ Đã khôi phục backup '+dateKey, '#27ae60', 5000);
+  });
+}
+
+function openBackupModal(){
+  if(!window._fbDb){ toast('Firebase chưa kết nối','#e74c3c'); return; }
+  const overlay = document.createElement('div');
+  overlay.id = 'backupOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);min-width:400px;max-width:500px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-weight:700;font-size:15px">🗃️ Backup tự động (7 ngày gần nhất)</div>
+      <button onclick="document.getElementById('backupOverlay').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">&times;</button>
+    </div>
+    <div id="backupList" style="display:flex;flex-direction:column;gap:8px"><div style="text-align:center;padding:20px;color:var(--text-muted)">⏳ Đang tải từ Firebase...</div></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:12px">✅ Backup lưu trên Firebase — dùng được mọi thiết bị</div>
+  </div>`;
+  document.body.appendChild(overlay);
+  window._fbDb.ref('backups').once('value', snap=>{
+    const val = snap.val()||{};
+    const dates = Object.keys(val).sort().reverse();
+    const el = document.getElementById('backupList');
+    if(!el) return;
+    if(!dates.length){ el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text-muted)">Chưa có backup nào</div>'; return; }
+    el.innerHTML = dates.map(d=>{
+      const s = val[d];
+      return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--gray-border);border-radius:8px;background:#fff">
+        <div style="flex:1">
+          <div style="font-weight:600;font-size:13px">📅 ${d}</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">Hải: ${(s.hai||[]).length} bài · Hiếu: ${(s.hieu||[]).length} bài · Task: ${(s.tasks||[]).length}</div>
+        </div>
+        <button onclick="restoreFromBackup('${d}')" class="btn btn-sm btn-outline" style="color:var(--red);border-color:var(--red)">↩ Khôi phục</button>
+      </div>`;
+    }).join('');
+  });
+}
+
 // ===== INIT — load after all variables declared =====
 loadAppData();
 applyAllAvatars();
