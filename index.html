@@ -810,10 +810,30 @@
   <div id="tasksOverview">
     <div class="panel-header" style="border-radius:0;border:none;border-bottom:1px solid var(--gray-border);margin-bottom:0">
       <div class="panel-title">&#128203; Công việc khác</div>
-      <div class="toolbar">
-        <select id="tkFilterPerson" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
+      <div class="toolbar" style="flex-wrap:wrap;gap:6px">
+        <select id="tkFilterPerson" onchange="renderTasksOverview()" style="display:none">
           <option value="">Tất cả người</option>
           <option>Hải</option><option>Hiếu</option><option>Khác</option>
+        </select>
+        <select id="tkFilterDate" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
+          <option value="">📅 Tất cả ngày</option>
+          <option value="today">Hôm nay</option>
+          <option value="week">7 ngày tới</option>
+          <option value="overdue">Quá hạn</option>
+          <option value="no_deadline">Không deadline</option>
+        </select>
+        <select id="tkFilterPriority" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
+          <option value="">🎯 Tất cả ưu tiên</option>
+          <option value="Cao">🔴 Cao</option>
+          <option value="Bình thường">🟠 Bình thường</option>
+          <option value="Thấp">🟢 Thấp</option>
+        </select>
+        <select id="tkFilterStatus" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
+          <option value="">📊 Tất cả trạng thái</option>
+          <option value="active">Đang làm</option>
+          <option value="done">Đã hoàn thành</option>
+          <option value="pending">Pending</option>
+          <option value="overdue">Quá hạn deadline</option>
         </select>
         <button class="btn btn-outline btn-sm" onclick="openQuickImport()">&#128196; Nhập từ tin nhắn</button>
         <button class="btn btn-primary btn-sm" onclick="openNewProjectModal()">&#43; Thêm task</button>
@@ -4048,10 +4068,33 @@ function renderTasksOverview(){
   const fp=(document.getElementById('tkFilterPerson')||{}).value||'';
   // Member filter: Hải/Hiếu only see their tasks
   const memberFilter = currentMember==='admin'?'':currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
+  const fDate=(document.getElementById('tkFilterDate')||{}).value||'';
+  const fPri=(document.getElementById('tkFilterPriority')||{}).value||'';
+  const fStatus=(document.getElementById('tkFilterStatus')||{}).value||'';
+  const today2=todayVN();
   let list = tasks.filter(t=>{
     if(memberFilter && t.person!==memberFilter) return false;
     if(fp && t.person!==fp) return false;
     if(currentMember==='hai' && t.team==='Team 02') return false;
+    // Date filter
+    if(fDate){
+      if(fDate==='today' && t.deadline!==today2) return false;
+      if(fDate==='week'){ if(!t.deadline||t.deadline<today2||t.deadline>addDays(today2,7)) return false; }
+      if(fDate==='overdue'){ if(!t.deadline||t.deadline>=today2) return false; }
+      if(fDate==='no_deadline' && t.deadline) return false;
+    }
+    // Priority filter
+    if(fPri && (t.priority||'Bình thường')!==fPri) return false;
+    // Status filter
+    if(fStatus){
+      const isDone2 = calcProjectProgress(t)>=100||calcTaskAutoStatus(t)==='Hoàn thành';
+      const isPending2 = !!t.pendingReason;
+      const isOverdue2 = !isDone2&&t.deadline&&t.deadline<today2;
+      if(fStatus==='done' && !isDone2) return false;
+      if(fStatus==='active' && (isDone2||isPending2)) return false;
+      if(fStatus==='pending' && !isPending2) return false;
+      if(fStatus==='overdue' && !isOverdue2) return false;
+    }
     return true;
   });
   const grid = document.getElementById('projectGrid');
@@ -4113,10 +4156,7 @@ function renderTasksOverview(){
           </div>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:2px;padding:0 2px;flex-shrink:0" onclick="event.stopPropagation()">
-        <button onclick="taskMove(${t.id},'up')" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;color:var(--text-muted);font-size:10px;padding:1px 5px;line-height:1.4;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)';this.style.color='var(--text-muted)'">▲</button>
-        <button onclick="taskMove(${t.id},'down')" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;color:var(--text-muted);font-size:10px;padding:1px 5px;line-height:1.4;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)';this.style.color='var(--text-muted)'">▼</button>
-      </div>
+
       <button onclick="event.stopPropagation();openTaskPendingModal(${t.id})" title="${isPendingTask?'Sửa / xoá pending':'Pending task này'}"
         style="background:none;border:1px solid ${isPendingTask?'#e67e22':'var(--gray-border)'};border-radius:4px;cursor:pointer;padding:4px 7px;color:${isPendingTask?'#e67e22':'var(--text-muted)'};font-size:11px;flex-shrink:0;transition:all .15s"
         onmouseover="this.style.borderColor='#e67e22';this.style.color='#e67e22'" onmouseout="this.style.borderColor='${isPendingTask?'#e67e22':'var(--gray-border)'}';this.style.color='${isPendingTask?'#e67e22':'var(--text-muted)'}'">⏸</button>
