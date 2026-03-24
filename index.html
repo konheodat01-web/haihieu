@@ -4282,7 +4282,7 @@ function renderSubBoard(task){
       e.preventDefault();colEl.style.background='var(--gray-light)';
       if(!dragCardId) return;
       if(isPending){
-        pendingDragCard={cardId:dragCardId,colId:col.id};
+        pendingDragCard={cardId:dragCardId,colId:col.id,taskId:task.id};
         const card = (task.cards||[]).find(c=>c.id===dragCardId);
         document.getElementById('pendingReason').value=card?.pendingReason||'';
         document.getElementById('pendingModal').classList.add('open');
@@ -4301,7 +4301,7 @@ function renderSubBoard(task){
     const cardsEl=document.getElementById('subcards-'+col.id);
     cards.forEach(card=>{
       const isLastCol = col.id===cols[cols.length-1].id || col.id==='done';
-      const nextCol = !isLastCol ? cols[cols.indexOf(col)+1] : null;
+      const nextCol = !isLastCol ? cols[cols.findIndex(c=>c.id===col.id)+1] : null;
       // Wrapper row: [select] [card] [done tick]
       const rowEl = document.createElement('div');
       rowEl.style.cssText='display:flex;align-items:center;gap:5px;margin-bottom:8px';
@@ -4409,7 +4409,7 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   if(nextCol.id==='pending' || nextCol.id==='col_pending'){
     // Going to pending needs reason
     event.target.checked=false;
-    pendingDragCard={cardId,colId:nextCol.id};
+    pendingDragCard={cardId,colId:nextCol.id,taskId};
     document.getElementById('pendingReason').value=card.pendingReason||'';
     document.getElementById('pendingModal').classList.add('open');
   } else {
@@ -4635,7 +4635,8 @@ function renderRecurringTasks(){
       <div id="recurDoneList" style="display:${doneOpen?'block':'none'};margin-top:6px">
         ${doneTodayList.map(d=>`<div style="padding:8px 14px;border:1px solid #a8deba;border-radius:8px;background:#f0faf4;display:flex;align-items:center;gap:10px;margin-bottom:6px">
           <span style="font-size:13px;font-weight:600">✅ ${d.name}</span>
-          <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${d.doneAt||today2}</span>
+          <span style="font-size:11px;color:var(--text-muted)">${d.doneAt||today2}</span>
+          <button onclick="undoDoneRecurring(${d.id})" class="btn btn-sm btn-outline" style="font-size:11px;color:#e67e22;border-color:#e67e22;margin-left:auto">↩ Hoàn tác</button>
         </div>`).join('')}
       </div>
     </div>`;
@@ -5010,15 +5011,19 @@ function confirmPending(){
       renderGiaoViec();
       saveAppData();
     } else {
-      const task=tasks.find(t=>t.id===currentProjectId);
-      const card=task?.cards.find(c=>c.id===pendingDragCard.cardId);
-      if(card){
-        card.colId=pendingDragCard.colId;
-        card.pendingReason=reason;
-        card.pendingDate=todayVN();
-        card.pendingStatus='Chờ xử lý';
-      }
+      const _tid = pendingDragCard.taskId || currentProjectId;
+      const task=tasks.find(t=>t.id===_tid);
+      // Bulk pending support
+      const idsToMove = pendingDragCard.bulkIds || [pendingDragCard.cardId];
+      (task?.cards||[]).forEach(c=>{
+        if(!idsToMove.includes(c.id)) return;
+        c.colId = pendingDragCard.colId;
+        c.pendingReason = reason;
+        c.pendingDate = todayVN();
+        c.pendingStatus = 'Chờ xử lý';
+      });
       pendingDragCard=null;
+      clearCardSelection();
       if(task) renderSubBoard(task);
       renderTasksOverview();
       saveAppData();
@@ -10052,10 +10057,30 @@ function bulkMoveToCol(colId){
   const task = tasks.find(t=>t.id===currentProjectId);
   if(!task||!_selectedCardIds.size) return;
   const isPending = colId==='pending'||colId==='col_pending';
+  if(isPending){
+    // Pending requires reason — open modal for first selected card
+    const firstCard = (task.cards||[]).find(c=>_selectedCardIds.has(c.id));
+    if(firstCard){
+      pendingDragCard = {cardId:firstCard.id, colId, taskId:task.id, bulkIds:[..._selectedCardIds], bulkColId:colId};
+      document.getElementById('pendingReason').value = firstCard.pendingReason||'';
+      document.getElementById('pendingModal').classList.add('open');
+    }
+    return;
+  }
   (task.cards||[]).forEach(card=>{
     if(!_selectedCardIds.has(card.id)) return;
-    if(isPending){
-      
+    card.colId = colId;
+    delete card.pendingReason;
+  });
+  saveAppData();
+  clearCardSelection();
+  renderSubBoard(task);
+  renderTasksOverview();
+  const cols = getProjectCols(task);
+  const col = cols.find(c=>c.id===colId);
+  toast(`⇒ Đã chuyển ${_selectedCardIds.size||'các'} thẻ → ${col?.label||colId}`);
+}
+
 function closeAllBulkDropdowns(){
   document.querySelectorAll('[id^="bulk-drop-"]').forEach(el=>el.style.display='none');
 }
@@ -10076,20 +10101,6 @@ function toggleBulkDropdown(key){
       document.addEventListener('click', outside);
     }, 10);
   }
-}
-
-    } else {
-      card.colId = colId;
-      delete card.pendingReason;
-    }
-  });
-  saveAppData();
-  clearCardSelection();
-  renderSubBoard(task);
-  renderTasksOverview();
-  const cols = getProjectCols(task);
-  const col = cols.find(c=>c.id===colId);
-  toast(`⇒ Đã chuyển ${_selectedCardIds.size||'các'} thẻ → ${col?.label||colId}`);
 }
 
 function bulkCardMove(dir){
