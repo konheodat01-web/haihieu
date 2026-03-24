@@ -508,6 +508,7 @@
   <button onclick="showPage('add')">&#43; Thêm bài</button>
   <button onclick="showPage('import')">&#8679; Import</button>
   <div class="nav-section">Quản lý</div>
+  <button onclick="showPage('recurring')">🔁 Task định kỳ <span id="navBadgeRecurring" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
   <button onclick="showPage('tasks')">&#128203; Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
   <button onclick="showPage('index')">&#128269; Index Tasks <span id="navBadgeIndex" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
   <button onclick="showPage('prompts')">&#9997; Prompt</button>
@@ -590,8 +591,28 @@
           <button class="edit-menu-item" onclick="openBulkEdit('hai','index');closeEditMenu('hai')">🔍 Loại Index</button>
         </div>
       </div>
-      <button class="btn btn-sm btn-outline" onclick="openBulkImportField('hai','link')">&#128279; Link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="openBulkImportField('hai','spin')">&#128257; Spin</button>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('dan-hai')" style="color:#2980b9;border-color:#2980b9">📥 Dán link ▾</button>
+        <div id="bulk-drop-dan-hai" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="openBulkImportField('hai','link');closeAllBulkDropdowns()" class="edit-menu-item">🔗 Link bài</div>
+          <div onclick="openBulkImportField('hai','spin');closeAllBulkDropdowns()" class="edit-menu-item">🔄 Spin</div>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('copy-hai')" style="color:#555">📋 Copy ▾</button>
+        <div id="bulk-drop-copy-hai" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="bulkCopyField('hai','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
+          <div onclick="bulkCopyField('hai','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
+          <div onclick="bulkCopyExcel('hai');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('mo-hai')" style="color:#c0392b">🔗 Mở link ▾</button>
+        <div id="bulk-drop-mo-hai" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="bulkOpenLinks('hai','link');closeAllBulkDropdowns()" class="edit-menu-item">🔗 Mở link bài</div>
+          <div onclick="bulkOpenLinks('hai','spin');closeAllBulkDropdowns()" class="edit-menu-item">🔗 Mở spin</div>
+        </div>
+      </div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <div style="position:relative">
         <button class="btn btn-sm btn-outline" onclick="toggleColorPicker('hai')" id="colorBtn-hai" style="display:flex;align-items:center;gap:5px">
@@ -610,13 +631,7 @@
           </div>
         </div>
       </div>
-      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','link')" title="Copy link bài (hàng dọc)">📋 Link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hai','link')" title="Mở hàng loạt link bài">🔗 Mở link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hai','spin')" title="Copy spin (hàng dọc)">📋 Spin</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hai','spin')" title="Mở hàng loạt link spin">🔗 Mở spin</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hai')" title="Copy định dạng Excel">📊 Copy Excel</button>
+
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm" onclick="openBulkIndexId('hai')" style="background:#f0f7fd;border:1px solid #2980b9;color:#2980b9;font-weight:600">🔍 Gán ID Index</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
@@ -693,8 +708,28 @@
           <button class="edit-menu-item" onclick="openBulkEdit('hieu','index');closeEditMenu('hieu')">🔍 Loại Index</button>
         </div>
       </div>
-      <button class="btn btn-sm btn-outline" onclick="openBulkImportField('hieu','link')">&#128279; Link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="openBulkImportField('hieu','spin')">&#128257; Spin</button>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('dan-hieu')" style="color:#2980b9;border-color:#2980b9">📥 Dán link ▾</button>
+        <div id="bulk-drop-dan-hieu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="openBulkImportField('hieu','link');closeAllBulkDropdowns()" class="edit-menu-item">🔗 Link bài</div>
+          <div onclick="openBulkImportField('hieu','spin');closeAllBulkDropdowns()" class="edit-menu-item">🔄 Spin</div>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('copy-hieu')" style="color:#555">📋 Copy ▾</button>
+        <div id="bulk-drop-copy-hieu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="bulkCopyField('hieu','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
+          <div onclick="bulkCopyField('hieu','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
+          <div onclick="bulkCopyExcel('hieu');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
+        </div>
+      </div>
+      <div style="position:relative;display:inline-block">
+        <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('mo-hieu')" style="color:#c0392b">🔗 Mở link ▾</button>
+        <div id="bulk-drop-mo-hieu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="bulkOpenLinks('hieu','link');closeAllBulkDropdowns()" class="edit-menu-item">🔗 Mở link bài</div>
+          <div onclick="bulkOpenLinks('hieu','spin');closeAllBulkDropdowns()" class="edit-menu-item">🔗 Mở spin</div>
+        </div>
+      </div>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <div style="position:relative">
         <button class="btn btn-sm btn-outline" onclick="toggleColorPicker('hieu')" id="colorBtn-hieu" style="display:flex;align-items:center;gap:5px">
@@ -713,13 +748,7 @@
           </div>
         </div>
       </div>
-      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','link')" title="Copy link bài (hàng dọc)">📋 Link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hieu','link')" title="Mở hàng loạt link bài">🔗 Mở link bài</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyField('hieu','spin')" title="Copy spin (hàng dọc)">📋 Spin</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkOpenLinks('hieu','spin')" title="Mở hàng loạt link spin">🔗 Mở spin</button>
-      <button class="btn btn-sm btn-outline" onclick="bulkCopyExcel('hieu')" title="Copy định dạng Excel">📊 Copy Excel</button>
+
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
       <button class="btn btn-sm" onclick="openBulkIndexId('hieu')" style="background:#f0f7fd;border:1px solid #2980b9;color:#2980b9;font-weight:600">🔍 Gán ID Index</button>
       <div style="width:1px;height:20px;background:#ffc107;flex-shrink:0"></div>
@@ -755,6 +784,19 @@
 </div>
 
 <!-- CÔNG VIỆC KHÁC -->
+<div id="page-recurring" class="page">
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-title">🔁 Task định kỳ</div>
+      <div class="toolbar">
+        <button class="btn btn-primary btn-sm" onclick="openNewRecurringModal()">+ Thêm task định kỳ</button>
+      </div>
+    </div>
+    <div id="recurringList" style="padding:14px;display:flex;flex-direction:column;gap:10px"></div>
+    <div id="recurringEmpty" class="empty" style="display:none"><div class="icon">🔁</div>Chưa có task định kỳ nào.</div>
+  </div>
+</div>
+
 <div id="page-tasks" class="page">
 
   <!-- TAB BAR -->
@@ -999,6 +1041,27 @@
             <option value="Team 01">Team 01</option>
             <option value="Team 02">Team 02</option>
           </select>
+        </div>
+      </div>
+      <div class="form-group" style="width:100%;background:#f8f9fa;border-radius:8px;padding:10px 12px;border:1px solid var(--gray-border)">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:6px">
+          <input type="checkbox" id="npm_recurring" onchange="toggleRecurringFields()" style="cursor:pointer;accent-color:var(--red);width:14px;height:14px">
+          <span style="font-weight:600;font-size:13px">🔁 Task định kỳ</span>
+        </label>
+        <div id="npm_recurring_fields" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+          <div class="form-group" style="margin:0">
+            <label style="font-size:11px">Chu kỳ</label>
+            <select id="npm_recur_type" style="width:100%;height:32px;font-size:12px">
+              <option value="daily">Hàng ngày</option>
+              <option value="weekly">Hàng tuần</option>
+              <option value="monthly">Hàng tháng</option>
+              <option value="custom">Tùy chỉnh (ngày)</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0" id="npm_recur_custom_wrap">
+            <label style="font-size:11px">Số ngày</label>
+            <input type="number" id="npm_recur_days" min="1" value="7" style="width:100%;height:32px;font-size:12px">
+          </div>
         </div>
       </div>
       <div class="form-group" style="width:100%">
@@ -3418,6 +3481,7 @@ function showPage(name){
   if(name==='hai'){ activeDate['hai']=todayVN(); renderHai(); }
   if(name==='hieu'){ activeDate['hieu']=todayVN(); renderHieu(); }
   if(name==='tasks') renderTasksOverview();
+  if(name==='recurring') renderRecurringTasks();
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
   if(name==='index') renderIndexTasks();
@@ -3608,6 +3672,8 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
       localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
+      if(r.recurringTasks && Array.isArray(r.recurringTasks)){ recurringTasks=r.recurringTasks; recurNextId=Math.max(1,...recurringTasks.map(x=>x.id||0))+1; localStorage.setItem('wt_recurring',JSON.stringify(recurringTasks)); }
+      localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
       localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
       localStorage.setItem('wt_links',           JSON.stringify(links));
       localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
@@ -3638,7 +3704,7 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       updateNavBadges();
 
       // Auto-clean trash only AFTER Firebase data is fully loaded
-      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); autoBackupDaily(); }
+      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); autoBackupDaily(); processRecurringOnLoad(); }
 
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
@@ -3678,6 +3744,7 @@ function loadAppData(){
     if(lc) linkCategories = JSON.parse(lc);
     const ws = localStorage.getItem('wt_websites');
     if(ws){ websites=JSON.parse(ws); wsNextId=Math.max(1,...websites.map(w=>w.id+1)); }
+    const _rec=localStorage.getItem('wt_recurring'); if(_rec){ recurringTasks=JSON.parse(_rec); recurNextId=Math.max(1,...recurringTasks.map(r=>r.id||0))+1; }
     const wsg=localStorage.getItem('wt_ws_groups'); if(wsg) wsGroups=JSON.parse(wsg);
     const it=localStorage.getItem('wt_index_tasks'); if(it){ indexTasks=JSON.parse(it); itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
     const gv=localStorage.getItem('wt_giaoviec'); if(gv){ giaoViecList=JSON.parse(gv); giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
@@ -4236,6 +4303,11 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   if(!nextCol){
     // Already last col — uncheck moves back
     if(!event.target.checked && curIdx>0) card.colId=cols[curIdx-1].id;
+    // Check if task just completed → spawn recurring
+    if(calcTaskAutoStatus(task)==='Hoàn thành' && task.recurring && !task._recurSpawned){
+      task._recurSpawned = true;
+      setTimeout(()=>spawnRecurringTask(task), 500);
+    }
     saveAppData();
     renderSubBoard(task); renderTasksOverview(); return;
   }
@@ -4248,6 +4320,11 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   } else {
     card.colId=nextCol.id;
     if(card.pendingReason) delete card.pendingReason;
+    // Check completion → spawn recurring
+    if(calcTaskAutoStatus(task)==='Hoàn thành' && task.recurring && !task._recurSpawned){
+      task._recurSpawned=true;
+      setTimeout(()=>spawnRecurringTask(task),500);
+    }
     saveAppData();
     renderSubBoard(task);
     renderTasksOverview();
@@ -4273,6 +4350,8 @@ function openNewProjectModal(){
   document.getElementById('npm_deadline').value='';
   document.getElementById('npm_desc').value='';
   document.getElementById('npm_steps').value='';
+  const _rec=document.getElementById('npm_recurring'); if(_rec){_rec.checked=false;}
+  const _rf=document.getElementById('npm_recurring_fields'); if(_rf) _rf.style.display='none';
   // Team
   const teamSel=document.getElementById('npm_team'); if(teamSel) teamSel.value='Team 01';
   const teamRow=document.getElementById('npm_team_row');
@@ -4326,6 +4405,407 @@ function parseSteps(stepsText){
   ];
 }
 
+
+
+// ===== RECURRING TASKS =====
+let recurringTasks = [];
+let recurNextId = 1;
+
+function saveRecurring(){ 
+  try{ localStorage.setItem('wt_recurring', JSON.stringify(recurringTasks)); }catch(e){}
+  saveAppData();
+}
+
+function renderRecurringTasks(){
+  const list = document.getElementById('recurringList');
+  const empty = document.getElementById('recurringEmpty');
+  if(!list) return;
+  if(!recurringTasks.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  const today = todayVN();
+
+  const _today = todayVN();
+  // Done today section
+  const doneTodayList = (JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]')).filter(d=>d.date===_today);
+
+  list.innerHTML = recurringTasks.map(r=>{
+    const today = _today;
+    const typeLabel = {daily:'Hàng ngày', weekly:'Hàng tuần', monthly:'Hàng tháng', custom:`Mỗi ${r.days} ngày`}[r.type]||r.type;
+    const nextDate = r.nextDate||'—';
+    const isDue = nextDate<=today;
+    const isDoneToday = doneTodayList.some(d=>d.id===r.id);
+    let cardStyle = 'background:#fff;border:1px solid var(--gray-border);';
+    if(isDoneToday) cardStyle = 'background:#f0faf4;border:1px solid #a8deba;opacity:.7;';
+    else if(isDue) cardStyle = 'background:#fdf9f9;border-left:4px solid var(--red);border-top:1px solid var(--gray-border);border-right:1px solid var(--gray-border);border-bottom:1px solid var(--gray-border);';
+    return `<div style="${cardStyle}border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px;margin-bottom:4px;${isDoneToday?'text-decoration:line-through;color:var(--text-muted)':''}">
+          ${isDoneToday?'✅':'🔁'} ${r.name}
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <span style="font-size:11px;background:#f0f7fd;color:#2980b9;padding:1px 8px;border-radius:10px;border:1px solid #b8d4ea">${typeLabel}</span>
+          ${r.person?`<span style="font-size:11px;color:var(--text-muted)">👤 ${r.person}</span>`:''}
+          ${isDoneToday
+            ? `<span style="font-size:11px;color:#27ae60;font-weight:600">✓ Đã xong hôm nay</span><span style="font-size:11px;color:var(--text-muted)">📅 Lần tới: ${nextDate}</span>`
+            : `<span style="font-size:11px;color:${isDue?'var(--red)':'var(--text-muted)'}">📅 Lần tới: <b>${nextDate}</b>${isDue?' ⚠️ Đến hạn!':''}</span>`
+          }
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${isDoneToday
+          ?`<button onclick="undoDoneRecurring(${r.id})" class="btn btn-sm btn-outline" style="font-size:11px;color:#e67e22;border-color:#e67e22" title="Hoàn tác done">↩ Hoàn tác</button>`
+          :`<button onclick="doneRecurringToday(${r.id})" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none;font-size:11px">✓ Done</button>`
+        }
+        <button onclick="editRecurring(${r.id})" class="btn btn-sm btn-outline" style="font-size:11px">✎</button>
+        <button onclick="deleteRecurring(${r.id})" class="btn btn-sm btn-outline" style="font-size:11px;color:#e74c3c;border-color:#e74c3c">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Done today section
+  const today2 = _today;
+  if(doneTodayList.length){
+    const doneOpen = (localStorage.getItem('recur_done_open')||'1')==='1';
+    list.innerHTML += `<div style="margin-top:16px">
+      <div onclick="toggleRecurDoneSection()" style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;background:#f0faf4;border-radius:8px;border:1px solid #a8deba;user-select:none">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#27ae60">✅ Đã hoàn thành hôm nay (${doneTodayList.length})</span>
+        <span id="recurDoneChevron" style="margin-left:auto;font-size:11px;color:#27ae60;transform:${doneOpen?'rotate(0deg)':'rotate(-90deg)'};transition:transform .2s;display:inline-block">▼</span>
+      </div>
+      <div id="recurDoneList" style="display:${doneOpen?'block':'none'};margin-top:6px">
+        ${doneTodayList.map(d=>`<div style="padding:8px 14px;border:1px solid #a8deba;border-radius:8px;background:#f0faf4;display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span style="font-size:13px;font-weight:600">✅ ${d.name}</span>
+          <span style="font-size:11px;color:var(--text-muted);margin-left:auto">${d.doneAt||today2}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+}
+
+function openNewRecurringModal(id){
+  const r = id ? recurringTasks.find(x=>x.id===id) : null;
+  const overlay = document.createElement('div');
+  overlay.id = 'recurringModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:420px;max-width:95vw">
+    <div style="font-weight:700;font-size:15px;margin-bottom:16px">${r?'✎ Sửa':'+ Thêm'} task định kỳ</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Tên task *</label>
+        <input type="text" id="rm_name" style="width:100%" value="${r?.name||''}" placeholder="VD: Check backlink tháng...">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>Người thực hiện</label>
+          <select id="rm_person" style="width:100%">
+            <option value="">--</option>
+            <option ${r?.person==='Hải'?'selected':''}>Hải</option>
+            <option ${r?.person==='Hiếu'?'selected':''}>Hiếu</option>
+            <option ${r?.person==='Khác'?'selected':''}>Khác</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Loại</label>
+          <select id="rm_type" style="width:100%">
+            <option>Nội dung</option><option>SEO</option><option>Thiết kế</option><option>Kỹ thuật</option><option>Khác</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>Chu kỳ</label>
+          <select id="rm_recur_type" style="width:100%" onchange="rmToggleSchedule(this.value)">
+            <option value="daily" ${r?.type==='daily'?'selected':''}>Hàng ngày</option>
+            <option value="weekly" ${r?.type==='weekly'||!r?'selected':''}>Hàng tuần</option>
+            <option value="monthly" ${r?.type==='monthly'?'selected':''}>Hàng tháng</option>
+            <option value="custom" ${r?.type==='custom'?'selected':''}>Tùy chỉnh (ngày)</option>
+          </select>
+        </div>
+        <div class="form-group" id="rm_days_wrap" style="display:${r?.type==='custom'?'block':'none'}"><label>Số ngày</label>
+          <input type="number" id="rm_days" min="1" value="${r?.days||7}" style="width:100%">
+        </div>
+      </div>
+      <!-- Weekly: chọn thứ -->
+      <div class="form-group" id="rm_weekdays_wrap" style="display:${r?.type==='weekly'||!r?'block':'none'}">
+        <label style="font-size:12px">Các thứ trong tuần</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+          ${['CN','T2','T3','T4','T5','T6','T7'].map((d,i)=>`<label style="display:flex;align-items:center;gap:3px;cursor:pointer;padding:3px 8px;border:1px solid var(--gray-border);border-radius:6px;font-size:12px;${(r?.weekdays||[]).includes(i)?'background:#fdf2f2;border-color:var(--red);color:var(--red)':''}">
+            <input type="checkbox" value="${i}" name="rm_weekday" ${(r?.weekdays||[]).includes(i)?'checked':''} style="cursor:pointer;accent-color:var(--red)">${d}</label>`).join('')}
+        </div>
+      </div>
+      <!-- Monthly: chọn ngày -->
+      <div class="form-group" id="rm_monthdays_wrap" style="display:${r?.type==='monthly'?'block':'none'}">
+        <label style="font-size:12px">Các ngày trong tháng</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+          ${Array.from({length:31},(_,i)=>`<label style="cursor:pointer;width:30px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gray-border);border-radius:4px;font-size:11px;${(r?.monthdays||[]).includes(i+1)?'background:var(--red);color:#fff;border-color:var(--red)':''}">
+            <input type="checkbox" value="${i+1}" name="rm_monthday" ${(r?.monthdays||[]).includes(i+1)?'checked':''} style="display:none">${i+1}</label>`).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Click để chọn/bỏ ngày</div>
+      </div>
+      <div class="form-group"><label>Ngày bắt đầu tính (lần tới)</label>
+        <input type="date" id="rm_next" style="width:100%" value="${r?.nextDate||todayVN()}">
+      </div>
+      <div class="form-group"><label>Mô tả</label>
+        <textarea id="rm_desc" rows="2" style="width:100%">${r?.desc||''}</textarea>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:16px">
+      <button onclick="document.getElementById('recurringModal').remove()" class="btn btn-outline">Huỷ</button>
+      <button onclick="saveRecurringModal(${r?r.id:'null'})" class="btn btn-primary">✓ Lưu</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  if(r && document.getElementById('rm_type')) document.getElementById('rm_type').value = r.type_task||'Khác';
+  // Init monthday click handlers
+  document.querySelectorAll('input[name="rm_monthday"]').forEach(chk=>{
+    const lbl=chk.parentElement;
+    lbl.onclick=()=>{ chk.checked=!chk.checked; lbl.style.background=chk.checked?'var(--red)':''; lbl.style.color=chk.checked?'#fff':''; lbl.style.borderColor=chk.checked?'var(--red)':'var(--gray-border)'; };
+  });
+  setTimeout(()=>document.getElementById('rm_name').focus(),100);
+}
+
+
+function rmToggleSchedule(type){
+  const d = document.getElementById('rm_days_wrap');
+  const w = document.getElementById('rm_weekdays_wrap');
+  const m = document.getElementById('rm_monthdays_wrap');
+  if(d) d.style.display = type==='custom'?'block':'none';
+  if(w) w.style.display = type==='weekly'?'block':'none';
+  if(m) m.style.display = type==='monthly'?'block':'none';
+  // Toggle monthday labels click handler
+  if(type==='monthly'){
+    setTimeout(()=>{
+      document.querySelectorAll('input[name="rm_monthday"]').forEach(chk=>{
+        const lbl = chk.parentElement;
+        lbl.onclick = ()=>{
+          chk.checked=!chk.checked;
+          lbl.style.background=chk.checked?'var(--red)':'';
+          lbl.style.color=chk.checked?'#fff':'';
+          lbl.style.borderColor=chk.checked?'var(--red)':'var(--gray-border)';
+        };
+      });
+    },50);
+  }
+}
+
+
+function doneRecurringToday(id){
+  const r = recurringTasks.find(x=>x.id===id);
+  if(!r) return;
+  const today = todayVN();
+  // Save to done list
+  let doneList = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
+  doneList = doneList.filter(d=>d.date===today); // keep only today
+  if(!doneList.find(d=>d.id===id)){
+    doneList.push({id, name:r.name, date:today, doneAt:today});
+    localStorage.setItem('wt_recur_done_today', JSON.stringify(doneList));
+  }
+  // Advance next date
+  r.lastDone = today;
+  r.nextDate = calcNextDate(today, r);
+  saveRecurring();
+  renderRecurringTasks();
+  toast(`✅ Done: ${r.name} — lần tới: ${r.nextDate}`, '#27ae60', 4000);
+}
+
+function toggleRecurDoneSection(){
+  const cur = (localStorage.getItem('recur_done_open')||'1')==='1';
+  localStorage.setItem('recur_done_open', cur?'0':'1');
+  const list = document.getElementById('recurDoneList');
+  const chevron = document.getElementById('recurDoneChevron');
+  if(list) list.style.display = cur?'none':'block';
+  if(chevron) chevron.style.transform = cur?'rotate(-90deg)':'rotate(0deg)';
+}
+
+function undoDoneRecurring(id){
+  const r = recurringTasks.find(x=>x.id===id);
+  if(!r) return;
+  const today = todayVN();
+  let doneList = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
+  doneList = doneList.filter(d=>!(d.id===id && d.date===today));
+  localStorage.setItem('wt_recur_done_today', JSON.stringify(doneList));
+  // Restore nextDate back to today
+  r.nextDate = today;
+  r.lastDone = '';
+  saveRecurring();
+  renderRecurringTasks();
+  toast('↩ Đã hoàn tác — task trở lại chưa done', '#e67e22', 3000);
+}
+
+function editRecurring(id){ openNewRecurringModal(id); }
+
+function saveRecurringModal(id){
+  const name = (document.getElementById('rm_name').value||'').trim();
+  if(!name){ toast('Nhập tên task!','#e74c3c'); return; }
+  const obj = {
+    id: id||recurNextId++,
+    name,
+    person: document.getElementById('rm_person').value,
+    type_task: document.getElementById('rm_type').value,
+    type: document.getElementById('rm_recur_type').value,
+    days: parseInt(document.getElementById('rm_days').value||7),
+    nextDate: document.getElementById('rm_next').value||todayVN(),
+    desc: document.getElementById('rm_desc').value.trim(),
+    weekdays: [...document.querySelectorAll('input[name="rm_weekday"]:checked')].map(x=>parseInt(x.value)),
+    monthdays: [...document.querySelectorAll('input[name="rm_monthday"]:checked')].map(x=>parseInt(x.value)),
+  };
+  if(id){
+    const idx = recurringTasks.findIndex(x=>x.id===id);
+    if(idx>=0) recurringTasks[idx]=obj;
+  } else {
+    recurringTasks.push(obj);
+  }
+  saveRecurring();
+  document.getElementById('recurringModal').remove();
+  renderRecurringTasks();
+  toast('✓ Đã lưu task định kỳ');
+}
+
+function deleteRecurring(id){
+  if(!confirm('Xoá task định kỳ này?')) return;
+  recurringTasks = recurringTasks.filter(x=>x.id!==id);
+  saveRecurring();
+  renderRecurringTasks();
+  toast('Đã xoá');
+}
+
+function createRecurringNow(id, silent){
+  const r = recurringTasks.find(x=>x.id===id);
+  if(!r) return;
+  const today = todayVN();
+  // Check if a non-done task with this recurring id already exists today
+  const alreadyExists = tasks.find(t=>t._recurId===id && t.from===today);
+  if(alreadyExists){ if(!silent) toast('Task hôm nay đã tạo rồi!','#e67e22'); return; }
+  const newTask = {
+    id: taskNextId++,
+    name: r.name,
+    person: r.person||'',
+    type: r.type_task||'Khác',
+    priority: 'Bình thường',
+    dang: 'text',
+    team: 'Team 01',
+    from: today,
+    deadline: today, // deadline = ngày tạo, sẽ tự rolling nếu chưa xong
+    desc: r.desc||'',
+    cols: null,
+    cards: [],
+    _recurId: id, // link to recurring config
+  };
+  tasks.push(newTask);
+  r.lastCreated = today;
+  r.nextDate = calcNextDate(today, r);
+  if(!silent){
+    saveRecurring();
+    renderRecurringTasks();
+    renderTasksOverview();
+    toast(`✓ Đã tạo task: ${r.name}`, '#27ae60', 4000);
+  }
+  return newTask;
+}
+
+// Chạy mỗi khi app load: auto-tạo task đến hạn + đẩy deadline task chưa xong
+function processRecurringOnLoad(){
+  const today = todayVN();
+  let changed = false;
+
+  recurringTasks.forEach(r=>{
+    // Auto-create if nextDate <= today
+    if(r.nextDate && r.nextDate <= today){
+      const t = createRecurringNow(r.id, true);
+      if(t) changed = true;
+    }
+  });
+
+  // Roll deadline: task có _recurId, chưa done, deadline < today → đẩy lên today
+  tasks.forEach(t=>{
+    if(!t._recurId) return;
+    const isDone = calcTaskAutoStatus(t)==='Hoàn thành';
+    if(!isDone && t.deadline && t.deadline < today){
+      t.deadline = today;
+      changed = true;
+    }
+  });
+
+  if(changed){
+    saveAppData();
+    renderTasksOverview();
+    updateNavBadges();
+  }
+}
+
+function updateRecurringBadge(){
+  const today = todayVN();
+  const due = recurringTasks.filter(r=>r.nextDate&&r.nextDate<=today).length;
+  const badge = document.getElementById('navBadgeRecurring');
+  if(badge){ badge.textContent=due; badge.style.display=due?'':'none'; }
+}
+
+function toggleRecurringFields(){
+  const checked = document.getElementById('npm_recurring')?.checked;
+  const el = document.getElementById('npm_recurring_fields');
+  if(el) el.style.display = checked ? 'grid' : 'none';
+}
+
+function calcNextDate(fromDate, recurring){
+  const d = new Date(fromDate+'T12:00:00');
+  if(!d || isNaN(d)) return todayVN();
+  const type = recurring.type;
+  const days = parseInt(recurring.days)||7;
+  if(type==='weekly' && recurring.weekdays && recurring.weekdays.length){
+    // Find next weekday after fromDate
+    for(let i=1;i<=7;i++){
+      const next = new Date(d); next.setDate(d.getDate()+i);
+      if(recurring.weekdays.includes(next.getDay())) return next.toISOString().split('T')[0];
+    }
+    d.setDate(d.getDate()+7); // fallback
+  } else if(type==='monthly' && recurring.monthdays && recurring.monthdays.length){
+    // Find next monthday after fromDate
+    const sortedDays = [...recurring.monthdays].sort((a,b)=>a-b);
+    const curDay = d.getDate();
+    const curMonth = d.getMonth(), curYear = d.getFullYear();
+    // Check remaining days this month
+    const nextThisMonth = sortedDays.find(day=>day>curDay);
+    if(nextThisMonth) return new Date(curYear, curMonth, nextThisMonth).toISOString().split('T')[0].split('T')[0];
+    // Otherwise first day next month
+    return new Date(curYear, curMonth+1, sortedDays[0]).toISOString().split('T')[0];
+  } else if(type==='daily')  d.setDate(d.getDate()+1);
+  else if(type==='weekly') d.setDate(d.getDate()+7);
+  else if(type==='monthly') d.setMonth(d.getMonth()+1);
+  else d.setDate(d.getDate()+days);
+  return d.toISOString().split('T')[0];
+}
+
+function spawnRecurringTask(t){
+  if(!t.recurring) return;
+  const nextFrom = calcNextDate(t.from||todayVN(), t.recurring);
+  const nextDeadline = t.deadline ? calcNextDate(t.deadline, t.recurring) : '';
+  const newTask = {
+    id: taskNextId++,
+    name: t.name,
+    person: t.person,
+    type: t.type,
+    priority: t.priority||'Bình thường',
+    dang: t.dang||'text',
+    team: t.team||'Team 01',
+    from: nextFrom,
+    deadline: nextDeadline,
+    desc: t.desc||'',
+    cols: t.cols||null,
+    cards: (t.cols||null) ? [] : (getProjectCols(t).map(col=>({id:'c'+cardNextId++, colId:col.id, name:''})).slice(0,0)),
+    recurring: t.recurring,
+    _recurFrom: t.id, // reference to parent
+  };
+  // Reset cards to first col
+  if(t.cards && t.cards.length){
+    const firstColId = getProjectCols(t)[0].id;
+    newTask.cards = t.cards.map(card=>({
+      ...card,
+      id: 'c'+cardNextId++,
+      colId: firstColId,
+      pendingReason: '',
+    }));
+  }
+  tasks.push(newTask);
+  saveAppData();
+  renderTasksOverview();
+  toast(`🔁 Đã tạo task định kỳ tiếp theo: ${newTask.name} (${nextFrom})`, '#27ae60', 5000);
+}
+
 function saveProject(){
   const name=(document.getElementById('npm_name').value||'').trim();
   if(!name){toast('Nhập tên task!','#e74c3c');return;}
@@ -4343,16 +4823,19 @@ function saveProject(){
       t.desc=document.getElementById('npm_desc').value.trim();
       t.cols=cols;
       t.team=document.getElementById('npm_team')?.value||t.team||'Team 01';
+      t.recurring=document.getElementById('npm_recurring')?.checked?{type:document.getElementById('npm_recur_type')?.value||'weekly',days:parseInt(document.getElementById('npm_recur_days')?.value||7)}:null;
       if(currentProjectId===editingProjectId){
         document.getElementById('subBoardTitle').textContent=t.name;
         renderSubBoard(t);
       }
     }
   } else {
+    const recurOn=document.getElementById('npm_recurring')?.checked;
     const t={id:taskNextId++,name,person:document.getElementById('npm_person').value,
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
       deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
-      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01'};
+      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01',
+      recurring:recurOn?{type:document.getElementById('npm_recur_type')?.value||'weekly',days:parseInt(document.getElementById('npm_recur_days')?.value||7)}:null};
     tasks.push(t);
   }
   closeNewProjectModal();
@@ -4797,9 +5280,9 @@ function qi_addAll(){
 }
 // ===== MEMBER SWITCHER =====
 const MEMBER_CONFIG = {
-  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','tasks','add','import','links','index','prompts']},
-  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','tasks','add','import','links','index','prompts']},
-  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','tasks','add','import','links','index','prompts']},
+  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','recurring','tasks','add','import','links','index','prompts']},
+  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','recurring','tasks','add','import','links','index','prompts']},
+  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','recurring','tasks','add','import','links','index','prompts']},
 };
 
 function toggleMemberDropdown(){
@@ -5962,6 +6445,29 @@ function applyBulkImportField(){
   toast(`&#10003; Đã gán ${count} link vào cột ${bifField==='link'?'Link bài':'Spin'}`);
 }
 // ===== ROW COLOR =====
+
+function closeAllBulkDropdowns(){
+  document.querySelectorAll('[id^="bulk-drop-"]').forEach(el=>el.style.display='none');
+}
+function toggleBulkDropdown(key){
+  const el = document.getElementById('bulk-drop-'+key);
+  if(!el) return;
+  const isOpen = el.style.display!=='none';
+  closeAllBulkDropdowns();
+  if(!isOpen){
+    el.style.display='block';
+    setTimeout(()=>{
+      function outside(e){
+        if(!el.contains(e.target) && !e.target.closest('[onclick*="toggleBulkDropdown"]')){
+          el.style.display='none';
+          document.removeEventListener('click', outside);
+        }
+      }
+      document.addEventListener('click', outside);
+    }, 10);
+  }
+}
+
 function toggleColorPicker(sheet){
   const picker = document.getElementById('colorPicker-'+sheet);
   const isOpen = picker.style.display !== 'none';
@@ -6791,6 +7297,7 @@ function wsImportRun(){
 }
 
 function updateNavBadges(){
+  updateRecurringBadge();
   // Badge Công việc khác: số task chưa done (progress < 100%) theo member filter
   const memberFilter = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
   const incompleteTasks = (typeof tasks!=='undefined'?tasks:[]).filter(t=>{
@@ -9332,7 +9839,29 @@ function bulkMoveToCol(colId){
   (task.cards||[]).forEach(card=>{
     if(!_selectedCardIds.has(card.id)) return;
     if(isPending){
-      // skip pending col for bulk — use next logic
+      
+function closeAllBulkDropdowns(){
+  document.querySelectorAll('[id^="bulk-drop-"]').forEach(el=>el.style.display='none');
+}
+function toggleBulkDropdown(key){
+  const el = document.getElementById('bulk-drop-'+key);
+  if(!el) return;
+  const isOpen = el.style.display!=='none';
+  closeAllBulkDropdowns();
+  if(!isOpen){
+    el.style.display='block';
+    setTimeout(()=>{
+      function outside(e){
+        if(!el.contains(e.target) && !e.target.closest('[onclick*="toggleBulkDropdown"]')){
+          el.style.display='none';
+          document.removeEventListener('click', outside);
+        }
+      }
+      document.addEventListener('click', outside);
+    }, 10);
+  }
+}
+
     } else {
       card.colId = colId;
       delete card.pendingReason;
