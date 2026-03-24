@@ -3562,6 +3562,7 @@ function fbPayload(ts){
     deletedTasks, links, linkCategories,
     websites, wsGroups,
     indexTasks, giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
+    recurDoneToday: getRecurDoneToday(),
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
@@ -3592,6 +3593,7 @@ function saveToLocalStorage(){
     localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
     localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
     localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
+    // recurDoneToday saved via setRecurDoneToday()
     localStorage.setItem('wt_passwords',       JSON.stringify(getProfilePasswords()));
     localStorage.setItem('wt_settings', JSON.stringify(_settings));
     localStorage.setItem('wt_ts',              String(ts));
@@ -3689,6 +3691,7 @@ function initFirebaseListener(){
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
+      if(Array.isArray(r.recurDoneToday)){ setRecurDoneToday(r.recurDoneToday.filter(d=>d.date===todayVN())); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
@@ -3709,6 +3712,7 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       if(r.recurringTasks && Array.isArray(r.recurringTasks)){ recurringTasks=r.recurringTasks; recurNextId=Math.max(1,...recurringTasks.map(x=>x.id||0))+1; localStorage.setItem('wt_recurring',JSON.stringify(recurringTasks)); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); }
       localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
     localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
+    // recurDoneToday saved via setRecurDoneToday()
       localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
       localStorage.setItem('wt_links',           JSON.stringify(links));
       localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
@@ -3720,6 +3724,7 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
     localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
     localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
+    // recurDoneToday saved via setRecurDoneToday()
       if(r._ts) localStorage.setItem('wt_ts',    String(r._ts));
 
       renderDashboard(); renderHai(); renderHieu();
@@ -4514,7 +4519,7 @@ function renderRecurringTasks(){
 
   const _today = todayVN();
   // Done today section
-  const _allDoneToday = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
+  const _allDoneToday = getRecurDoneToday();
   const doneTodayList = _allDoneToday.filter(d=>d.date===_today && (currentMember==='admin'||d.person===(currentMember==='hai'?'Hải':'Hiếu')));
 
   const visibleRecurring = currentMember==='admin' ? recurringTasks : recurringTasks.filter(r=>r.person===(currentMember==='hai'?'Hải':'Hiếu'));
@@ -4685,11 +4690,11 @@ function doneRecurringToday(id){
   if(!r) return;
   const today = todayVN();
   // Save to done list
-  let doneList = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
+  let doneList = getRecurDoneToday();
   doneList = doneList.filter(d=>d.date===today); // keep only today
   if(!doneList.find(d=>d.id===id)){
     doneList.push({id, name:r.name, date:today, doneAt:today, person:r.person||''});
-    localStorage.setItem('wt_recur_done_today', JSON.stringify(doneList));
+    setRecurDoneToday(doneList); saveAppData();
   }
   // Advance next date
   r.lastDone = today;
@@ -4712,9 +4717,9 @@ function undoDoneRecurring(id){
   const r = recurringTasks.find(x=>x.id===id);
   if(!r) return;
   const today = todayVN();
-  let doneList = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
+  let doneList = getRecurDoneToday();
   doneList = doneList.filter(d=>!(d.id===id && d.date===today));
-  localStorage.setItem('wt_recur_done_today', JSON.stringify(doneList));
+  setRecurDoneToday(doneList); saveAppData();
   // Restore nextDate back to today
   r.nextDate = today;
   r.lastDone = '';
@@ -7781,6 +7786,13 @@ function indexDueDate(dateStr){
 
 // ===== KHO ID =====
 let khoIdList = []; // persisted archive of all created index task IDs
+
+function getRecurDoneToday(){
+  try{ return getRecurDoneToday(); }catch(e){ return []; }
+}
+function setRecurDoneToday(list){
+  localStorage.setItem('wt_recur_done_today', JSON.stringify(list));
+}
 
 function loadKhoId(){
   try{ khoIdList = JSON.parse(localStorage.getItem('wt_kho_id')||'[]'); }catch(e){ khoIdList=[]; }
