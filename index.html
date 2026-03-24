@@ -1374,7 +1374,7 @@
           </div>
         </div>
         <!-- BƯỚC THỦ CÔNG -->
-        <div class="form-group" style="width:100%">
+        <div class="form-group" id="qi_steps_row" style="width:100%">
           <label style="font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:space-between">
             <span>Các bước thực hiện <span style="font-weight:400;color:var(--text-muted)">(mỗi dòng 1 bước)</span></span>
             <button onclick="qi_addDefaultSteps()" style="background:none;border:1px solid var(--gray-border);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:var(--text-muted)">+ Bước mặc định</button>
@@ -3562,6 +3562,7 @@ function fbPayload(ts){
     deletedTasks, links, linkCategories,
     websites, wsGroups,
     indexTasks, giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
+    recurDoneToday: getRecurDoneToday(),
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
@@ -3633,6 +3634,12 @@ function initFirebaseListener(){
         const gvPanel = document.getElementById('panel-giaoviec');
         if(gvPanel && gvPanel.style.display!=='none') renderGiaoViec();
       }
+      // Update recurDoneToday even on own push
+      if(Array.isArray(r.recurDoneToday)){
+        setRecurDoneToday(r.recurDoneToday.filter(d=>d.date===todayVN()));
+      }
+      if(Array.isArray(r.recurringTasks)) recurringTasks = r.recurringTasks;
+      if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks();
       return;
     }
 
@@ -3690,7 +3697,7 @@ function initFirebaseListener(){
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
-      if(Array.isArray(r.recurDoneToday)){ const td=r.recurDoneToday.filter(d=>d.date===todayVN()); if(JSON.stringify(td)!==localStorage.getItem('wt_recur_done_today')){ setRecurDoneToday(td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
+      if(Array.isArray(r.recurDoneToday)){ const _td=r.recurDoneToday.filter(d=>d.date===todayVN()); const _cur=localStorage.getItem('wt_recur_done_today'); if(JSON.stringify(_td)!==_cur){ setRecurDoneToday(_td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
@@ -4524,7 +4531,9 @@ function renderRecurringTasks(){
   const visibleRecurring = currentMember==='admin' ? recurringTasks : recurringTasks.filter(r=>r.person===(currentMember==='hai'?'Hải':'Hiếu'));
   if(!visibleRecurring.length){ list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
-  list.innerHTML = visibleRecurring.map(r=>{
+  // Tách task chưa done và task đã done hôm nay
+  const notDoneList = visibleRecurring.filter(r=>!doneTodayList.some(d=>d.id===r.id));
+  list.innerHTML = notDoneList.map(r=>{
     const today = _today;
     const typeLabel = {daily:'Hàng ngày', weekly:'Hàng tuần', monthly:'Hàng tháng', custom:`Mỗi ${r.days} ngày`}[r.type]||r.type;
     const nextDate = r.nextDate||'—';
@@ -4699,7 +4708,7 @@ function doneRecurringToday(id){
   r.lastDone = today;
   r.nextDate = calcNextDate(today, r);
   saveRecurring();
-  renderRecurringTasks();
+  setTimeout(()=>renderRecurringTasks(), 50);
   toast(`✅ Done: ${r.name} — lần tới: ${r.nextDate}`, '#27ae60', 4000);
 }
 
@@ -7787,15 +7796,14 @@ function indexDueDate(dateStr){
 let khoIdList = []; // persisted archive of all created index task IDs
 
 function getRecurDoneToday(){
-  try{ return getRecurDoneToday(); }catch(e){ return []; }
+  try{ return JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]'); }catch(e){ return []; }
 }
 function setRecurDoneToday(list){
   localStorage.setItem('wt_recur_done_today', JSON.stringify(list));
 }
 function saveRecurDoneToday(list){
-  localStorage.setItem('wt_recur_done_today', JSON.stringify(list));
-  // Push only this field to Firebase without triggering full saveAppData
-  if(window._fbDb) window._fbDb.ref('appData/recurDoneToday').set(list);
+  setRecurDoneToday(list);
+  // Will be included in next saveAppData call
 }
 
 function loadKhoId(){
@@ -10139,9 +10147,9 @@ function qi_onDangChange(){
   if(hint) hint.style.display=dang==='url'?'block':'none';
   if(btnParse) btnParse.style.display=dang==='url'?'none':'inline-flex';
   if(btnParseUrl) btnParseUrl.style.display=dang==='url'?'inline-flex':'none';
-  // Hide steps textarea for URL mode
-  const stepsArea=document.getElementById('qi_steps')?.closest('.form-group');
-  if(stepsArea) stepsArea.style.display=dang==='url'?'none':'block';
+  // Always show steps row
+  const stepsRow2=document.getElementById('qi_steps_row');
+  if(stepsRow2) stepsRow2.style.display='block';
 }
 
 function qi_parseUrl(){
