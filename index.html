@@ -828,6 +828,9 @@
           <option value="Bình thường">🟠 Bình thường</option>
           <option value="Thấp">🟢 Thấp</option>
         </select>
+        <select id="tkFilterType" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
+          <option value="">🏷️ Tất cả loại</option>
+        </select>
         <select id="tkFilterStatus" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
           <option value="">📊 Tất cả trạng thái</option>
           <option value="active">Đang làm</option>
@@ -4068,6 +4071,14 @@ function renderTasksOverview(){
   const fp=(document.getElementById('tkFilterPerson')||{}).value||'';
   // Member filter: Hải/Hiếu only see their tasks
   const memberFilter = currentMember==='admin'?'':currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
+  // Populate type filter options
+  const typeSelTk = document.getElementById('tkFilterType');
+  if(typeSelTk){
+    const types = [...new Set(tasks.map(t=>t.type).filter(Boolean))].sort();
+    const curType = typeSelTk.value;
+    typeSelTk.innerHTML = '<option value="">🏷️ Tất cả loại</option>' + types.map(t=>`<option value="${t}" ${t===curType?'selected':''}>${t}</option>`).join('');
+  }
+  const fType=(document.getElementById('tkFilterType')||{}).value||'';
   const fDate=(document.getElementById('tkFilterDate')||{}).value||'';
   const fPri=(document.getElementById('tkFilterPriority')||{}).value||'';
   const fStatus=(document.getElementById('tkFilterStatus')||{}).value||'';
@@ -4076,6 +4087,7 @@ function renderTasksOverview(){
     if(memberFilter && t.person!==memberFilter) return false;
     if(fp && t.person!==fp) return false;
     if(currentMember==='hai' && t.team==='Team 02') return false;
+    if(fType && (t.type||'')!==fType) return false;
     // Date filter
     if(fDate){
       if(fDate==='today' && t.deadline!==today2) return false;
