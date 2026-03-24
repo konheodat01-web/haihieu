@@ -7904,7 +7904,7 @@ function switchItTab(tab){
   const t2 = document.getElementById('itTab-kho');
   if(tab==='kho'){
     if(tasksPanel) tasksPanel.style.display='none';
-    if(khoPanel) khoPanel.style.display='flex'; khoPanel.style.flexDirection='column';
+    if(khoPanel){ khoPanel.style.display='flex'; khoPanel.style.flexDirection='column'; }
     if(banner) banner.style.display='none';
     if(t1){ t1.style.background='#fff'; t1.style.color='var(--text-muted)'; }
     if(t2){ t2.style.background='var(--red)'; t2.style.color='#fff'; }
@@ -7998,7 +7998,7 @@ function renderIndexTasks(){
     if(currentMember==='hai' && t.team!=='Team 01') return false;
     if(fTeam && t.team!==fTeam) return false;
     if(fStatus && t.status!==fStatus) return false;
-    if(q && !t.taskId.toLowerCase().includes(q) && !t.stt.toLowerCase().includes(q) && !(t.name||'').toLowerCase().includes(q)) return false;
+    if(q && !t.taskId.toLowerCase().includes(q) && !(t.stt||'').toLowerCase().includes(q) && !(t.name||'').toLowerCase().includes(q)) return false;
     return true;
   });
 
