@@ -10219,29 +10219,6 @@ function applyBulkNT(sheet, val){
   toast(`✓ Đã cập nhật NT ${val}% cho ${ids.size} bài`);
 }
 
-// ===== QUICK IMPORT M7 WEBSITES =====
-(function(){
-  const newItems = [{"brand": "NBET", "url": "https://nbet.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "NBET", "url": "https://nbet.us.org/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "TA88", "url": "https://ta88.ru.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "TA88", "url": "https://ta88.za.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "XO88X", "url": "https://xo88x.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "XO88X", "url": "https://xo88x.co.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "ZBETZ", "url": "https://zbetz.co.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "ZBETZ", "url": "https://zbetz.de.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "RED88A", "url": "https://red88a.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "RED88A", "url": "https://red88a.co.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "11BETT", "url": "https://11bett.us.com/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}, {"brand": "11BETT", "url": "https://11bett.com.mx/", "admin": "wp-admin", "account": "admin", "password": "Hs&K58G2hKmXhTsr", "status": "Tốt", "note": "", "team": "Team 01", "owner": "Hiếu", "group": "M7"}];
-  let added = 0, skipped = 0;
-  newItems.forEach(w => {
-    const dup = websites.find(x =>
-      (x.url && x.url.replace(/\/$/,'') === w.url.replace(/\/$/,'')) ||
-      x.brand.toLowerCase() === w.brand.toLowerCase()
-    );
-    if(dup) { skipped++; return; }
-    websites.push({...w, id: wsNextId++});
-    added++;
-  });
-  if(added > 0) {
-    saveAppData();
-    renderWebsites();
-    autoFillAnchors();
-    updateWsIcons();
-    toast('✓ Đã thêm ' + added + ' website M7' + (skipped ? ' (' + skipped + ' trùng bỏ qua)' : ''), '#27ae60', 4000);
-  } else {
-    toast('Tất cả ' + skipped + ' website M7 đã tồn tại.', '#e67e22', 3000);
-  }
-})();
 </script>
 
 <!-- EDIT INDEX TASK MODAL -->
