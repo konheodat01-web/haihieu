@@ -1051,7 +1051,7 @@
           <input type="checkbox" id="npm_recurring" onchange="toggleRecurringFields()" style="cursor:pointer;accent-color:var(--red);width:14px;height:14px">
           <span style="font-weight:600;font-size:13px">🔁 Task định kỳ</span>
         </label>
-        <div id="npm_recurring_fields" style="display:none;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+        <div id="npm_recurring_fields" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
           <div class="form-group" style="margin:0">
             <label style="font-size:11px">Chu kỳ</label>
             <select id="npm_recur_type" style="width:100%;height:32px;font-size:12px">
@@ -4407,7 +4407,7 @@ function openEditProjectModal(){
   document.getElementById('npm_name').value=t.name;
   const npmPerson=document.getElementById('npm_person');
   if(npmPerson){ npmPerson.value=t.person||''; npmPerson.disabled=(currentMember!=='admin'); }
-  document.getElementById('npm_type').value=t.type||'Nội dung';
+  populateTaskTypeSelect('npm_type', t.type||'Nội dung');
   const pri=document.getElementById('npm_priority'); if(pri) pri.value=t.priority||'Bình thường';
   const dang=document.getElementById('npm_dang'); if(dang) dang.value=t.dang||'text';
   document.getElementById('npm_from').value=t.from||'';
@@ -4417,6 +4417,10 @@ function openEditProjectModal(){
   const teamRow=document.getElementById('npm_team_row'); if(teamRow) teamRow.style.display=currentMember==='hai'?'none':'block';
   const midSteps = t.cols&&t.cols!==DEFAULT_COLS ? t.cols.filter(c=>c.id!=='col_new'&&c.id!=='col_pending'&&c.id!=='done'&&c.id!=='todo') : [];
   document.getElementById('npm_steps').value=midSteps.map(c=>c.label).join('\n');
+  // Recurring fields
+  const recEl=document.getElementById('npm_recurring');
+  if(recEl){ recEl.checked=!!t.recurring; document.getElementById('npm_recurring_fields').style.display=t.recurring?'grid':'none'; }
+  if(t.recurring){ const rt=document.getElementById('npm_recur_type'); if(rt) rt.value=t.recurring.type||'weekly'; const rd=document.getElementById('npm_recur_days'); if(rd) rd.value=t.recurring.days||7; }
   document.getElementById('npm_delete_btn').style.display='inline-flex';
   document.getElementById('newProjectModal').classList.add('open');
   setTimeout(()=>document.getElementById('npm_name').focus(),100);
@@ -5098,6 +5102,9 @@ function openQuickImport(){
   qi_goBack();
   setTimeout(()=>{ document.getElementById('qi_input').focus(); qi_onDangChange(); }, 50);
   const _qiTeamRow=document.getElementById('qi_team_row'); if(_qiTeamRow) _qiTeamRow.style.display=currentMember==='hai'?'none':'block';
+  // Auto-fill person
+  const _qiPerson=document.getElementById('qi_person');
+  if(_qiPerson && currentMember!=='admin') _qiPerson.value=currentMember==='hai'?'Hải':'Hiếu';
 }
 function qi_resetForm(){
   document.getElementById('qi_input').value='';
