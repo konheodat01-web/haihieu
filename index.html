@@ -8119,7 +8119,7 @@ function renderIndexDueBanner(){
     const isOverdue = t.dueDate < today && t.status!=='Pending';
     const isPending = t.status==='Pending';
     return `<div class="it-due-card ${isOverdue?'overdue':isPending?'waiting':''}">
-      ${renderItId(t.taskId)}${subBadge||''}
+      ${renderItId(t.taskId)}${t.isSubTask?'<span style="font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin-left:3px">sub</span>':''}
       ${t.name?`<span style="font-size:12px;font-weight:500;color:var(--text)">${t.name}</span>`:''}
       <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team}</span>
       ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:11px">${t.person}</span>`:''}
