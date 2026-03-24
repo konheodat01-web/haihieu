@@ -3636,6 +3636,9 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       if(active==='index') renderIndexTasks();
       updateNavBadges();
 
+      // Auto-clean trash only AFTER Firebase data is fully loaded
+      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); }
+
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
     }catch(e){console.warn('Firebase receive error',e);}
@@ -9649,7 +9652,7 @@ function autoCleanTrash(){
   const now = Date.now();
   const before = deletedTasks.length;
   deletedTasks = deletedTasks.filter(t => {
-    if(!t._deletedAt) return false; // no timestamp → remove
+    if(!t._deletedAt) return true; // no timestamp → keep (legacy data)
     return (now - t._deletedAt) < DAY_MS;
   });
   if(deletedTasks.length < before){
@@ -9665,7 +9668,6 @@ renderDashboard();
 renderHai();
 renderHieu();
 window._appLoaded = true;
-autoCleanTrash();
 initDragSelectGlobal();
 window._appData = data;
 window._tasks = tasks;
