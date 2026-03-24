@@ -1010,7 +1010,10 @@
         </div>
         <div class="form-group">
           <label>Loại</label>
-          <select id="npm_type" style="width:100%"><option>Nội dung</option><option>SEO</option><option>Thiết kế</option><option>Kỹ thuật</option><option>Marketing</option><option>Khác</option></select>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="npm_type" style="flex:1"></select>
+            <button type="button" onclick="openTaskTypeManager()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--text-muted)" title="Quản lý loại task">⚙</button>
+          </div>
         </div>
         <div class="form-group">
           <label>Dạng task</label>
@@ -1436,7 +1439,13 @@
 
     <!-- TOOLBAR ROW — cố định, không cuộn -->
     <div class="panel-header" style="flex-shrink:0;background:#fff;z-index:20;border-bottom:1px solid var(--gray-border)">
-      <div class="panel-title">&#128269; Quản lý Task Index</div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="panel-title">&#128269; Quản lý Task Index</div>
+        <div style="display:flex;gap:0;border:1px solid var(--gray-border);border-radius:6px;overflow:hidden">
+          <button id="itTab-tasks" onclick="switchItTab('tasks')" class="btn btn-sm" style="border-radius:0;border:none;background:var(--red);color:#fff;font-size:11px;padding:4px 10px">📋 Danh sách</button>
+          <button id="itTab-kho" onclick="switchItTab('kho')" class="btn btn-sm" style="border-radius:0;border:none;background:#fff;color:var(--text-muted);font-size:11px;padding:4px 10px;border-left:1px solid var(--gray-border)">🗄️ Kho ID</button>
+        </div>
+      </div>
       <div class="toolbar">
         <input type="text" id="itSearch" placeholder="&#128269; Tìm ID / STT..." oninput="renderIndexTasks()" style="width:160px;height:32px;font-size:12px">
         <select id="itFilterTeam" onchange="renderIndexTasks()" style="height:32px;font-size:12px">
@@ -1457,6 +1466,9 @@
         </select>
         <button class="btn btn-primary btn-sm" onclick="openAddIndexModal()">&#43; Thêm task index</button>
       </div>
+    <!-- INDEX PAGE FILTERS - hide in kho mode -->
+    <div id="itFiltersRow" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-bottom:1px solid var(--gray-border);flex-shrink:0;flex-wrap:wrap">
+    </div>
     </div>
 
     <!-- BANNER ĐẾN HẠN — nằm trong panel, co lại khi có data -->
@@ -1469,6 +1481,25 @@
     </div>
 
     <!-- TABLE AREA — scroll độc lập -->
+    <!-- KHO ID PANEL -->
+    <div id="itKhoPanel" style="display:none;flex:1;overflow-y:auto;padding:14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+        <input type="text" id="khoSearch" placeholder="🔍 Tìm ID, tên, website..." oninput="renderKhoId()" style="width:220px;height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px">
+        <select id="khoFilterTeam" onchange="renderKhoId()" style="height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
+          <option value="">Tất cả team</option>
+          <option value="Team 01">Team 01</option>
+          <option value="Team 02">Team 02</option>
+        </select>
+        <select id="khoFilterMonth" onchange="renderKhoId()" style="height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 6px">
+          <option value="">Tất cả tháng</option>
+        </select>
+        <span id="khoCount" style="font-size:12px;color:var(--text-muted);margin-left:auto"></span>
+        <button onclick="forceMigrateKho()" class="btn btn-sm btn-outline" style="font-size:11px">🔄 Đồng bộ từ danh sách</button>
+      </div>
+      <div id="khoList"></div>
+      <div id="khoEmpty" style="display:none;text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:32px;margin-bottom:8px">🗄️</div>Kho ID trống</div>
+    </div>
+
     <div class="table-wrap" style="flex:1;overflow-y:auto;overflow-x:auto;min-height:0">
       <table class="data" id="tableIndexTasks" style="min-width:820px;width:100%">
         <thead>
@@ -3530,7 +3561,7 @@ function fbPayload(ts){
     tasks, taskOrder: tasks.map(t=>t.id),
     deletedTasks, links, linkCategories,
     websites, wsGroups,
-    indexTasks, giaoViecList, assignees, prompts,
+    indexTasks, giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
@@ -3559,6 +3590,8 @@ function saveToLocalStorage(){
     localStorage.setItem('wt_giaoviec',        JSON.stringify(giaoViecList));
     localStorage.setItem('wt_assignees',       JSON.stringify(assignees));
     localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
+    localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
+    localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
     localStorage.setItem('wt_passwords',       JSON.stringify(getProfilePasswords()));
     localStorage.setItem('wt_settings', JSON.stringify(_settings));
     localStorage.setItem('wt_ts',              String(ts));
@@ -3656,6 +3689,7 @@ function initFirebaseListener(){
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
+      if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
       if(Array.isArray(r.prompts)){      prompts=r.prompts;           promptNextId=Math.max(1,...prompts.map(p=>p.id||0))+1; }
@@ -3672,8 +3706,9 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
       localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
       localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
-      if(r.recurringTasks && Array.isArray(r.recurringTasks)){ recurringTasks=r.recurringTasks; recurNextId=Math.max(1,...recurringTasks.map(x=>x.id||0))+1; localStorage.setItem('wt_recurring',JSON.stringify(recurringTasks)); }
+      if(r.recurringTasks && Array.isArray(r.recurringTasks)){ recurringTasks=r.recurringTasks; recurNextId=Math.max(1,...recurringTasks.map(x=>x.id||0))+1; localStorage.setItem('wt_recurring',JSON.stringify(recurringTasks)); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); }
       localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
+    localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
       localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
       localStorage.setItem('wt_links',           JSON.stringify(links));
       localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
@@ -3683,6 +3718,8 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       localStorage.setItem('wt_giaoviec',        JSON.stringify(giaoViecList));
       localStorage.setItem('wt_assignees',       JSON.stringify(assignees));
       localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
+    localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
+    localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
       if(r._ts) localStorage.setItem('wt_ts',    String(r._ts));
 
       renderDashboard(); renderHai(); renderHieu();
@@ -3704,7 +3741,7 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       updateNavBadges();
 
       // Auto-clean trash only AFTER Firebase data is fully loaded
-      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); autoBackupDaily(); processRecurringOnLoad(); }
+      if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); autoBackupDaily(); migrateIndexTasksToKho(); }
 
       const ind=document.getElementById('syncIndicator');
       if(ind){ind.textContent='🔄 Nhận dữ liệu mới';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',3000);}
@@ -4303,11 +4340,6 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   if(!nextCol){
     // Already last col — uncheck moves back
     if(!event.target.checked && curIdx>0) card.colId=cols[curIdx-1].id;
-    // Check if task just completed → spawn recurring
-    if(calcTaskAutoStatus(task)==='Hoàn thành' && task.recurring && !task._recurSpawned){
-      task._recurSpawned = true;
-      setTimeout(()=>spawnRecurringTask(task), 500);
-    }
     saveAppData();
     renderSubBoard(task); renderTasksOverview(); return;
   }
@@ -4320,11 +4352,6 @@ function moveCardByCheck(event, taskId, cardId, currentColId){
   } else {
     card.colId=nextCol.id;
     if(card.pendingReason) delete card.pendingReason;
-    // Check completion → spawn recurring
-    if(calcTaskAutoStatus(task)==='Hoàn thành' && task.recurring && !task._recurSpawned){
-      task._recurSpawned=true;
-      setTimeout(()=>spawnRecurringTask(task),500);
-    }
     saveAppData();
     renderSubBoard(task);
     renderTasksOverview();
@@ -4337,13 +4364,13 @@ function openNewProjectModal(){
   editingProjectId=null;
   document.getElementById('npmTitle').textContent='+ Thêm task mới';
   document.getElementById('npm_name').value='';
+  populateTaskTypeSelect('npm_type', 'Nội dung');
   // Person: auto-fill from member
   const npmPerson=document.getElementById('npm_person');
   if(npmPerson){
     npmPerson.value = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
     npmPerson.disabled = currentMember!=='admin';
   }
-  document.getElementById('npm_type').value='Nội dung';
   const pri=document.getElementById('npm_priority'); if(pri) pri.value='Bình thường';
   const dang0=document.getElementById('npm_dang'); if(dang0) dang0.value='url';
   document.getElementById('npm_from').value=todayVN();
@@ -4411,9 +4438,70 @@ function parseSteps(stepsText){
 let recurringTasks = [];
 let recurNextId = 1;
 
-function saveRecurring(){ 
-  try{ localStorage.setItem('wt_recurring', JSON.stringify(recurringTasks)); }catch(e){}
+function saveRecurring(){
   saveAppData();
+}
+
+
+// ===== TASK TYPES MANAGEMENT =====
+const DEFAULT_TASK_TYPES = ['Nội dung','SEO','Thiết kế','Kỹ thuật','Marketing','Khác'];
+function getTaskTypes(){
+  try{ return JSON.parse(localStorage.getItem('wt_task_types')||'null') || DEFAULT_TASK_TYPES; }catch(e){ return DEFAULT_TASK_TYPES; }
+}
+function saveTaskTypes(types){ localStorage.setItem('wt_task_types', JSON.stringify(types)); }
+
+function populateTaskTypeSelect(selId, currentVal){
+  const sel = document.getElementById(selId);
+  if(!sel) return;
+  const types = getTaskTypes();
+  sel.innerHTML = types.map(t=>`<option ${t===currentVal?'selected':''}>${t}</option>`).join('');
+}
+
+function openTaskTypeManager(){
+  const types = getTaskTypes();
+  const overlay = document.createElement('div');
+  overlay.id = 'taskTypeModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:360px">
+    <div style="font-weight:700;font-size:15px;margin-bottom:14px">⚙ Quản lý loại task</div>
+    <div id="ttList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
+      ${types.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px">
+        <input type="text" value="${t}" data-idx="${i}" class="tt-input" style="flex:1;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;font-size:13px">
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px">×</button>
+      </div>`).join('')}
+    </div>
+    <button onclick="ttAddRow()" class="btn btn-sm btn-outline" style="width:100%;margin-bottom:12px">+ Thêm loại</button>
+    <div style="display:flex;justify-content:space-between">
+      <button onclick="document.getElementById('taskTypeModal').remove()" class="btn btn-outline">Huỷ</button>
+      <button onclick="saveTaskTypeManager()" class="btn btn-primary">✓ Lưu</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function ttAddRow(){
+  const ttList = document.getElementById('ttList');
+  if(!ttList) return;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:8px';
+  row.innerHTML = '<input type="text" class="tt-input" style="flex:1;border:1px solid var(--gray-border);border-radius:6px;padding:5px 8px;font-size:13px" placeholder="Tên loại mới...">'
+    + '<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px">×</button>';
+  ttList.appendChild(row);
+  row.querySelector('input').focus();
+}
+
+function saveTaskTypeManager(){
+  const inputs = document.querySelectorAll('#ttList .tt-input');
+  const types = [...inputs].map(i=>(i.value||'').trim()).filter(Boolean);
+  if(!types.length){ toast('Cần ít nhất 1 loại!','#e74c3c'); return; }
+  saveTaskTypes(types);
+  document.getElementById('taskTypeModal').remove();
+  // Refresh selects
+  const cur = document.getElementById('npm_type')?.value;
+  populateTaskTypeSelect('npm_type', cur);
+  const curRm = document.getElementById('rm_type')?.value;
+  if(document.getElementById('rm_type')) populateTaskTypeSelect('rm_type', curRm);
+  toast('✓ Đã lưu loại task');
 }
 
 function renderRecurringTasks(){
@@ -4426,9 +4514,13 @@ function renderRecurringTasks(){
 
   const _today = todayVN();
   // Done today section
-  const doneTodayList = (JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]')).filter(d=>d.date===_today);
+  const _allDoneToday = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
+  const doneTodayList = _allDoneToday.filter(d=>d.date===_today && (currentMember==='admin'||d.person===(currentMember==='hai'?'Hải':'Hiếu')));
 
-  list.innerHTML = recurringTasks.map(r=>{
+  const visibleRecurring = currentMember==='admin' ? recurringTasks : recurringTasks.filter(r=>r.person===(currentMember==='hai'?'Hải':'Hiếu'));
+  if(!visibleRecurring.length){ list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = visibleRecurring.map(r=>{
     const today = _today;
     const typeLabel = {daily:'Hàng ngày', weekly:'Hàng tuần', monthly:'Hàng tháng', custom:`Mỗi ${r.days} ngày`}[r.type]||r.type;
     const nextDate = r.nextDate||'—';
@@ -4494,24 +4586,28 @@ function openNewRecurringModal(id){
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="form-group"><label>Người thực hiện</label>
-          <select id="rm_person" style="width:100%">
-            <option value="">--</option>
-            <option ${r?.person==='Hải'?'selected':''}>Hải</option>
-            <option ${r?.person==='Hiếu'?'selected':''}>Hiếu</option>
-            <option ${r?.person==='Khác'?'selected':''}>Khác</option>
-          </select>
+          ${currentMember==='admin'
+            ? `<select id="rm_person" style="width:100%">
+                <option value="">--</option>
+                <option ${(r?.person==='Hải')?'selected':''}>Hải</option>
+                <option ${(r?.person==='Hiếu')?'selected':''}>Hiếu</option>
+                <option ${(r?.person==='Khác')?'selected':''}>Khác</option>
+              </select>`
+            : `<input type="text" id="rm_person" style="width:100%;background:#f8f9fa" value="${currentMember==='hai'?'Hải':'Hiếu'}" readonly>`
+          }
         </div>
         <div class="form-group"><label>Loại</label>
-          <select id="rm_type" style="width:100%">
-            <option>Nội dung</option><option>SEO</option><option>Thiết kế</option><option>Kỹ thuật</option><option>Khác</option>
-          </select>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="rm_type" style="flex:1"></select>
+            <button type="button" onclick="openTaskTypeManager()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:2px 8px;cursor:pointer;font-size:11px;color:var(--text-muted)" title="Quản lý loại task">⚙</button>
+          </div>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="form-group"><label>Chu kỳ</label>
           <select id="rm_recur_type" style="width:100%" onchange="rmToggleSchedule(this.value)">
-            <option value="daily" ${r?.type==='daily'?'selected':''}>Hàng ngày</option>
-            <option value="weekly" ${r?.type==='weekly'||!r?'selected':''}>Hàng tuần</option>
+            <option value="daily" ${!r||r?.type==='daily'?'selected':''}>Hàng ngày</option>
+            <option value="weekly" ${r?.type==='weekly'?'selected':''}>Hàng tuần</option>
             <option value="monthly" ${r?.type==='monthly'?'selected':''}>Hàng tháng</option>
             <option value="custom" ${r?.type==='custom'?'selected':''}>Tùy chỉnh (ngày)</option>
           </select>
@@ -4550,7 +4646,7 @@ function openNewRecurringModal(id){
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  if(r && document.getElementById('rm_type')) document.getElementById('rm_type').value = r.type_task||'Khác';
+  populateTaskTypeSelect('rm_type', r?.type_task||'Nội dung');
   // Init monthday click handlers
   document.querySelectorAll('input[name="rm_monthday"]').forEach(chk=>{
     const lbl=chk.parentElement;
@@ -4592,7 +4688,7 @@ function doneRecurringToday(id){
   let doneList = JSON.parse(localStorage.getItem('wt_recur_done_today')||'[]');
   doneList = doneList.filter(d=>d.date===today); // keep only today
   if(!doneList.find(d=>d.id===id)){
-    doneList.push({id, name:r.name, date:today, doneAt:today});
+    doneList.push({id, name:r.name, date:today, doneAt:today, person:r.person||''});
     localStorage.setItem('wt_recur_done_today', JSON.stringify(doneList));
   }
   // Advance next date
@@ -4665,68 +4761,12 @@ function deleteRecurring(id){
 }
 
 function createRecurringNow(id, silent){
-  const r = recurringTasks.find(x=>x.id===id);
-  if(!r) return;
-  const today = todayVN();
-  // Check if a non-done task with this recurring id already exists today
-  const alreadyExists = tasks.find(t=>t._recurId===id && t.from===today);
-  if(alreadyExists){ if(!silent) toast('Task hôm nay đã tạo rồi!','#e67e22'); return; }
-  const newTask = {
-    id: taskNextId++,
-    name: r.name,
-    person: r.person||'',
-    type: r.type_task||'Khác',
-    priority: 'Bình thường',
-    dang: 'text',
-    team: 'Team 01',
-    from: today,
-    deadline: today, // deadline = ngày tạo, sẽ tự rolling nếu chưa xong
-    desc: r.desc||'',
-    cols: null,
-    cards: [],
-    _recurId: id, // link to recurring config
-  };
-  tasks.push(newTask);
-  r.lastCreated = today;
-  r.nextDate = calcNextDate(today, r);
-  if(!silent){
-    saveRecurring();
-    renderRecurringTasks();
-    renderTasksOverview();
-    toast(`✓ Đã tạo task: ${r.name}`, '#27ae60', 4000);
-  }
-  return newTask;
+  // Không còn tạo task trong Công việc khác nữa
+  // Chỉ cập nhật nextDate trong kho task định kỳ
+  return null;
 }
 
-// Chạy mỗi khi app load: auto-tạo task đến hạn + đẩy deadline task chưa xong
-function processRecurringOnLoad(){
-  const today = todayVN();
-  let changed = false;
 
-  recurringTasks.forEach(r=>{
-    // Auto-create if nextDate <= today
-    if(r.nextDate && r.nextDate <= today){
-      const t = createRecurringNow(r.id, true);
-      if(t) changed = true;
-    }
-  });
-
-  // Roll deadline: task có _recurId, chưa done, deadline < today → đẩy lên today
-  tasks.forEach(t=>{
-    if(!t._recurId) return;
-    const isDone = calcTaskAutoStatus(t)==='Hoàn thành';
-    if(!isDone && t.deadline && t.deadline < today){
-      t.deadline = today;
-      changed = true;
-    }
-  });
-
-  if(changed){
-    saveAppData();
-    renderTasksOverview();
-    updateNavBadges();
-  }
-}
 
 function updateRecurringBadge(){
   const today = todayVN();
@@ -4770,41 +4810,7 @@ function calcNextDate(fromDate, recurring){
   return d.toISOString().split('T')[0];
 }
 
-function spawnRecurringTask(t){
-  if(!t.recurring) return;
-  const nextFrom = calcNextDate(t.from||todayVN(), t.recurring);
-  const nextDeadline = t.deadline ? calcNextDate(t.deadline, t.recurring) : '';
-  const newTask = {
-    id: taskNextId++,
-    name: t.name,
-    person: t.person,
-    type: t.type,
-    priority: t.priority||'Bình thường',
-    dang: t.dang||'text',
-    team: t.team||'Team 01',
-    from: nextFrom,
-    deadline: nextDeadline,
-    desc: t.desc||'',
-    cols: t.cols||null,
-    cards: (t.cols||null) ? [] : (getProjectCols(t).map(col=>({id:'c'+cardNextId++, colId:col.id, name:''})).slice(0,0)),
-    recurring: t.recurring,
-    _recurFrom: t.id, // reference to parent
-  };
-  // Reset cards to first col
-  if(t.cards && t.cards.length){
-    const firstColId = getProjectCols(t)[0].id;
-    newTask.cards = t.cards.map(card=>({
-      ...card,
-      id: 'c'+cardNextId++,
-      colId: firstColId,
-      pendingReason: '',
-    }));
-  }
-  tasks.push(newTask);
-  saveAppData();
-  renderTasksOverview();
-  toast(`🔁 Đã tạo task định kỳ tiếp theo: ${newTask.name} (${nextFrom})`, '#27ae60', 5000);
-}
+
 
 function saveProject(){
   const name=(document.getElementById('npm_name').value||'').trim();
@@ -7772,6 +7778,105 @@ function indexDueDate(dateStr){
   return addDays(dateStr, 4);
 }
 
+
+// ===== KHO ID =====
+let khoIdList = []; // persisted archive of all created index task IDs
+
+function loadKhoId(){
+  try{ khoIdList = JSON.parse(localStorage.getItem('wt_kho_id')||'[]'); }catch(e){ khoIdList=[]; }
+}
+function saveKhoId(){
+  localStorage.setItem('wt_kho_id', JSON.stringify(khoIdList));
+  saveAppData(); // push everything including khoId to Firebase
+}
+
+function addToKhoId(task){
+  if(khoIdList.find(k=>k.taskId===task.taskId)) return; // đã có rồi
+  khoIdList.push({
+    taskId: task.taskId,
+    name: task.name||'',
+    team: task.team||'',
+    person: task.person||'',
+    stt: task.stt||'',
+    createdDate: task.createdDate||todayVN(),
+    website: task.name||'',
+  });
+  saveKhoId();
+}
+
+function switchItTab(tab){
+  const tasksPanel = document.querySelector('#page-index .table-wrap');
+  const khoPanel = document.getElementById('itKhoPanel');
+  const banner = document.getElementById('itDueBanner');
+  const t1 = document.getElementById('itTab-tasks');
+  const t2 = document.getElementById('itTab-kho');
+  if(tab==='kho'){
+    if(tasksPanel) tasksPanel.style.display='none';
+    if(khoPanel) khoPanel.style.display='flex'; khoPanel.style.flexDirection='column';
+    if(banner) banner.style.display='none';
+    if(t1){ t1.style.background='#fff'; t1.style.color='var(--text-muted)'; }
+    if(t2){ t2.style.background='var(--red)'; t2.style.color='#fff'; }
+    renderKhoId();
+  } else {
+    if(tasksPanel) tasksPanel.style.display='';
+    if(khoPanel) khoPanel.style.display='none';
+    if(t1){ t1.style.background='var(--red)'; t1.style.color='#fff'; }
+    if(t2){ t2.style.background='#fff'; t2.style.color='var(--text-muted)'; }
+    renderIndexTasks();
+  }
+}
+
+function renderKhoId(){
+  loadKhoId();
+  const q = (document.getElementById('khoSearch')?.value||'').toLowerCase();
+  const ft = document.getElementById('khoFilterTeam')?.value||'';
+  const fm = document.getElementById('khoFilterMonth')?.value||'';
+
+  // Populate month filter
+  const months = [...new Set(khoIdList.map(k=>k.taskId?.slice(0,2)).filter(Boolean))].sort().reverse();
+  const mSel = document.getElementById('khoFilterMonth');
+  if(mSel){
+    const cur = mSel.value;
+    mSel.innerHTML = '<option value="">Tất cả tháng</option>' + months.map(m=>`<option value="${m}" ${m===cur?'selected':''}>Tháng ${parseInt(m)}</option>`).join('');
+  }
+
+  let list = [...khoIdList].sort((a,b)=>(b.taskId||'').localeCompare(a.taskId||''));
+  if(q) list = list.filter(k=>(k.taskId||'').toLowerCase().includes(q)||(k.name||'').toLowerCase().includes(q)||(k.website||'').toLowerCase().includes(q));
+  if(ft) list = list.filter(k=>k.team===ft);
+  if(fm) list = list.filter(k=>(k.taskId||'').startsWith(fm));
+
+  const el = document.getElementById('khoList');
+  const empty = document.getElementById('khoEmpty');
+  const cnt = document.getElementById('khoCount');
+  if(cnt) cnt.textContent = list.length + ' ID';
+
+  if(!list.length){ if(el) el.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if(empty) empty.style.display='none';
+
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr style="background:#f8f9fa;border-bottom:2px solid var(--gray-border)">
+      <th style="padding:8px 10px;text-align:left;font-weight:600">ID Task</th>
+      <th style="padding:8px 10px;text-align:left;font-weight:600">Tên / Website</th>
+      <th style="padding:8px 10px;text-align:left;font-weight:600">STT</th>
+      <th style="padding:8px 10px;text-align:left;font-weight:600">Team</th>
+      <th style="padding:8px 10px;text-align:left;font-weight:600">Người</th>
+      <th style="padding:8px 10px;text-align:left;font-weight:600">Ngày tạo</th>
+      <th style="padding:8px 10px;text-align:left;font-weight:600">Trạng thái</th>
+    </tr></thead>
+    <tbody>
+      ${list.map((k,i)=>`<tr style="${i%2===0?'background:#fff':'background:#f8f9fa'};border-bottom:1px solid #f0f0f0">
+        <td style="padding:7px 10px;font-family:monospace;font-weight:600">${renderItId(k.taskId)}</td>
+        <td style="padding:7px 10px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${k.name||'—'}</td>
+        <td style="padding:7px 10px">${k.stt||'—'}</td>
+        <td style="padding:7px 10px">${k.team||'—'}</td>
+        <td style="padding:7px 10px">${k.person||'—'}</td>
+        <td style="padding:7px 10px">${fmtDate(k.createdDate)||'—'}</td>
+        <td style="padding:7px 10px">${(()=>{const t=indexTasks.find(x=>x.taskId===k.taskId);return t?`<span style="font-size:11px;color:${t.status==='Done'?'#27ae60':t.status==='Pending'?'#e67e22':'#2980b9'}">${t.status}</span>`:'<span style="font-size:11px;color:var(--text-muted)">Đã xóa</span>'})()}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
 function renderIndexTasks(){
   // Render due banner first
   renderIndexDueBanner();
@@ -7819,6 +7924,7 @@ function renderIndexTasks(){
   const renderRow = t => {
     const isDone = t.status==='Done';
     const isPending = t.status==='Pending';
+    const subBadge = t.isSubTask ? '<span style="font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin-left:4px">sub</span>' : '';
     const isOverdue = !isDone && t.dueDate < today;
     const isDue = !isDone && t.dueDate === today;
     const teamBadge = t.team==='Team 02'
@@ -7857,7 +7963,7 @@ function renderIndexTasks(){
       onmouseover="this.style.borderColor='var(--red)'" onmouseout="this.style.borderColor='var(--gray-border)'">✎</button>`;
 
     return `<tr class="${isDone?'it-row-done':''}" style="${isDue&&!isDone?'background:#fffde7':isOverdue&&!isDone?'background:#fdf2f2':''}">
-      <td style="white-space:nowrap">${renderItId(t.taskId)}</td>
+      <td style="white-space:nowrap">${renderItId(t.taskId)}${subBadge||''}</td>
       <td style="font-size:13px;font-weight:500">${t.name||'<span style="color:var(--text-muted)">—</span>'}</td>
       <td style="font-size:12px">${fmtDate(t.createdDate)||'—'}</td>
       <td style="font-size:12px;font-weight:600">${t.stt}</td>
@@ -7921,7 +8027,7 @@ function renderIndexDueBanner(){
     const isOverdue = t.dueDate < today && t.status!=='Pending';
     const isPending = t.status==='Pending';
     return `<div class="it-due-card ${isOverdue?'overdue':isPending?'waiting':''}">
-      ${renderItId(t.taskId)}
+      ${renderItId(t.taskId)}${subBadge||''}
       ${t.name?`<span style="font-size:12px;font-weight:500;color:var(--text)">${t.name}</span>`:''}
       <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team}</span>
       ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:11px">${t.person}</span>`:''}
@@ -7959,6 +8065,8 @@ function openAddIndexModal(){
   document.getElementById('aim_stt').value = '';
   const sf = document.getElementById('aim_stt_from'); if(sf) sf.value='';
   const st = document.getElementById('aim_stt_to'); if(st) st.value='';
+  const sub = document.getElementById('aim_is_sub'); if(sub) sub.checked=false;
+  const pp = document.getElementById('aim_parents_preview'); if(pp){ pp.style.display='none'; pp.innerHTML=''; }
   document.getElementById('aim_name').value = '';
 
   // Team buttons
@@ -8052,6 +8160,8 @@ function saveAddIndexTask(){
   const sttVal = _buildAimStt();
   if(!sttVal){ toast('Vui lòng nhập STT!','#e74c3c'); return; }
   const taskId = genIndexTaskId(dateVal, _aimTeam, sttVal, mmVal||undefined);
+  const isSubTask = document.getElementById('aim_is_sub')?.checked;
+
   if(indexTasks.find(t=>t.taskId===taskId)){
     const msg = `⚠️ Thêm task thất bại!\n\nID "${taskId}" đã tồn tại trong hệ thống.\n\nVui lòng kiểm tra lại STT hoặc ngày ép index.`;
     alert(msg);
@@ -8065,27 +8175,37 @@ function saveAddIndexTask(){
     return [parts[0], parts[1]||parts[0]];
   }
 
-  // Check trùng ID chính xác (đã kiểm tra ở trên)
-  // Check xung đột range STT trong cùng tháng + team
   const mm = taskId.slice(0,2);
   const [newStart, newEnd] = parseSttRange(sttVal);
-  const sttConflict = indexTasks.find(t=>{
-    if(t.team !== _aimTeam) return false;
-    if(t.taskId.slice(0,2) !== mm) return false;
-    const [exStart, exEnd] = parseSttRange(t.stt);
-    // Overlap nếu: newStart <= exEnd AND newEnd >= exStart
-    return newStart <= exEnd && newEnd >= exStart;
-  });
-  if(sttConflict){
-    const [exS, exE] = parseSttRange(sttConflict.stt);
-    const msg = `⚠️ Thêm task thất bại!\n\nSTT "${sttVal}" bị xung đột với task đã tồn tại:\n• ID: ${sttConflict.taskId}\n• STT: ${sttConflict.stt} (${exS}–${exE})\n• Tên: ${sttConflict.name||'(không tên)'}\n\nSố thứ tự bị trùng — vui lòng dùng dải STT khác.`;
-    alert(msg);
-    return;
+
+  // Tìm task cha nếu là task con
+  let parentIds = [];
+  if(isSubTask){
+    parentIds = indexTasks.filter(t=>{
+      if(t.team !== _aimTeam) return false;
+      if(t.taskId.slice(0,2) !== mm) return false;
+      const [es,ee] = parseSttRange(t.stt);
+      return newStart<=ee && newEnd>=es;
+    }).map(t=>t.taskId);
+  } else {
+    // Check xung đột range STT (chỉ khi không phải task con)
+    const sttConflict = indexTasks.find(t=>{
+      if(t.team !== _aimTeam) return false;
+      if(t.taskId.slice(0,2) !== mm) return false;
+      const [exStart, exEnd] = parseSttRange(t.stt);
+      return newStart <= exEnd && newEnd >= exStart;
+    });
+    if(sttConflict){
+      const [exS, exE] = parseSttRange(sttConflict.stt);
+      const msg = `⚠️ Thêm task thất bại!\n\nSTT "${sttVal}" bị xung đột với task đã tồn tại:\n• ID: ${sttConflict.taskId}\n• STT: ${sttConflict.stt} (${exS}–${exE})\n• Tên: ${sttConflict.name||'(không tên)'}\n\nSố thứ tự bị trùng — vui lòng dùng dải STT khác.\n\nNếu đây là task con, hãy tick vào "🔗 Task con".`;
+      alert(msg);
+      return;
+    }
   }
   const nameVal = (document.getElementById('aim_name').value||'').trim();
   if(!nameVal){ toast('Vui lòng nhập tên task!','#e74c3c'); return; }
   const due = indexDueDate(dateVal);
-  indexTasks.push({
+  const newItTask = {
     taskId, stt:sttVal,
     name: nameVal,
     person: _aimPerson,
@@ -8096,7 +8216,11 @@ function saveAddIndexTask(){
     pendingReason: '',
     pendingNewDue: '',
     _id: itNextId++,
-  });
+    isSubTask: isSubTask||false,
+    parentIds: parentIds.length ? parentIds : undefined,
+  };
+  indexTasks.push(newItTask);
+  addToKhoId(newItTask); // lưu vào kho ngay khi tạo
   saveAppData();
   closeAddIndexModal();
   renderIndexTasks();
@@ -8173,6 +8297,7 @@ function submitIndexAction(){
     t.pendingReason='';
     t.pendingNewDue='';
     syncSheetStatusFromIndex(t.taskId, 'Done');
+    if(!khoIdList.find(k=>k.taskId===t.taskId)) addToKhoId(t);
   } else {
     const reason=(document.getElementById('iamReason').value||'').trim();
     const newDue=(document.getElementById('iamNewDue').value||'').trim();
@@ -8285,9 +8410,15 @@ function saveEditIndexTask(){
   toast('✓ Đã cập nhật task!');
 }
 
+function removeFromKhoId(taskId){
+  khoIdList = khoIdList.filter(k=>k.taskId!==taskId);
+  saveKhoId();
+}
+
 function deleteIndexTask(taskId){
   if(!confirm('Xoá task index "'+taskId+'"?')) return;
   indexTasks = indexTasks.filter(t=>t.taskId!==taskId);
+  removeFromKhoId(taskId); // xóa khỏi kho
   saveAppData();
   renderIndexTasks();
   toast('Đã xoá.');
@@ -10280,12 +10411,47 @@ function openBackupModal(){
   });
 }
 
+
+// Migrate existing indexTasks to khoId (one-time)
+function forceMigrateKho(){
+  localStorage.removeItem('wt_kho_migrated');
+  khoIdList = [];
+  migrateIndexTasksToKho();
+  renderKhoId();
+  toast('✓ Đã đồng bộ '+khoIdList.length+' ID vào kho', '#27ae60', 3000);
+}
+
+function migrateIndexTasksToKho(){
+  if(localStorage.getItem('wt_kho_migrated')==='2') return; // already done v2
+  let added = 0;
+  indexTasks.forEach(t=>{
+    if(!khoIdList.find(k=>k.taskId===t.taskId)){
+      khoIdList.push({
+        taskId: t.taskId,
+        name: t.name||'',
+        team: t.team||'',
+        person: t.person||'',
+        stt: t.stt||'',
+        createdDate: t.createdDate||'',
+        website: t.name||'',
+      });
+      added++;
+    }
+  });
+  if(added>0){
+    saveKhoId();
+    console.log('Migrated '+added+' index tasks to Kho ID');
+  }
+  localStorage.setItem('wt_kho_migrated','2');
+}
+
 // ===== INIT — load after all variables declared =====
 loadAppData();
 applyAllAvatars();
 renderDashboard();
 renderHai();
 renderHieu();
+loadKhoId();
 window._appLoaded = true;
 initDragSelectGlobal();
 window._appData = data;
@@ -10848,6 +11014,14 @@ function applyBulkNT(sheet, val){
           <button type="button" id="aim_person_btn_hieu" onclick="aimSetPerson('Hiếu')"
             class="btn btn-outline" style="flex:1">👤 Hiếu</button>
         </div>
+      </div>
+      <div style="background:#fff8ee;border-radius:8px;padding:10px 12px;border:1px solid #fce0b0">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="aim_is_sub" onchange="updateAimPreview()" style="cursor:pointer;accent-color:var(--red);width:14px;height:14px">
+          <span style="font-weight:600;font-size:13px">🔗 Task con</span>
+          <span style="font-size:11px;color:var(--text-muted)">— cho phép STT trùng với task cha, tự liên kết</span>
+        </label>
+        <div id="aim_parents_preview" style="display:none;margin-top:6px;font-size:11px;color:#e67e22"></div>
       </div>
       <div style="background:#f8f9fa;border-radius:8px;padding:12px;border:1px solid var(--gray-border)">
         <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:600">ID TASK SẼ ĐƯỢC TẠO:</div>
