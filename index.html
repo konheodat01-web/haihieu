@@ -3562,7 +3562,6 @@ function fbPayload(ts){
     deletedTasks, links, linkCategories,
     websites, wsGroups,
     indexTasks, giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
-    recurDoneToday: getRecurDoneToday(),
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
@@ -3691,7 +3690,7 @@ function initFirebaseListener(){
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
-      if(Array.isArray(r.recurDoneToday)){ setRecurDoneToday(r.recurDoneToday.filter(d=>d.date===todayVN())); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); }
+      if(Array.isArray(r.recurDoneToday)){ const td=r.recurDoneToday.filter(d=>d.date===todayVN()); if(JSON.stringify(td)!==localStorage.getItem('wt_recur_done_today')){ setRecurDoneToday(td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
       if(Array.isArray(r.assignees) && r.assignees.length) assignees=r.assignees;
@@ -4694,7 +4693,7 @@ function doneRecurringToday(id){
   doneList = doneList.filter(d=>d.date===today); // keep only today
   if(!doneList.find(d=>d.id===id)){
     doneList.push({id, name:r.name, date:today, doneAt:today, person:r.person||''});
-    setRecurDoneToday(doneList); saveAppData();
+    saveRecurDoneToday(doneList);
   }
   // Advance next date
   r.lastDone = today;
@@ -5404,7 +5403,7 @@ function setMember(m){
   if(syncBtn) syncBtn.style.display=m==='admin'?'inline-block':'none';
   applyAllAvatars();
   updateNavBadges();
-  if(window._memberSwitching){ showPage('dashboard'); window._memberSwitching=false; }
+  if(window._memberSwitching && window._appLoaded){ showPage('dashboard'); window._memberSwitching=false; }
 }
 
 // Patch renders to respect member filter
@@ -7792,6 +7791,11 @@ function getRecurDoneToday(){
 }
 function setRecurDoneToday(list){
   localStorage.setItem('wt_recur_done_today', JSON.stringify(list));
+}
+function saveRecurDoneToday(list){
+  localStorage.setItem('wt_recur_done_today', JSON.stringify(list));
+  // Push only this field to Firebase without triggering full saveAppData
+  if(window._fbDb) window._fbDb.ref('appData/recurDoneToday').set(list);
 }
 
 function loadKhoId(){
