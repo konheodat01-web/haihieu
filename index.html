@@ -8003,7 +8003,7 @@ function renderIndexTasks(){
   });
 
   // Sort: oldest createdDate first, newest last (không phân nhóm theo status nữa)
-  list = list.slice().sort((a,b)=> a.createdDate.localeCompare(b.createdDate) || a.taskId.localeCompare(b.taskId));
+  list = list.slice().sort((a,b)=> (a.createdDate||'').localeCompare(b.createdDate||'') || (a.taskId||'').localeCompare(b.taskId||''));
 
   if(!list.length){ tbody.innerHTML=''; empty.style.display='block'; updateNavBadges(); return; }
   empty.style.display='none';
