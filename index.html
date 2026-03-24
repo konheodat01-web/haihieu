@@ -390,6 +390,8 @@
           style="flex:1;padding:9px;font-size:12px;font-weight:600;border:none;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);background:#fff">✍️ Viết</button>
         <button id="pqTabAnh" onclick="pqSetTab('anh')"
           style="flex:1;padding:9px;font-size:12px;font-weight:500;border:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);background:#fff">🖼️ Ảnh</button>
+        <button id="pqTabNote" onclick="pqSetTab('note')"
+          style="flex:1;padding:9px;font-size:12px;font-weight:500;border:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);background:#fff">📝 Note</button>
       </div>
       <div id="pqResults" style="overflow-y:auto;flex:1;max-height:380px"></div>
       <div style="padding:8px 12px;border-top:1px solid var(--gray-border);background:#f8f9fa;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
@@ -10339,9 +10341,10 @@ let _pqTab = 'viet';
 
 function pqSetTab(tab){
   _pqTab = tab;
-  const bv=document.getElementById('pqTabViet'), ba=document.getElementById('pqTabAnh');
+  const bv=document.getElementById('pqTabViet'), ba=document.getElementById('pqTabAnh'), bn=document.getElementById('pqTabNote');
   if(bv){ bv.style.borderBottomColor=tab==='viet'?'var(--red)':'transparent'; bv.style.color=tab==='viet'?'var(--red)':'var(--text-muted)'; bv.style.fontWeight=tab==='viet'?'600':'500'; }
   if(ba){ ba.style.borderBottomColor=tab==='anh'?'var(--red)':'transparent'; ba.style.color=tab==='anh'?'var(--red)':'var(--text-muted)'; ba.style.fontWeight=tab==='anh'?'600':'500'; }
+  if(bn){ bn.style.borderBottomColor=tab==='note'?'var(--red)':'transparent'; bn.style.color=tab==='note'?'var(--red)':'var(--text-muted)'; bn.style.fontWeight=tab==='note'?'600':'500'; }
   pqSearch();
 }
 
