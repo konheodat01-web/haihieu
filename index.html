@@ -3932,8 +3932,8 @@ function clearImportForm(){
 const DEFAULT_COLS = [
   {id:'todo',    label:'Cần làm',    color:'#6c757d'},
   {id:'doing',   label:'Đang làm',   color:'#2980b9'},
-  {id:'pending', label:'Pending',    color:'#e67e22'},
   {id:'done',    label:'Hoàn thành', color:'#27ae60'},
+  {id:'pending', label:'Pending',    color:'#e67e22'},
 ];
 const TASK_TYPE_COLORS = {'Nội dung':'badge-blue','SEO':'badge-green','Thiết kế':'badge-red','Kỹ thuật':'badge-gray','Marketing':'badge-red','Khác':'badge-gray'};
 
@@ -4496,8 +4496,8 @@ function parseSteps(stepsText){
   return [
     {id:'col_new', label:'Chưa làm', color:'#95a5a6'},
     ...midCols,
-    {id:'col_pending', label:'Pending', color:'#e67e22'},
     {id:'done', label:'Hoàn thành', color:'#27ae60'},
+    {id:'col_pending', label:'Pending', color:'#e67e22'},
   ];
 }
 
