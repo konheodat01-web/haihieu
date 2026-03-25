@@ -4052,39 +4052,35 @@ const _taskRowMap = {};
 
 
 function deduplicateWebsiteIds(){
-  if(localStorage.getItem('wt_ws_deduped')==='2') return;
-  let changed = false;
   const seen = new Set();
+  let count = 0;
   websites.forEach(w=>{
     if(seen.has(w.id)){
       w.id = wsNextId++;
-      changed = true;
+      count++;
     }
     seen.add(w.id);
   });
-  if(changed){
+  if(count > 0){
     saveAppData();
-    console.log('✅ Deduped website IDs:', changed);
+    console.log('Fixed', count, 'dup website IDs');
   }
-  localStorage.setItem('wt_ws_deduped','2');
 }
 
 function deduplicateLinkIds(){
-  if(localStorage.getItem('wt_links_deduped')==='2') return;
-  let changed = false;
   const seen = new Set();
+  let count = 0;
   links.forEach(l=>{
     if(seen.has(l.id)){
       l.id = linkNextId++;
-      changed = true;
+      count++;
     }
     seen.add(l.id);
   });
-  if(changed){
+  if(count > 0){
     saveAppData();
-    console.log('✅ Deduped link IDs');
+    console.log('Fixed', count, 'dup link IDs');
   }
-  localStorage.setItem('wt_links_deduped','2');
 }
 
 function deduplicateTasks(){
