@@ -5957,12 +5957,13 @@ function editLink(id){
   document.getElementById('lf_note').value=l.note||'';
   document.getElementById('lf_type').value=l.type||'work';
   populateGroupSelect(l.type||'work');
-  document.getElementById('lf_group').value=l.group||'';
+  // Set group after populate
+  const _grpSel=document.getElementById('lf_group');
+  if(_grpSel) _grpSel.value=l.group||'';
   document.getElementById('lf_delete_btn').style.display='inline-flex';
   document.getElementById('linkAddPanelTitle').textContent='✎ Sửa link';
   const ownerEl=document.getElementById('lf_owner');
-  ownerEl.value=l.owner;
-  ownerEl.disabled=false;
+  if(ownerEl){ ownerEl.value=l.owner||'admin'; ownerEl.disabled=false; }
   // Auth fields
   const hasAuth = !!(l.account||l.password);
   const chk = document.getElementById('lf_has_auth');
@@ -5978,6 +5979,7 @@ function editLink(id){
 function clearLinkForm(){
   editingLinkId=null;
   document.getElementById('lf_id').value='';
+  const _ownerReset=document.getElementById('lf_owner'); if(_ownerReset) _ownerReset.value='admin';
   document.getElementById('lf_name').value='';
   document.getElementById('lf_url').value='';
   document.getElementById('lf_desc').value='';
