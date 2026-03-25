@@ -4052,7 +4052,7 @@ const _taskRowMap = {};
 
 
 function deduplicateWebsiteIds(){
-  if(localStorage.getItem('wt_ws_deduped')) return;
+  if(localStorage.getItem('wt_ws_deduped')==='2') return;
   let changed = false;
   const seen = new Set();
   websites.forEach(w=>{
@@ -4066,11 +4066,11 @@ function deduplicateWebsiteIds(){
     saveAppData();
     console.log('✅ Deduped website IDs:', changed);
   }
-  localStorage.setItem('wt_ws_deduped','1');
+  localStorage.setItem('wt_ws_deduped','2');
 }
 
 function deduplicateLinkIds(){
-  if(localStorage.getItem('wt_links_deduped')) return;
+  if(localStorage.getItem('wt_links_deduped')==='2') return;
   let changed = false;
   const seen = new Set();
   links.forEach(l=>{
@@ -4084,7 +4084,7 @@ function deduplicateLinkIds(){
     saveAppData();
     console.log('✅ Deduped link IDs');
   }
-  localStorage.setItem('wt_links_deduped','1');
+  localStorage.setItem('wt_links_deduped','2');
 }
 
 function deduplicateTasks(){
