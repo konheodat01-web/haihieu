@@ -7798,7 +7798,7 @@ function qlSave(){
   const url=(document.getElementById('ql_url')?.value||'').trim();
   if(!name||!url){toast('Nhập tên và URL!','#e74c3c');return;}
   if(type==='work'){
-    links.push({
+    links.unshift({
       id:linkNextId++, name, url,
       desc:(document.getElementById('ql_desc')?.value||'').trim(),
       group:document.getElementById('ql_group')?.value||'Khác',
