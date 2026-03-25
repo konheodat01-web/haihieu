@@ -3718,7 +3718,7 @@ function initFirebaseListener(){
 
       links         = arr(r.links, links);
       linkCategories= r.linkCategories != null ? r.linkCategories : linkCategories;
-      if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); }
+      if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); deduplicateWebsiteIds(); }
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
@@ -4050,6 +4050,24 @@ function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 
 const _taskRowMap = {};
 
+
+function deduplicateWebsiteIds(){
+  if(localStorage.getItem('wt_ws_deduped')) return;
+  let changed = false;
+  const seen = new Set();
+  websites.forEach(w=>{
+    if(seen.has(w.id)){
+      w.id = wsNextId++;
+      changed = true;
+    }
+    seen.add(w.id);
+  });
+  if(changed){
+    saveAppData();
+    console.log('✅ Deduped website IDs:', changed);
+  }
+  localStorage.setItem('wt_ws_deduped','1');
+}
 
 function deduplicateLinkIds(){
   if(localStorage.getItem('wt_links_deduped')) return;
