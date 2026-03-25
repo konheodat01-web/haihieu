@@ -4050,6 +4050,25 @@ function initTaskGridDrag(){ /* no-op, drag replaced by buttons */ }
 
 const _taskRowMap = {};
 
+
+function deduplicateLinkIds(){
+  if(localStorage.getItem('wt_links_deduped')) return;
+  let changed = false;
+  const seen = new Set();
+  links.forEach(l=>{
+    if(seen.has(l.id)){
+      l.id = linkNextId++;
+      changed = true;
+    }
+    seen.add(l.id);
+  });
+  if(changed){
+    saveAppData();
+    console.log('✅ Deduped link IDs');
+  }
+  localStorage.setItem('wt_links_deduped','1');
+}
+
 function deduplicateTasks(){
   const seen = new Set();
   let maxId = tasks.reduce((m,t)=>Math.max(m,t.id||0),0);
