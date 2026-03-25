@@ -1567,39 +1567,37 @@
   <!-- PANEL 1: LINKS -->
   <div id="linksPanel" style="background:#fff;border-radius:0 8px 8px 8px;border:1px solid var(--gray-border);padding:0;display:none;flex-direction:column;height:calc(100vh - 130px)">
     <div style="padding:10px 16px;border-bottom:1px solid var(--gray-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0">
-      <div class="toolbar" style="flex:1">
+      <div class="toolbar" style="flex:1;flex-wrap:wrap;gap:6px">
         <input type="text" id="linkSearch" placeholder="&#128269; Tìm link..." oninput="renderLinks()" style="width:180px;height:32px;font-size:12px">
-        <select id="linkFilterOwner" onchange="renderLinks()" style="height:32px;font-size:12px">
-          <option value="">Tất cả người dùng</option><option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
-        </select>
         <select id="linkFilterGroup" onchange="renderLinks()" style="height:32px;font-size:12px">
           <option value="">Tất cả nhóm</option>
-          <option value="Khác">Khác</option>
+        </select>
+        <select id="linkFilterOwner" onchange="renderLinks()" style="height:32px;font-size:12px">
+          <option value="">Tất cả người</option><option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
         </select>
         <select id="linkFilterAccount" onchange="renderLinks()" style="height:32px;font-size:12px">
           <option value="">Tất cả</option>
           <option value="has_account">Có tài khoản</option>
           <option value="no_account">Không có TK</option>
         </select>
+        <button class="btn btn-primary btn-sm" onclick="lkNewLink()">&#43; Thêm link</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 300px;gap:0;align-items:stretch;flex:1;overflow:hidden">
-      <div style="padding:14px;border-right:1px solid var(--gray-border);overflow-y:auto;height:100%">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">
-            &#128188; Link công việc <span id="cntWorkLinks" style="background:var(--gray-light);border-radius:20px;padding:1px 7px;font-size:11px;font-weight:400;color:var(--text-muted)">0</span>
-          </div>
-          <button class="btn btn-sm btn-outline" onclick="quickAddLink('work')" style="font-size:11px">&#43; Thêm</button>
-        </div>
+    <div style="display:grid;grid-template-columns:1fr 300px;flex:1;overflow:hidden;min-height:0">
+      <!-- LEFT: list -->
+      <div style="overflow-y:auto;padding:14px;border-right:1px solid var(--gray-border)">
+        <div id="lkCount" style="font-size:11px;color:var(--text-muted);margin-bottom:8px"></div>
         <div id="workLinksGrid"></div>
-        <div id="emptyWorkLinks" style="display:none;padding:24px 0;text-align:center;color:var(--text-muted);font-size:13px">Chưa có link nào</div>
+        <div id="emptyWorkLinks" style="display:none;padding:32px 0;text-align:center;color:var(--text-muted)">Chưa có link nào</div>
       </div>
-      <!-- RIGHT FORM -->
-      <div id="linkAddPanel" style="overflow-y:auto;height:100%;border-left:1px solid var(--gray-border);background:#fafafa">
-        <div style="padding:10px 14px;border-bottom:1px solid var(--gray-border);background:#f8f9fa;font-weight:600;font-size:13px" id="linkAddPanelTitle">&#43; Thêm link</div>
+      <!-- RIGHT: form -->
+      <div id="linkAddPanel" style="overflow-y:auto;border-left:1px solid var(--gray-border);background:#fafafa">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--gray-border);background:#f8f9fa;font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:space-between">
+          <span id="linkAddPanelTitle">+ Thêm link</span>
+          <button onclick="lkClearForm()" style="background:none;border:none;cursor:pointer;font-size:16px;color:var(--text-muted)">&#10005;</button>
+        </div>
         <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
-          <input type="hidden" id="lf_id">
-          <div class="form-group"><label>Tên *</label><input type="text" id="lf_name" style="width:100%" placeholder="VD: Admin WP Debet..."></div>
+          <div class="form-group"><label>Tên *</label><input type="text" id="lf_name" style="width:100%" placeholder="VD: Spin editor..."></div>
           <div class="form-group"><label>URL *</label><input type="text" id="lf_url" style="width:100%" placeholder="https://..."></div>
           <div class="form-group"><label>Tác dụng</label><textarea id="lf_desc" rows="2" style="width:100%"></textarea></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -1612,13 +1610,13 @@
             </div>
             <div class="form-group"><label>Hiển thị cho</label>
               <select id="lf_owner" style="width:100%">
-                <option value="admin">Chung (tất cả)</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
+                <option value="admin">Chung (tất cả)</option>
+                <option value="Hải">Hải</option>
+                <option value="Hiếu">Hiếu</option>
               </select>
             </div>
           </div>
-          <input type="hidden" id="lf_type" value="work">
           <div class="form-group"><label>Ghi chú</label><textarea id="lf_note" rows="2" style="width:100%" placeholder="Ghi chú thêm..."></textarea></div>
-          <!-- Account/Password toggle -->
           <div class="form-group">
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
               <input type="checkbox" id="lf_has_auth" onchange="toggleLfAuth()" style="cursor:pointer;accent-color:var(--red)">
@@ -1630,21 +1628,21 @@
               <label>Tài khoản</label>
               <div style="display:flex;gap:4px">
                 <input type="text" id="lf_account" style="flex:1" placeholder="Email hoặc username">
-                <button class="ws-copy-btn" data-field="lf_account" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Copy">📋</button>
+                <button onclick="copyFieldVal('lf_account',this)" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px">📋</button>
               </div>
             </div>
             <div class="form-group">
               <label>Mật khẩu</label>
               <div style="display:flex;gap:4px">
                 <input type="text" id="lf_password" style="flex:1" placeholder="Mật khẩu">
-                <button class="ws-copy-btn" data-field="lf_password" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px" title="Copy">📋</button>
+                <button onclick="copyFieldVal('lf_password',this)" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:13px">📋</button>
               </div>
             </div>
           </div>
+          <input type="hidden" id="lf_type" value="work">
           <div style="display:flex;gap:6px">
-            <button class="btn btn-primary" onclick="saveLink()" style="flex:1">&#10003; Lưu</button>
-            <button class="btn btn-danger btn-sm" id="lf_delete_btn" style="display:none" onclick="deleteLink()">&#128465;</button>
-            <button class="btn btn-outline btn-sm" onclick="clearLinkForm()">&#10005;</button>
+            <button class="btn btn-primary" onclick="lkSaveLink()" style="flex:1">&#10003; Lưu</button>
+            <button class="btn btn-danger btn-sm" id="lf_delete_btn" style="display:none" onclick="lkDeleteLink()">&#128465;</button>
           </div>
         </div>
       </div>
@@ -5901,170 +5899,169 @@ let links = [
 let linkNextId = 10;
 let editingLinkId = null;
 
+
+// ===== LINK CÔNG VIỆC =====
+let _lkEditIdx = -1;
+
 function getOwnerBadge(owner){
-  if(owner==='Hải') return `<span class="owner-badge-hai">Hải</span>`;
-  if(owner==='Hiếu') return `<span class="owner-badge-hieu">Hiếu</span>`;
-  return `<span class="owner-badge-admin">Chung</span>`;
+  if(owner==='Hải') return '<span class="owner-badge-hai">Hải</span>';
+  if(owner==='Hiếu') return '<span class="owner-badge-hieu">Hiếu</span>';
+  return '<span class="owner-badge-admin">Chung</span>';
 }
 
-function getVisibleLinks(){
-  return links.filter(l=>{
-    if(currentMember==='admin') return true;
-    if(currentMember==='hai') return l.owner==='admin'||l.owner==='Hải';
-    if(currentMember==='hieu') return l.owner==='admin'||l.owner==='Hiếu';
+function copyFieldVal(id, btn){
+  const val = document.getElementById(id)?.value||'';
+  copyText(val, btn);
+}
+
+function lkGetVisible(){
+  return links.map((l,i)=>({...l,_idx:i})).filter(l=>{
+    if(l.type!=='work') return false;
+    if(currentMember==='hai' && l.owner!=='admin' && l.owner!=='Hải') return false;
+    if(currentMember==='hieu' && l.owner!=='admin' && l.owner!=='Hiếu') return false;
     return true;
   });
 }
 
-function renderLinkSection(type, gridId, emptyId, cntId){
+function renderLinks(){
   const q=(document.getElementById('linkSearch')||{}).value?.toLowerCase()||'';
-  const fo=(document.getElementById('linkFilterOwner')||{}).value||'';
   const fg=(document.getElementById('linkFilterGroup')||{}).value||'';
+  const fo=(document.getElementById('linkFilterOwner')||{}).value||'';
   const fa=(document.getElementById('linkFilterAccount')||{}).value||'';
-  let list=getVisibleLinks().filter(l=>{
-    if(l.type!==type) return false;
-    if(q && !l.name.toLowerCase().includes(q) && !l.url.toLowerCase().includes(q) && !(l.desc||'').toLowerCase().includes(q)) return false;
-    if(fo && l.owner!==fo) return false;
+
+  const gSel=document.getElementById('linkFilterGroup');
+  if(gSel){
+    const all=lkGetVisible();
+    const groups=[...new Set(all.map(l=>l.group||'Khác'))].sort();
+    const cur=gSel.value;
+    gSel.innerHTML='<option value="">Tất cả nhóm</option>'+groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
+  }
+
+  let list=lkGetVisible().filter(l=>{
+    if(q && !l.name.toLowerCase().includes(q) && !(l.url||'').toLowerCase().includes(q) && !(l.desc||'').toLowerCase().includes(q)) return false;
     if(fg && (l.group||'Khác')!==fg) return false;
+    if(fo && l.owner!==fo) return false;
     if(fa==='has_account' && !l.account) return false;
     if(fa==='no_account' && l.account) return false;
     return true;
   });
-  document.getElementById(cntId).textContent=list.length;
-  const grid=document.getElementById(gridId);
-  const empty=document.getElementById(emptyId);
-  if(!list.length){grid.innerHTML='';empty.style.display='block';return;}
-  empty.style.display='none';
 
-  // Flat list — group shown as tag
+  const grid=document.getElementById('workLinksGrid');
+  const empty=document.getElementById('emptyWorkLinks');
+  const cnt=document.getElementById('lkCount');
+  if(cnt) cnt.textContent=list.length+' link';
+  if(!list.length){if(grid)grid.innerHTML='';if(empty)empty.style.display='block';return;}
+  if(empty)empty.style.display='none';
+
   grid.innerHTML=list.map(l=>{
-    const grpTag = l.group&&l.group!=='Khác' ? `<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fff3cd;color:#856404;font-weight:400">${l.group}</span>` : '';
-    const accBtn = l.account ? `<div style="display:flex;gap:4px" onclick="event.stopPropagation()"><button onclick="copyText(_copyMap['lk_acc_${l.id}'],this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy tài khoản">👤</button>${l.password?`<button onclick="copyText(_copyMap['lk_pwd_${l.id}'],this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy mật khẩu">🔑</button>`:''}</div>` : '';
-    _copyMap['lk_acc_'+l.id] = l.account||'';
-    _copyMap['lk_pwd_'+l.id] = l.password||'';
-    return `<div onclick="editLink(${l.id})" style="background:#fff;border:1px solid var(--gray-border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:box-shadow .15s,border-color .15s;display:flex;align-items:center;gap:12px;margin-bottom:4px"
-      onmouseover="this.style.boxShadow='0 2px 10px rgba(0,0,0,.08)';this.style.borderColor='#bbb'"
-      onmouseout="this.style.boxShadow='';this.style.borderColor='var(--gray-border)'">
+    const grpTag=l.group&&l.group!=='Khác'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fff3cd;color:#856404">${l.group}</span>`:'';
+    const isActive=_lkEditIdx===l._idx;
+    const acc=(l.account||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const pwd=(l.password||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div onclick="lkSelectByIdx(${l._idx})"
+      style="background:${isActive?'#fdf2f2':'#fff'};border:1px solid ${isActive?'var(--red)':'var(--gray-border)'};border-radius:8px;padding:10px 14px;cursor:pointer;margin-bottom:4px;display:flex;align-items:center;gap:10px">
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;flex-wrap:wrap">
           🔗 ${l.name} ${grpTag} ${getOwnerBadge(l.owner)}
         </div>
-        <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${l.url}</div>
+        <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${l.url||''}</div>
         ${l.desc?`<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${l.desc}</div>`:''}
         ${l.note?`<div style="font-size:11px;color:var(--blue);margin-top:2px">📝 ${l.note}</div>`:''}
       </div>
-      ${accBtn}
-      <a href="${l.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;white-space:nowrap">Mở</a>
+      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+        ${l.account?`<button onclick="copyText('${acc}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy TK">👤</button>`:''}
+        ${l.password?`<button onclick="copyText('${pwd}',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:2px 6px;font-size:11px;cursor:pointer" title="Copy MK">🔑</button>`:''}
+        <a href="${l.url}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Mở</a>
+      </div>
     </div>`;
   }).join('');
 }
 
-function renderLinks(){
-  // Populate group filter dynamically
-  const gSel = document.getElementById('linkFilterGroup');
-  if(gSel){
-    const allLinks = getVisibleLinks();
-    const groups = [...new Set(allLinks.map(l=>l.group||'Khác').filter(Boolean))].sort();
-    const cur = gSel.value;
-    gSel.innerHTML = '<option value="">Tất cả nhóm</option>' + groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
-  }
-  renderLinkSection('work','workLinksGrid','emptyWorkLinks','cntWorkLinks');
-}
-
-function quickAddLink(type){
-  clearLinkForm();
-  document.getElementById('lf_type').value=type;
-  populateGroupSelect(type);
-  document.getElementById('linkAddPanelTitle').textContent='+ Thêm link '+(type==='work'?'công việc':'web');
-  document.getElementById('lf_name').focus();
-}
-
-function editLink(id){
-  const l=links.find(x=>x.id===id);
+function lkSelectByIdx(idx){
+  const l=links[idx];
   if(!l) return;
-  editingLinkId=id;
-  document.getElementById('lf_id').value=id;
-  document.getElementById('lf_name').value=l.name;
-  document.getElementById('lf_url').value=l.url;
+  _lkEditIdx=idx;
+  document.getElementById('lf_name').value=l.name||'';
+  document.getElementById('lf_url').value=l.url||'';
   document.getElementById('lf_desc').value=l.desc||'';
   document.getElementById('lf_note').value=l.note||'';
   document.getElementById('lf_type').value=l.type||'work';
   populateGroupSelect(l.type||'work');
-  // Set group after populate
-  const _grpSel=document.getElementById('lf_group');
-  if(_grpSel) _grpSel.value=l.group||'';
+  setTimeout(()=>{ const g=document.getElementById('lf_group'); if(g) g.value=l.group||''; },20);
+  const ownerEl=document.getElementById('lf_owner');
+  if(ownerEl) ownerEl.value=l.owner||'admin';
+  const hasAuth=!!(l.account||l.password);
+  const chk=document.getElementById('lf_has_auth');
+  if(chk){chk.checked=hasAuth;toggleLfAuth();}
+  document.getElementById('lf_account').value=l.account||'';
+  document.getElementById('lf_password').value=l.password||'';
   document.getElementById('lf_delete_btn').style.display='inline-flex';
   document.getElementById('linkAddPanelTitle').textContent='✎ Sửa link';
-  const ownerEl=document.getElementById('lf_owner');
-  if(ownerEl){ ownerEl.value=l.owner||'admin'; ownerEl.disabled=false; }
-  // Auth fields
-  const hasAuth = !!(l.account||l.password);
-  const chk = document.getElementById('lf_has_auth');
-  if(chk){ chk.checked=hasAuth; toggleLfAuth(); }
-  if(hasAuth){
-    document.getElementById('lf_account').value=l.account||'';
-    document.getElementById('lf_password').value=l.password||'';
-  }
-  document.getElementById('lf_name').focus();
-  document.getElementById('linkAddPanel').scrollIntoView({behavior:'smooth',block:'nearest'});
+  renderLinks();
 }
 
-function clearLinkForm(){
-  editingLinkId=null;
-  document.getElementById('lf_id').value='';
-  const _ownerReset=document.getElementById('lf_owner'); if(_ownerReset) _ownerReset.value='admin';
+function lkNewLink(){
+  _lkEditIdx=-1;
   document.getElementById('lf_name').value='';
   document.getElementById('lf_url').value='';
   document.getElementById('lf_desc').value='';
-  const lnEl=document.getElementById('lf_note');if(lnEl)lnEl.value='';
+  document.getElementById('lf_note').value='';
   document.getElementById('lf_type').value='work';
   populateGroupSelect('work');
+  const ownerEl=document.getElementById('lf_owner'); if(ownerEl) ownerEl.value='admin';
+  const chk=document.getElementById('lf_has_auth'); if(chk){chk.checked=false;toggleLfAuth();}
+  document.getElementById('lf_account').value='';
+  document.getElementById('lf_password').value='';
   document.getElementById('lf_delete_btn').style.display='none';
   document.getElementById('linkAddPanelTitle').textContent='+ Thêm link';
-  const ownerEl=document.getElementById('lf_owner');
-  ownerEl.value=currentMember==='admin'?'admin':currentMember==='hai'?'Hải':'Hiếu';
-  ownerEl.disabled=false;
-  const chk=document.getElementById('lf_has_auth');
-  if(chk){chk.checked=false; toggleLfAuth();}
-  const acc=document.getElementById('lf_account'); if(acc) acc.value='';
-  const pwd=document.getElementById('lf_password'); if(pwd) pwd.value='';
+  document.getElementById('lf_name').focus();
+  renderLinks();
 }
 
-function saveLink(){
+function lkClearForm(){ lkNewLink(); }
+
+function lkSaveLink(){
   const name=(document.getElementById('lf_name').value||'').trim();
   const url=(document.getElementById('lf_url').value||'').trim();
-  if(!name||!url){toast('Vui lòng nhập Tên và URL!','#e74c3c');return;}
+  if(!name){toast('Nhập tên link!','#e74c3c');return;}
+  if(!url){toast('Nhập URL!','#e74c3c');return;}
+  const hasAuth=document.getElementById('lf_has_auth')?.checked;
   const obj={
-    id:editingLinkId||linkNextId++,
-    name, url,
-    desc:document.getElementById('lf_desc').value.trim(),
-    note:(document.getElementById('lf_note')?.value||'').trim(),
-    group:document.getElementById('lf_group').value.trim()||'Khác',
-    type:document.getElementById('lf_type').value||'work',
+    id:_lkEditIdx>=0?links[_lkEditIdx].id:linkNextId++,
+    name,url,
+    desc:(document.getElementById('lf_desc').value||'').trim(),
+    note:(document.getElementById('lf_note').value||'').trim(),
+    group:(document.getElementById('lf_group').value||'Khác').trim(),
+    type:'work',
     owner:document.getElementById('lf_owner').value||'admin',
-    account: document.getElementById('lf_has_auth')?.checked ? (document.getElementById('lf_account')?.value||'').trim() : '',
-    password: document.getElementById('lf_has_auth')?.checked ? (document.getElementById('lf_password')?.value||'') : '',
+    account:hasAuth?(document.getElementById('lf_account').value||'').trim():'',
+    password:hasAuth?(document.getElementById('lf_password').value||''):'',
   };
-  if(editingLinkId){
-    const idx=links.findIndex(l=>l.id===editingLinkId);
-    if(idx>=0) links[idx]=obj;
+  if(_lkEditIdx>=0){
+    links[_lkEditIdx]=obj;
   } else {
     links.unshift(obj);
+    _lkEditIdx=0;
   }
-  clearLinkForm();
-  renderLinks();
   saveAppData();
-  toast('&#10003; Đã lưu link!');
+  renderLinks();
+  toast('✓ Đã lưu link!');
 }
 
-function deleteLink(){
-  if(!editingLinkId||!confirm('Xoá link này?')) return;
-  links=links.filter(l=>l.id!==editingLinkId);
-  clearLinkForm();
+function lkDeleteLink(){
+  if(_lkEditIdx<0||!confirm('Xoá link này?')) return;
+  links.splice(_lkEditIdx,1);
+  _lkEditIdx=-1;
   saveAppData();
-  renderLinks();
-  toast('Đã xoá.');
+  lkNewLink();
 }
+
+function quickAddLink(type){ if(type==='work') lkNewLink(); }
+function editLink(id){ const idx=links.findIndex(l=>l.id===id); if(idx>=0) lkSelectByIdx(idx); }
+function saveLink(){ lkSaveLink(); }
+function deleteLink(){ lkDeleteLink(); }
+function clearLinkForm(){ lkClearForm(); }
+
 // ===== CATEGORY MANAGER =====
 let linkCategories = {
   work: ['WordPress', 'SEO', 'Tool', 'Google', 'Khác'],
