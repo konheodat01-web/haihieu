@@ -1556,6 +1556,9 @@
     <div class="panel-header" style="flex-shrink:0">
       <div class="panel-title">📈 Theo dõi web</div>
       <div class="toolbar">
+        <select id="wst_filter_group" onchange="renderWsTrack()" style="height:32px;font-size:12px">
+          <option value="">Tất cả nhóm</option>
+        </select>
         <select id="wst_filter_ws" onchange="renderWsTrack()" style="height:32px;font-size:12px;min-width:180px">
           <option value="">-- Chọn website --</option>
         </select>
@@ -4683,12 +4686,21 @@ function getWstSite(wsId){
 }
 
 function renderWsTrack(){
-  // Populate left list
   const listEl = document.getElementById('wstWebList');
   if(!listEl) return;
 
-  // Load tracked websites
-  const trackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
+  // Populate group filter from tracked websites' groups
+  const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
+  const groups = [...new Set(allTrackedWs.map(w=>w.group||'').filter(Boolean))].sort();
+  const gSel = document.getElementById('wst_filter_group');
+  if(gSel){
+    const cur = gSel.value;
+    gSel.innerHTML = '<option value="">Tất cả nhóm</option>' + groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
+  }
+  const fGroup = gSel?.value||'';
+
+  // Filter tracked websites by group
+  const trackedWs = allTrackedWs.filter(w=>!fGroup || (w.group||'')=== fGroup);
   const CHKLIST = ['Dựng web','Content','Mở bot'];
   listEl.innerHTML = trackedWs.map(w=>{
     const site = getWstSite(w.id);
@@ -4876,6 +4888,7 @@ function wstSaveEntry(){
   if(!wsId) return;
   let site = getWstSite(wsId);
   if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
+  if(!site.entries) site.entries = []; // safety fix
   const entry = {
     id: 'wste'+Date.now(),
     date: document.getElementById('wst_date').value||todayVN(),
