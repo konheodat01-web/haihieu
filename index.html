@@ -515,6 +515,7 @@
   <button onclick="showPage('index')">&#128269; Index Tasks <span id="navBadgeIndex" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
   <button onclick="showPage('prompts')">&#9997; Prompt</button>
   <button onclick="showPage('links')">&#128279; Link quan trọng</button>
+  <button onclick="showPage('wstrack')">📈 Theo dõi web</button>
   <div style="flex:1"></div>
   <!-- Bottom actions: hover to expand -->
   <div id="navBottomMenu" style="position:relative;border-top:1px solid rgba(255,255,255,.08)"
@@ -1550,6 +1551,37 @@
 </div>
 
 <!-- LINK QUAN TRỌNG -->
+<div id="page-wstrack" class="page">
+  <div class="panel" style="display:flex;flex-direction:column;height:calc(100vh - 90px);overflow:hidden">
+    <div class="panel-header" style="flex-shrink:0">
+      <div class="panel-title">📈 Theo dõi web</div>
+      <div class="toolbar">
+        <select id="wst_filter_ws" onchange="renderWsTrack()" style="height:32px;font-size:12px;min-width:180px">
+          <option value="">-- Chọn website --</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="openWstAddModal()">+ Thêm dữ liệu</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:240px 1fr;flex:1;overflow:hidden;min-height:0">
+      <!-- LEFT: website list -->
+      <div style="border-right:1px solid var(--gray-border);overflow-y:auto;padding:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted)">Website đang theo dõi</div>
+        </div>
+        <div id="wstWebList"></div>
+        <button onclick="openWstPickModal()" class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;font-size:11px">+ Thêm web vào theo dõi</button>
+      </div>
+      <!-- RIGHT: data -->
+      <div style="overflow-y:auto;padding:14px" id="wstContent">
+        <div style="text-align:center;padding:40px;color:var(--text-muted)">
+          <div style="font-size:32px;margin-bottom:8px">📈</div>
+          Chọn website bên trái để xem lịch sử
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="page-links" class="page">
 
   <!-- TABS -->
@@ -1811,6 +1843,22 @@
             <div style="display:flex;gap:4px">
               <select id="wf_group" style="flex:1"></select>
               <button onclick="openWsGroupManager()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:14px" title="Quản lý nhóm">⚙</button>
+            </div>
+          </div>
+          <div class="form-group" style="border-top:1px solid var(--gray-border);padding-top:10px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="wf_is301" onchange="wfToggle301()" style="cursor:pointer;accent-color:var(--red);width:14px;height:14px">
+              <span style="font-weight:600;font-size:13px">🔀 Website 301</span>
+              <span style="font-size:11px;color:var(--text-muted)">(redirect từ web gốc)</span>
+            </label>
+            <div id="wf_301_fields" style="display:none;margin-top:8px">
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Web gốc (chọn từ kho hoặc nhập URL)</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="wf_source_url" style="flex:1;font-size:12px" placeholder="VD: debets.com">
+                <select id="wf_source_select" style="flex:1;font-size:12px" onchange="document.getElementById('wf_source_url').value=this.value;this.value=''">
+                  <option value="">-- Chọn từ kho --</option>
+                </select>
+              </div>
             </div>
           </div>
           <div class="form-group"><label>Ghi chú</label><textarea id="wf_note" rows="2" style="width:100%"></textarea></div>
@@ -2092,6 +2140,7 @@ let websites = [
   {id:1, brand:'Debet', url:'https://debets.sbs', admin:'wp-admin', account:'dybala5858585858@gmail.com', password:'Mktb2022@', status:'Tốt', note:''},
 ];
 let wsNextId = 2;
+let editingWsId = null;
 const WS_STATUS_COLOR = {'Tốt':'#27ae60','Chờ cấp lại mật khẩu':'#e67e22','Lỗi web':'#e74c3c'};
 const WS_STATUS_ICON  = {'Tốt':'✅','Chờ cấp lại mật khẩu':'🔒','Lỗi web':'⚠️'};
 const LOAI_CONFIG = {
@@ -3536,6 +3585,7 @@ function showPage(name){
   if(name==='hieu'){ activeDate['hieu']=todayVN(); renderHieu(); }
   if(name==='tasks') renderTasksOverview();
   if(name==='recurring') renderRecurringTasks();
+  if(name==='wstrack') renderWsTrack();
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
   if(name==='index') renderIndexTasks();
@@ -3586,6 +3636,7 @@ function fbPayload(ts){
     websites, wsGroups,
     indexTasks, giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
     recurDoneToday: getRecurDoneToday(),
+    siteTracking,
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
@@ -3658,6 +3709,7 @@ function initFirebaseListener(){
         if(gvPanel && gvPanel.style.display!=='none') renderGiaoViec();
       }
       // Update recurDoneToday even on own push
+      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); }
       if(Array.isArray(r.recurDoneToday)){
         setRecurDoneToday(r.recurDoneToday.filter(d=>d.date===todayVN()));
       }
@@ -3720,6 +3772,7 @@ function initFirebaseListener(){
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
+      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); }
       if(Array.isArray(r.recurDoneToday)){ const _td=r.recurDoneToday.filter(d=>d.date===todayVN()); const _cur=localStorage.getItem('wt_recur_done_today'); if(JSON.stringify(_td)!==_cur){ setRecurDoneToday(_td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
@@ -4604,6 +4657,248 @@ function saveTaskTypeManager(){
   toast('✓ Đã lưu loại task');
 }
 
+
+// ===== WEBSITE TRACKING =====
+let siteTracking = []; // [{wsId, entries:[{id,date,rank,backlinks,indexed,note}]}]
+let _wstSelectedWsId = null;
+
+function saveWsTrack(){
+  try{ localStorage.setItem('wt_site_tracking', JSON.stringify(siteTracking)); }catch(e){}
+  // Push to Firebase in fbPayload via saveAppData
+  saveAppData();
+}
+
+function getWstSite(wsId){
+  return siteTracking.find(s=>s.wsId===wsId);
+}
+
+function renderWsTrack(){
+  // Populate left list
+  const listEl = document.getElementById('wstWebList');
+  if(!listEl) return;
+
+  // Load tracked websites
+  const trackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
+  const CHKLIST = ['Dựng web','Content','Mở bot'];
+  listEl.innerHTML = trackedWs.map(w=>{
+    const site = getWstSite(w.id);
+    const lastEntry = site?.entries?.slice(-1)[0];
+    const isActive = _wstSelectedWsId===w.id;
+    const cl = site?.checklist||{};
+    const clBadges = CHKLIST.map(item=>`<span onclick="event.stopPropagation();wstToggleCheck(${w.id},'${item}')" title="${item}" style="cursor:pointer;font-size:10px;padding:1px 6px;border-radius:10px;border:1px solid ${cl[item]?'#27ae60':'var(--gray-border)'};background:${cl[item]?'#d4edda':'#f8f9fa'};color:${cl[item]?'#155724':'var(--text-muted)'}">${cl[item]?'✓':''} ${item}</span>`).join('');
+    return `<div onclick="wstSelectWeb(${w.id})"
+      style="padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:6px;background:${isActive?'#fdf2f2':'#fff'};border:1px solid ${isActive?'var(--red)':'var(--gray-border)'}">
+      <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px">${w.brand}</div>
+      <div style="display:flex;gap:3px;flex-wrap:wrap">${clBadges}</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${lastEntry?lastEntry.date+' · '+site.entries.length+' mục':'Chưa có dữ liệu'}</div>
+    </div>`;
+  }).join('') || '<div style="font-size:11px;color:var(--text-muted)">Chưa theo dõi web nào</div>';
+
+  // Update select filter
+  const sel = document.getElementById('wst_filter_ws');
+  if(sel){
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">-- Chọn website --</option>' +
+      trackedWs.map(w=>`<option value="${w.id}" ${w.id==cur?'selected':''}>${w.brand}</option>`).join('');
+    if(!cur && _wstSelectedWsId) sel.value = _wstSelectedWsId;
+  }
+
+  if(_wstSelectedWsId) renderWstContent(_wstSelectedWsId);
+}
+
+function wstSelectWeb(wsId){
+  _wstSelectedWsId = wsId;
+  const sel = document.getElementById('wst_filter_ws');
+  if(sel) sel.value = wsId;
+  renderWsTrack();
+}
+
+function renderWstContent(wsId){
+  const content = document.getElementById('wstContent');
+  if(!content) return;
+  const w = websites.find(x=>x.id===wsId);
+  const site = getWstSite(wsId);
+  if(!w||!site){ content.innerHTML='<div style="padding:20px;color:var(--text-muted)">Không tìm thấy dữ liệu.</div>'; return; }
+
+  const entries = (site.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+
+  const indexBadge = v => v==='Đã index'?'<span style="font-size:11px;background:#d4edda;color:#155724;padding:2px 7px;border-radius:10px">✅ Đã index</span>':
+    v==='Chưa index'?'<span style="font-size:11px;background:#f8d7da;color:#721c24;padding:2px 7px;border-radius:10px">❌ Chưa index</span>':
+    v==='Một phần'?'<span style="font-size:11px;background:#fff3cd;color:#856404;padding:2px 7px;border-radius:10px">⚠️ Một phần</span>':'—';
+
+  content.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap">
+      <div style="font-weight:700;font-size:15px">📈 ${w.brand}</div>
+      <div style="font-size:11px;color:var(--blue)">${w.url||''}</div>
+      <button onclick="openWstAddModal()" class="btn btn-primary btn-sm" style="margin-left:auto">+ Thêm dữ liệu</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:10px 12px;background:#f8f9fa;border-radius:8px;border:1px solid var(--gray-border)">
+      <span style="font-size:11px;font-weight:600;color:var(--text-muted);line-height:2">Checklist:</span>
+      ${['Dựng web','Content','Mở bot'].map(item=>{
+        const done=(site&&site.checklist&&site.checklist[item]);
+        const btn = '<button onclick="wstToggleCheck('+wsId+',\''+item+'\') " style="display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;border:1px solid '+(done?'#27ae60':'var(--gray-border)')+';background:'+(done?'#d4edda':'#fff')+';color:'+(done?'#155724':'var(--text-muted)')+';cursor:pointer;font-size:12px">'+(done?'✅ ':'⬜ ')+item+'</button>';
+        return btn;
+      }).join('')}
+    </div>
+    ${!entries.length ? '<div style="text-align:center;padding:32px;color:var(--text-muted)">Chưa có dữ liệu nào. Bấm "+ Thêm dữ liệu" để bắt đầu.</div>' : `
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#f8f9fa;border-bottom:2px solid var(--gray-border)">
+        <th style="padding:8px 10px;text-align:left">Ngày</th>
+        <th style="padding:8px 10px;text-align:center">🏆 Rank TB</th>
+        <th style="padding:8px 10px;text-align:center">🔗 Backlink</th>
+        <th style="padding:8px 10px;text-align:center">🔍 Index</th>
+        <th style="padding:8px 10px;text-align:left">📝 Ghi chú</th>
+        <th style="padding:8px 10px;width:60px"></th>
+      </tr></thead>
+      <tbody>
+        ${entries.map((e,i)=>{
+          // Compare with previous entry (older)
+          const prev = entries[i+1];
+          const rankDiff = prev&&prev.rank&&e.rank ? e.rank-prev.rank : null;
+          const blDiff = prev&&prev.backlinks&&e.backlinks ? e.backlinks-prev.backlinks : null;
+          const rankArrow = rankDiff===null?'':(rankDiff<0?'<span style="color:#27ae60;font-size:10px">▲'+Math.abs(rankDiff)+'</span>':(rankDiff>0?'<span style="color:#e74c3c;font-size:10px">▼'+rankDiff+'</span>':''));
+          const blArrow = blDiff===null?'':(blDiff>0?'<span style="color:#27ae60;font-size:10px">+'+blDiff+'</span>':(blDiff<0?'<span style="color:#e74c3c;font-size:10px">'+blDiff+'</span>':''));
+          return `<tr style="border-bottom:1px solid #f0f0f0;${i===0?'background:#f9f9f9':''}">
+            <td style="padding:8px 10px;font-weight:${i===0?'600':'400'}">${e.date}</td>
+            <td style="padding:8px 10px;text-align:center">${e.rank||'—'} ${rankArrow}</td>
+            <td style="padding:8px 10px;text-align:center">${e.backlinks||'—'} ${blArrow}</td>
+            <td style="padding:8px 10px;text-align:center">${indexBadge(e.indexed)}</td>
+            <td style="padding:8px 10px;color:var(--text-muted);max-width:200px">${e.note||'—'}</td>
+            <td style="padding:8px 10px;text-align:right">
+              <button onclick="wstDeleteEntry(${wsId},'${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:13px;opacity:.4" onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.4;this.style.color='var(--text-muted)'">🗑</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`}`;
+}
+
+function openWstPickModal(){
+  // Show list of all websites to add to tracking
+  const tracked = new Set(siteTracking.map(s=>s.wsId));
+  const available = websites.filter(w=>!tracked.has(w.id));
+  const overlay = document.createElement('div');
+  overlay.id = 'wstPickOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:20px;width:420px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-weight:700;font-size:14px;margin-bottom:12px">+ Chọn website để theo dõi</div>
+    <input type="text" placeholder="🔍 Tìm..." oninput="wstPickFilter(this.value)" style="width:100%;border:1px solid var(--gray-border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:10px">
+    <div id="wstPickList" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+      ${available.length?available.map(w=>`
+        <div onclick="wstAddTracking(${w.id})" style="padding:8px 12px;border:1px solid var(--gray-border);border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+          <div style="flex:1"><div style="font-size:13px;font-weight:600">${w.brand}</div><div style="font-size:11px;color:var(--blue)">${w.url||''}</div></div>
+          <span style="font-size:11px;color:#27ae60;font-weight:600">+ Thêm</span>
+        </div>`).join(''):'<div style="text-align:center;padding:20px;color:var(--text-muted)">Tất cả website đã được theo dõi</div>'}
+    </div>
+    <div style="text-align:right;margin-top:12px">
+      <button onclick="document.getElementById('wstPickOverlay').remove()" class="btn btn-outline">Đóng</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function wstPickFilter(q){
+  const tracked = new Set(siteTracking.map(s=>s.wsId));
+  const list = websites.filter(w=>!tracked.has(w.id)&&(w.brand.toLowerCase().includes(q.toLowerCase())||((w.url||'').toLowerCase().includes(q.toLowerCase()))));
+  const el = document.getElementById('wstPickList');
+  if(el) el.innerHTML = list.map(w=>`
+    <div onclick="wstAddTracking(${w.id})" style="padding:8px 12px;border:1px solid var(--gray-border);border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:8px" onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">${w.brand}</div><div style="font-size:11px;color:var(--blue)">${w.url||''}</div></div>
+      <span style="font-size:11px;color:#27ae60;font-weight:600">+ Thêm</span>
+    </div>`).join('') || '<div style="text-align:center;padding:20px;color:var(--text-muted)">Không tìm thấy</div>';
+}
+
+function wstAddTracking(wsId){
+  if(!siteTracking.find(s=>s.wsId===wsId)){
+    siteTracking.push({wsId, entries:[]});
+    saveWsTrack();
+  }
+  _wstSelectedWsId = wsId;
+  const ov = document.getElementById('wstPickOverlay');
+  if(ov) ov.remove();
+  renderWsTrack();
+}
+
+function openWstAddModal(){
+  const wsId = _wstSelectedWsId;
+  if(!wsId){ toast('Chọn website trước!','#e74c3c'); return; }
+  const w = websites.find(x=>x.id===wsId);
+  const overlay = document.createElement('div');
+  overlay.id = 'wstAddOverlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-weight:700;font-size:14px;margin-bottom:14px">📈 Thêm dữ liệu — ${w?.brand||''}</div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div class="form-group"><label>Ngày ghi nhận</label>
+        <input type="date" id="wst_date" style="width:100%" value="${todayVN()}">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>🏆 Rank trung bình</label>
+          <input type="number" id="wst_rank" min="1" style="width:100%" placeholder="VD: 15">
+        </div>
+        <div class="form-group"><label>🔗 Backlink</label>
+          <input type="number" id="wst_bl" min="0" style="width:100%" placeholder="VD: 120">
+        </div>
+      </div>
+      <div class="form-group"><label>🔍 Trạng thái Index Google</label>
+        <select id="wst_indexed" style="width:100%">
+          <option value="">-- Chưa kiểm tra --</option>
+          <option value="Đã index">✅ Đã index</option>
+          <option value="Một phần">⚠️ Một phần</option>
+          <option value="Chưa index">❌ Chưa index</option>
+        </select>
+      </div>
+      <div class="form-group"><label>📝 Ghi chú</label>
+        <textarea id="wst_note" rows="2" style="width:100%" placeholder="Ghi chú tình trạng, thay đổi..."></textarea>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-top:16px">
+      <button onclick="document.getElementById('wstAddOverlay').remove()" class="btn btn-outline">Huỷ</button>
+      <button onclick="wstSaveEntry()" class="btn btn-primary">✓ Lưu</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(()=>document.getElementById('wst_date')?.focus(),50);
+}
+
+function wstSaveEntry(){
+  const wsId = _wstSelectedWsId;
+  if(!wsId) return;
+  let site = getWstSite(wsId);
+  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
+  const entry = {
+    id: 'wste'+Date.now(),
+    date: document.getElementById('wst_date').value||todayVN(),
+    rank: parseInt(document.getElementById('wst_rank').value)||null,
+    backlinks: parseInt(document.getElementById('wst_bl').value)||null,
+    indexed: document.getElementById('wst_indexed').value||'',
+    note: (document.getElementById('wst_note').value||'').trim(),
+  };
+  site.entries.push(entry);
+  saveWsTrack();
+  document.getElementById('wstAddOverlay').remove();
+  renderWsTrack();
+  toast('✓ Đã lưu dữ liệu theo dõi');
+}
+
+function wstToggleCheck(wsId, item){
+  let site = getWstSite(wsId);
+  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
+  if(!site.checklist) site.checklist={};
+  site.checklist[item] = !site.checklist[item];
+  saveWsTrack();
+  renderWsTrack();
+}
+
+function wstDeleteEntry(wsId, entryId){
+  if(!confirm('Xoá mục này?')) return;
+  const site = getWstSite(wsId);
+  if(!site) return;
+  site.entries = site.entries.filter(e=>e.id!==entryId);
+  saveWsTrack();
+  renderWsTrack();
+}
+
 function renderRecurringTasks(){
   const list = document.getElementById('recurringList');
   const empty = document.getElementById('recurringEmpty');
@@ -5397,9 +5692,9 @@ function qi_addAll(){
 }
 // ===== MEMBER SWITCHER =====
 const MEMBER_CONFIG = {
-  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','recurring','tasks','add','import','links','index','prompts']},
-  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','recurring','tasks','add','import','links','index','prompts']},
-  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','recurring','tasks','add','import','links','index','prompts']},
+  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','recurring','tasks','add','import','links','index','prompts','wstrack']},
+  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','recurring','tasks','add','import','links','index','prompts','wstrack']},
+  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','recurring','tasks','add','import','links','index','prompts','wstrack']},
 };
 
 function toggleMemberDropdown(){
@@ -6747,6 +7042,8 @@ function renderWebsites(){
       </div>
       </div><!-- end clickable -->
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
+        ${w.is301?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0ff;color:#6c5ce7;border:1px solid #c3b1e1;white-space:nowrap">🔀 301</span>`:''}
+        ${(()=>{ const kids=websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===w.url?.replace(/\/$/,''))); return kids.length?`<button onclick="event.stopPropagation();showW301s(${w.id})" style="font-size:10px;padding:1px 7px;border-radius:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;cursor:pointer;white-space:nowrap" title="Xem ${kids.length} web 301">🔀 ×${kids.length}</button>`:'' })()}
         <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
         ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
         <button onclick="event.stopPropagation();copyText(this.dataset.url,this)" data-url="${(w.url||'').replace(/"/g,'&quot;')}" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;color:var(--blue);border-color:#b8d4ea" title="Copy URL">🔗</button>
@@ -6787,7 +7084,63 @@ function openWebsiteForm(id=null){
     wfGroup.value=w?.group||'';
   }
   document.getElementById('wf_delete_btn').style.display=w?'inline-flex':'none';
+  // 301 fields
+  const is301El=document.getElementById('wf_is301');
+  if(is301El){
+    is301El.checked=!!(w?.is301);
+    document.getElementById('wf_301_fields').style.display=w?.is301?'block':'none';
+    if(w?.is301){
+      document.getElementById('wf_source_url').value=w?.sourceUrl||'';
+      const sel=document.getElementById('wf_source_select');
+      if(sel) sel.innerHTML='<option value="">-- Chọn từ kho --</option>'+websites.filter(x=>x.id!==w?.id).map(x=>`<option value="${x.url||''}">${x.brand} (${x.url||''})</option>`).join('');
+    }
+  }
   document.getElementById('wf_brand').focus();
+}
+
+
+function showW301s(wsId){
+  const w = websites.find(x=>x.id===wsId);
+  if(!w) return;
+  const children = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||(w.url&&x.sourceUrl.replace(/\/$/,'')===w.url.replace(/\/$/,''))));
+  if(!children.length){ toast('Chưa có website 301 nào từ '+w.brand,'#e67e22'); return; }
+  const overlay = document.createElement('div');
+  overlay.id = 'w301Overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.onclick = e=>{ if(e.target===overlay) overlay.remove(); };
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div style="font-weight:700;font-size:15px">🔀 Web 301 từ <span style="color:var(--red)">${w.brand}</span></div>
+      <button onclick="document.getElementById('w301Overlay').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Web gốc: <b>${w.url||''}</b></div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${children.map(x=>`
+        <div style="padding:10px 12px;border:1px solid var(--gray-border);border-radius:8px;display:flex;align-items:center;gap:10px;background:#fff">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:13px">${x.brand}</div>
+            <div style="font-size:11px;color:var(--blue)">${x.url||''}</div>
+          </div>
+          <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[x.status]||'#999'}18;color:${WS_STATUS_COLOR[x.status]||'#999'}">${x.status||''}</span>
+          <button onclick="document.getElementById('w301Overlay').remove();openWebsiteForm(${x.id})" class="btn btn-sm btn-outline" style="font-size:11px">✎</button>
+        </div>`).join('')}
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function wfToggle301(){
+  const checked = document.getElementById('wf_is301')?.checked;
+  const fields = document.getElementById('wf_301_fields');
+  if(fields) fields.style.display = checked ? 'block' : 'none';
+  if(checked){
+    // Populate source select with all websites except current
+    const sel = document.getElementById('wf_source_select');
+    if(sel){
+      sel.innerHTML = '<option value="">-- Chọn từ kho --</option>' +
+        websites.filter(w=>w.id!==editingWsId).map(w=>`<option value="${w.url||''}">${w.brand} (${w.url||''})</option>`).join('');
+    }
+  }
 }
 
 function clearWebsiteForm(){
@@ -6796,6 +7149,7 @@ function clearWebsiteForm(){
   document.getElementById('wf_status').value='Tốt';
   document.getElementById('wf_delete_btn').style.display='none';
   document.getElementById('wfTitle').textContent='+ Thêm website';
+  const _301=document.getElementById('wf_is301'); if(_301){_301.checked=false; document.getElementById('wf_301_fields').style.display='none'; document.getElementById('wf_source_url').value='';}
 }
 
 function normalizeAdmin(v){ return (v||'').trim().replace(/^\/+|\/+$/g,''); }
@@ -6818,6 +7172,8 @@ function saveWebsite(){
     team: document.getElementById('wf_team')?.value||'Team 01',
     owner: document.getElementById('wf_owner')?.value||'Công ty',
     group: document.getElementById('wf_group')?.value||'',
+    is301: document.getElementById('wf_is301')?.checked||false,
+    sourceUrl: document.getElementById('wf_is301')?.checked ? (document.getElementById('wf_source_url')?.value||'').trim() : '',
   };
   if(editingWsId){
     const i=websites.findIndex(w=>w.id===editingWsId);
