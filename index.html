@@ -7227,8 +7227,10 @@ function saveWebsite(){
     if(i>=0) websites[i]=obj; else websites.push(obj);
   } else {
     // Check for duplicate URL
+    const is301New = document.getElementById('wf_is301')?.checked;
     const dupUrl = url && websites.find(w=>w.url&&w.url.replace(/\/$/,'')===url.replace(/\/$/,''));
-    const dupBrand = websites.find(w=>w.brand.toLowerCase()===brand.toLowerCase());
+    // Không check trùng brand nếu là website 301 (nhiều web 301 có thể cùng brand với web gốc)
+    const dupBrand = !is301New && websites.find(w=>w.brand.toLowerCase()===brand.toLowerCase());
     const dup = dupUrl || dupBrand;
     if(dup){
       const msg = 'Website "'+dup.brand+'" ('+dup.url+') đã tồn tại!\n\nChọn:\n• OK = Thay thế thông tin cũ bằng dữ liệu vừa nhập\n• Huỷ = Bỏ, giữ nguyên dữ liệu cũ';
