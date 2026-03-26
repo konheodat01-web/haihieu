@@ -1801,6 +1801,24 @@
         <div style="padding:10px 14px;border-bottom:1px solid var(--gray-border);background:#f8f9fa;font-weight:600;font-size:13px" id="wfTitle">&#43; Thêm website</div>
         <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
           <input type="hidden" id="wf_id">
+          <!-- 301 toggle ở trên đầu -->
+          <div style="background:#f8f0ff;border:1px solid #c3b1e1;border-radius:8px;padding:10px 12px">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+              <input type="checkbox" id="wf_is301" onchange="wfToggle301()" style="cursor:pointer;accent-color:#6c5ce7;width:15px;height:15px">
+              <span style="font-weight:700;font-size:13px;color:#6c5ce7">🔀 Website 301</span>
+              <span style="font-size:11px;color:var(--text-muted)">(redirect từ web gốc)</span>
+            </label>
+            <div id="wf_301_fields" style="display:none;margin-top:10px">
+              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Chọn web gốc từ kho (sẽ sao chép thông tin)</label>
+              <select id="wf_source_select" style="width:100%;height:32px;font-size:12px" onchange="wf301SelectSource(this.value)">
+                <option value="">-- Chọn từ kho --</option>
+              </select>
+              <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+                <span style="font-size:11px;color:var(--text-muted)">hoặc nhập tay:</span>
+                <input type="text" id="wf_source_url" style="flex:1;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:4px 8px" placeholder="debets.com">
+              </div>
+            </div>
+          </div>
           <div class="form-group"><label>Tên brand *</label><input type="text" id="wf_brand" style="width:100%" placeholder="VD: Debet, CafeLegend..."></div>
           <div class="form-group"><label>URL *</label><input type="text" id="wf_url" style="width:100%" placeholder="debets.sbs" oninput="this.value=normalizeUrl(this.value)"></div>
           <div class="form-group"><label>Đuôi quản trị</label><input type="text" id="wf_admin" style="width:100%" placeholder="wp-admin, admin..." oninput="this.value=this.value.replace(/^\/+/,'')" onblur="this.value=this.value.replace(/\/+$/,'')"></div>
@@ -1843,22 +1861,6 @@
             <div style="display:flex;gap:4px">
               <select id="wf_group" style="flex:1"></select>
               <button onclick="openWsGroupManager()" style="background:none;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;cursor:pointer;font-size:14px" title="Quản lý nhóm">⚙</button>
-            </div>
-          </div>
-          <div class="form-group" style="border-top:1px solid var(--gray-border);padding-top:10px">
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
-              <input type="checkbox" id="wf_is301" onchange="wfToggle301()" style="cursor:pointer;accent-color:var(--red);width:14px;height:14px">
-              <span style="font-weight:600;font-size:13px">🔀 Website 301</span>
-              <span style="font-size:11px;color:var(--text-muted)">(redirect từ web gốc)</span>
-            </label>
-            <div id="wf_301_fields" style="display:none;margin-top:8px">
-              <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Web gốc (chọn từ kho hoặc nhập URL)</label>
-              <div style="display:flex;gap:6px">
-                <input type="text" id="wf_source_url" style="flex:1;font-size:12px" placeholder="VD: debets.com">
-                <select id="wf_source_select" style="flex:1;font-size:12px" onchange="document.getElementById('wf_source_url').value=this.value;this.value=''">
-                  <option value="">-- Chọn từ kho --</option>
-                </select>
-              </div>
             </div>
           </div>
           <div class="form-group"><label>Ghi chú</label><textarea id="wf_note" rows="2" style="width:100%"></textarea></div>
@@ -7134,13 +7136,35 @@ function wfToggle301(){
   const fields = document.getElementById('wf_301_fields');
   if(fields) fields.style.display = checked ? 'block' : 'none';
   if(checked){
-    // Populate source select with all websites except current
     const sel = document.getElementById('wf_source_select');
     if(sel){
       sel.innerHTML = '<option value="">-- Chọn từ kho --</option>' +
-        websites.filter(w=>w.id!==editingWsId).map(w=>`<option value="${w.url||''}">${w.brand} (${w.url||''})</option>`).join('');
+        websites.filter(w=>w.id!==editingWsId).map(w=>`<option value="${w.id}">${w.brand} (${w.url||''})</option>`).join('');
     }
   }
+}
+
+function wf301SelectSource(wsId){
+  if(!wsId) return;
+  const src = websites.find(w=>w.id===parseInt(wsId));
+  if(!src) return;
+  // Copy all info from source except URL
+  document.getElementById('wf_brand').value = src.brand||'';
+  document.getElementById('wf_admin').value = src.admin||'';
+  document.getElementById('wf_account').value = src.account||'';
+  document.getElementById('wf_password').value = src.password||'';
+  document.getElementById('wf_status').value = src.status||'Tốt';
+  document.getElementById('wf_note').value = src.note||'';
+  if(document.getElementById('wf_team')) document.getElementById('wf_team').value = src.team||'Team 01';
+  onWfTeamChange();
+  if(document.getElementById('wf_owner')) document.getElementById('wf_owner').value = src.owner||'Công ty';
+  if(document.getElementById('wf_group')) document.getElementById('wf_group').value = src.group||'';
+  // Store source URL
+  document.getElementById('wf_source_url').value = src.url||'';
+  // Clear URL field so user fills it
+  document.getElementById('wf_url').value = '';
+  setTimeout(()=>document.getElementById('wf_url').focus(), 50);
+  toast('✓ Đã sao chép thông tin từ '+src.brand+' — nhập URL mới vào', '#27ae60', 3000);
 }
 
 function clearWebsiteForm(){
