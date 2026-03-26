@@ -1810,9 +1810,12 @@
             </label>
             <div id="wf_301_fields" style="display:none;margin-top:10px">
               <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:4px">Chọn web gốc từ kho (sẽ sao chép thông tin)</label>
-              <select id="wf_source_select" style="width:100%;height:32px;font-size:12px" onchange="wf301SelectSource(this.value)">
-                <option value="">-- Chọn từ kho --</option>
-              </select>
+              <div style="position:relative">
+                <input type="text" id="wf_source_search" placeholder="🔍 Tìm tên hoặc URL..." 
+                  oninput="wf301Search(this.value)"
+                  style="width:100%;height:32px;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:0 8px;box-sizing:border-box">
+                <div id="wf_source_results" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--gray-border);border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:300;max-height:200px;overflow-y:auto;margin-top:2px"></div>
+              </div>
               <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
                 <span style="font-size:11px;color:var(--text-muted)">hoặc nhập tay:</span>
                 <input type="text" id="wf_source_url" style="flex:1;font-size:12px;border:1px solid var(--gray-border);border-radius:6px;padding:4px 8px" placeholder="debets.com">
@@ -7136,12 +7139,27 @@ function wfToggle301(){
   const fields = document.getElementById('wf_301_fields');
   if(fields) fields.style.display = checked ? 'block' : 'none';
   if(checked){
-    const sel = document.getElementById('wf_source_select');
-    if(sel){
-      sel.innerHTML = '<option value="">-- Chọn từ kho --</option>' +
-        websites.filter(w=>w.id!==editingWsId).map(w=>`<option value="${w.id}">${w.brand} (${w.url||''})</option>`).join('');
-    }
+    const si = document.getElementById('wf_source_search');
+    if(si) si.value='';
+    const sr = document.getElementById('wf_source_results');
+    if(sr) sr.style.display='none';
   }
+}
+
+function wf301Search(q){
+  const res = document.getElementById('wf_source_results');
+  if(!res) return;
+  const list = websites.filter(w=>w.id!==editingWsId && (
+    !q || w.brand.toLowerCase().includes(q.toLowerCase()) || (w.url||'').toLowerCase().includes(q.toLowerCase())
+  )).slice(0,8);
+  if(!list.length || !q){ res.style.display='none'; return; }
+  res.style.display='block';
+  res.innerHTML = list.map(w=>`
+    <div onclick="wf301SelectSource(${w.id})" style="padding:8px 12px;cursor:pointer;font-size:12px;border-bottom:1px solid #f0f0f0;display:flex;flex-direction:column;gap:2px"
+      onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">
+      <span style="font-weight:600">${w.brand}</span>
+      <span style="color:var(--blue);font-size:11px">${w.url||''}</span>
+    </div>`).join('');
 }
 
 function wf301SelectSource(wsId){
@@ -7161,6 +7179,11 @@ function wf301SelectSource(wsId){
   if(document.getElementById('wf_group')) document.getElementById('wf_group').value = src.group||'';
   // Store source URL
   document.getElementById('wf_source_url').value = src.url||'';
+  // Update search box display
+  const si = document.getElementById('wf_source_search');
+  if(si) si.value = src.brand + ' — ' + (src.url||'');
+  const sr = document.getElementById('wf_source_results');
+  if(sr) sr.style.display='none';
   // Clear URL field so user fills it
   document.getElementById('wf_url').value = '';
   setTimeout(()=>document.getElementById('wf_url').focus(), 50);
