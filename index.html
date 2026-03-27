@@ -1553,39 +1553,31 @@
 <!-- LINK QUAN TRỌNG -->
 <div id="page-wstrack" class="page">
   <div class="panel" style="display:flex;flex-direction:column;height:calc(100vh - 90px);overflow:hidden">
-    <div class="panel-header" style="flex-shrink:0">
+    <div class="panel-header" style="flex-shrink:0;flex-wrap:wrap;gap:8px">
       <div class="panel-title">📈 Theo dõi web</div>
-      <div class="toolbar">
+      <div class="toolbar" style="flex-wrap:wrap;gap:6px">
+        <input type="text" id="wst_search" placeholder="🔍 Tìm website..." oninput="renderWsTrack()" style="width:160px;height:32px;font-size:12px">
         <select id="wst_filter_group" onchange="renderWsTrack()" style="height:32px;font-size:12px">
           <option value="">Tất cả nhóm</option>
         </select>
         <select id="wst_filter_check" onchange="renderWsTrack()" style="height:32px;font-size:12px">
-          <option value="">Tất cả trạng thái</option>
+          <option value="">Tất cả checklist</option>
           <option value="all_done">✅ Hoàn thành hết</option>
           <option value="partial">⚠️ Chưa hoàn thành</option>
         </select>
-        <select id="wst_filter_ws" onchange="renderWsTrack()" style="height:32px;font-size:12px;min-width:180px">
-          <option value="">-- Chọn website --</option>
-        </select>
-        <button onclick="openWstChecklistManager()" class="btn btn-outline btn-sm" title="Quản lý checklist">⚙ Checklist</button>
-        <button class="btn btn-primary btn-sm" onclick="openWstAddModal()">+ Thêm dữ liệu</button>
+        <button onclick="openWstChecklistManager()" class="btn btn-outline btn-sm">⚙ Checklist</button>
+        <button onclick="openWstPickModal()" class="btn btn-outline btn-sm">+ Thêm web</button>
       </div>
     </div>
-    <div style="display:grid;grid-template-columns:240px 1fr;flex:1;overflow:hidden;min-height:0">
-      <!-- LEFT: website list -->
-      <div style="border-right:1px solid var(--gray-border);overflow-y:auto;padding:10px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted)">Website đang theo dõi</div>
-        </div>
-        <div id="wstWebList"></div>
-        <button onclick="openWstPickModal()" class="btn btn-outline btn-sm" style="width:100%;margin-top:8px;font-size:11px">+ Thêm web vào theo dõi</button>
-      </div>
-      <!-- RIGHT: data -->
-      <div style="overflow-y:auto;padding:14px" id="wstContent">
-        <div style="text-align:center;padding:40px;color:var(--text-muted)">
-          <div style="font-size:32px;margin-bottom:8px">📈</div>
-          Chọn website bên trái để xem lịch sử
-        </div>
+    <!-- TABLE -->
+    <div style="flex:1;overflow:auto;min-height:0">
+      <table id="wstTable" style="width:100%;border-collapse:collapse;font-size:12px;min-width:900px">
+        <thead id="wstThead" style="position:sticky;top:0;z-index:10;background:#f8f9fa"></thead>
+        <tbody id="wstTbody"></tbody>
+      </table>
+      <div id="wstEmpty" style="display:none;text-align:center;padding:40px;color:var(--text-muted)">
+        <div style="font-size:32px;margin-bottom:8px">📈</div>
+        Chưa theo dõi website nào. Bấm "+ Thêm web" để bắt đầu.
       </div>
     </div>
   </div>
@@ -4743,70 +4735,143 @@ function getWstSite(wsId){
 }
 
 function renderWsTrack(){
-  const listEl = document.getElementById('wstWebList');
-  if(!listEl) return;
+  const tbody = document.getElementById('wstTbody');
+  const thead = document.getElementById('wstThead');
+  const empty = document.getElementById('wstEmpty');
+  if(!tbody) return;
 
-  // Populate group filter from tracked websites' groups
   const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
-  const groups = [...new Set(allTrackedWs.map(w=>w.group||'').filter(Boolean))].sort();
+  const chkItems = getWstChecklist();
+
+  // Populate filters
   const gSel = document.getElementById('wst_filter_group');
-  if(gSel){
-    const cur = gSel.value;
-    gSel.innerHTML = '<option value="">Tất cả nhóm</option>' + groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join('');
-  }
-  const fGroup = gSel?.value||'';
-  const fCheck = document.getElementById('wst_filter_check')?.value||'';
-
-  // Update checklist filter options
-  const dynItems = getWstChecklist();
+  if(gSel){ const cur=gSel.value; const groups=[...new Set(allTrackedWs.map(w=>w.group||'').filter(Boolean))].sort(); gSel.innerHTML='<option value="">Tất cả nhóm</option>'+groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join(''); }
   const fCheckSel = document.getElementById('wst_filter_check');
-  if(fCheckSel){
-    const curF = fCheckSel.value;
-    fCheckSel.innerHTML = '<option value="">Tất cả trạng thái</option><option value="all_done">✅ Hoàn thành hết</option><option value="partial">⚠️ Chưa hoàn thành</option>'
-      + dynItems.map(item=>`<option value="done_${item}" ${curF==='done_'+item?'selected':''}>${item}: ✅ Done</option><option value="undone_${item}" ${curF==='undone_'+item?'selected':''}>${item}: ⬜ Chưa</option>`).join('');
-    if(curF) fCheckSel.value=curF;
-  }
+  if(fCheckSel){ const curF=fCheckSel.value; fCheckSel.innerHTML='<option value="">Tất cả checklist</option><option value="all_done">✅ Hoàn thành hết</option><option value="partial">⚠️ Chưa hoàn thành</option>'+chkItems.map(item=>`<option value="done_${item}" ${curF==='done_'+item?'selected':''}>${item}: ✅</option><option value="undone_${item}" ${curF==='undone_'+item?'selected':''}>${item}: ⬜</option>`).join(''); if(curF) fCheckSel.value=curF; }
 
-  // Filter tracked websites by group + checklist status
-  const trackedWs = allTrackedWs.filter(w=>{
+  const q=(document.getElementById('wst_search')?.value||'').toLowerCase();
+  const fGroup=gSel?.value||'';
+  const fCheck=fCheckSel?.value||'';
+
+  let list = allTrackedWs.filter(w=>{
+    if(q && !w.brand.toLowerCase().includes(q) && !(w.url||'').toLowerCase().includes(q)) return false;
     if(fGroup && (w.group||'')!==fGroup) return false;
     if(fCheck){
-      const site=getWstSite(w.id);
-      const cl=site?.checklist||{};
-      const chkItems=getWstChecklist();
-      if(fCheck==='all_done' && !chkItems.every(item=>cl[item])) return false;
-      if(fCheck==='partial' && chkItems.every(item=>cl[item])) return false;
-      if(fCheck.startsWith('done_')){const item=fCheck.slice(5); if(!cl[item]) return false;}
-      if(fCheck.startsWith('undone_')){const item=fCheck.slice(7); if(cl[item]) return false;}
+      const cl=getWstSite(w.id)?.checklist||{};
+      if(fCheck==='all_done' && !chkItems.every(i=>cl[i])) return false;
+      if(fCheck==='partial' && chkItems.every(i=>cl[i])) return false;
+      if(fCheck.startsWith('done_') && !cl[fCheck.slice(5)]) return false;
+      if(fCheck.startsWith('undone_') && cl[fCheck.slice(7)]) return false;
     }
     return true;
   });
-  const CHKLIST = getWstChecklist();
-  listEl.innerHTML = trackedWs.map(w=>{
-    const site = getWstSite(w.id);
-    const lastEntry = site?.entries?.slice(-1)[0];
-    const isActive = _wstSelectedWsId===w.id;
-    const cl = site?.checklist||{};
-    const clBadges = CHKLIST.map(item=>`<span onclick="event.stopPropagation();wstToggleCheck(${w.id},'${item}')" title="${item}" style="cursor:pointer;font-size:10px;padding:1px 6px;border-radius:10px;border:1px solid ${cl[item]?'#27ae60':'var(--gray-border)'};background:${cl[item]?'#d4edda':'#f8f9fa'};color:${cl[item]?'#155724':'var(--text-muted)'}">${cl[item]?'✓':''} ${item}</span>`).join('');
-    return `<div onclick="wstSelectWeb(${w.id})"
-      style="padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:6px;background:${isActive?'#fdf2f2':'#fff'};border:1px solid ${isActive?'var(--red)':'var(--gray-border)'}">
-      <div style="font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:4px">${w.brand}</div>
-      <div style="display:flex;gap:3px;flex-wrap:wrap">${clBadges}</div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:3px">${lastEntry?lastEntry.date+' · '+site.entries.length+' mục':'Chưa có dữ liệu'}</div>
-    </div>`;
-  }).join('') || '<div style="font-size:11px;color:var(--text-muted)">Chưa theo dõi web nào</div>';
 
-  // Update select filter
-  const sel = document.getElementById('wst_filter_ws');
-  if(sel){
-    const cur = sel.value;
-    sel.innerHTML = '<option value="">-- Chọn website --</option>' +
-      trackedWs.map(w=>`<option value="${w.id}" ${w.id==cur?'selected':''}>${w.brand}</option>`).join('');
-    if(!cur && _wstSelectedWsId) sel.value = _wstSelectedWsId;
+  if(!list.length){ tbody.innerHTML=''; if(thead) thead.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  // Build dynamic columns: fixed + checklist items + last entry fields
+  if(thead){
+    thead.innerHTML = `<tr style="border-bottom:2px solid var(--gray-border)">
+      <th style="padding:8px 10px;text-align:left;white-space:nowrap;font-size:11px">Website</th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px">Nhóm</th>
+      ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
+      <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px">🔗 BL</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px">🔍 Index</th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px">Cập nhật</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px">Thao tác</th>
+    </tr>`;
   }
 
-  if(_wstSelectedWsId) renderWstContent(_wstSelectedWsId);
+  tbody.innerHTML = list.map(w=>{
+    const site = getWstSite(w.id);
+    const cl = site?.checklist||{};
+    const entries = (site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+    const last = entries[0];
+    const indexColor = last?.indexed==='Đã index'?'#27ae60':last?.indexed==='Chưa index'?'#e74c3c':'#e67e22';
+    const indexIcon = last?.indexed==='Đã index'?'✅':last?.indexed==='Chưa index'?'❌':last?.indexed==='Một phần'?'⚠️':'—';
+    const allDone = chkItems.length && chkItems.every(i=>cl[i]);
+
+    return `<tr style="border-bottom:1px solid #f0f0f0;${allDone?'background:#f6fff8':''}" onmouseover="this.style.background='#fdf9f9'" onmouseout="this.style.background='${allDone?'#f6fff8':''}'">
+      <td style="padding:8px 10px;white-space:nowrap">
+        <div style="font-weight:600;font-size:12px">${w.brand}</div>
+        <div style="font-size:10px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;max-width:140px">${w.url||''}</div>
+      </td>
+      <td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">${w.group||'—'}</td>
+      ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
+        <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:18px" title="${item}">${cl[item]?'✅':'⬜'}</span>
+      </td>`).join('')}
+      <td style="padding:8px 10px;text-align:center;font-size:12px">${last?.rank||'—'}</td>
+      <td style="padding:8px 10px;text-align:center;font-size:12px">${last?.backlinks||'—'}</td>
+      <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
+      <td style="padding:8px 10px;font-size:11px;color:var(--text-muted);white-space:nowrap">${last?.date||'—'}</td>
+      <td style="padding:8px 10px;text-align:center;white-space:nowrap">
+        <button onclick="wstOpenDetail(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 7px" title="Xem lịch sử">📋</button>
+        <button onclick="wstAddEntry(${w.id})" class="btn btn-sm btn-primary" style="font-size:11px;padding:2px 7px;background:var(--red);border-color:var(--red)" title="Thêm dữ liệu">+</button>
+        <button onclick="wstRemoveTracking(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 6px;color:#e74c3c;border-color:#e74c3c" title="Bỏ theo dõi">×</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
+
+function wstAddEntry(wsId){
+  _wstSelectedWsId = wsId;
+  openWstAddModal();
+}
+
+function wstRemoveTracking(wsId){
+  const w = websites.find(x=>x.id===wsId);
+  if(!confirm('Bỏ theo dõi '+w?.brand+'?')) return;
+  siteTracking = siteTracking.filter(s=>s.wsId!==wsId);
+  saveWsTrack();
+  renderWsTrack();
+}
+
+function wstOpenDetail(wsId){
+  const w = websites.find(x=>x.id===wsId);
+  const site = getWstSite(wsId);
+  if(!w||!site) return;
+  const entries = (site.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const indexBadge = v=>v==='Đã index'?'<span style="font-size:10px;background:#d4edda;color:#155724;padding:1px 6px;border-radius:10px">✅ Đã index</span>':v==='Chưa index'?'<span style="font-size:10px;background:#f8d7da;color:#721c24;padding:1px 6px;border-radius:10px">❌ Chưa</span>':v==='Một phần'?'<span style="font-size:10px;background:#fff3cd;color:#856404;padding:1px 6px;border-radius:10px">⚠️ Một phần</span>':'—';
+  const ov = document.createElement('div');
+  ov.id='wstDetailOv';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center';
+  ov.onclick=e=>{if(e.target===ov)ov.remove()};
+  ov.innerHTML=`<div style="background:#fff;border-radius:12px;padding:22px;width:620px;max-width:95vw;max-height:85vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div><div style="font-weight:700;font-size:15px">📋 ${w.brand}</div><div style="font-size:11px;color:var(--blue)">${w.url||''}</div></div>
+      <div style="display:flex;gap:6px">
+        <button onclick="wstAddEntry(${wsId});document.getElementById('wstDetailOv').remove()" class="btn btn-primary btn-sm">+ Thêm dữ liệu</button>
+        <button onclick="document.getElementById('wstDetailOv').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
+      </div>
+    </div>
+    ${!entries.length?'<div style="text-align:center;padding:24px;color:var(--text-muted)">Chưa có dữ liệu</div>':`
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead><tr style="background:#f8f9fa;border-bottom:2px solid var(--gray-border)">
+        <th style="padding:7px 8px;text-align:left">Ngày</th>
+        <th style="padding:7px 8px;text-align:center">🏆 Rank</th>
+        <th style="padding:7px 8px;text-align:center">🔗 BL</th>
+        <th style="padding:7px 8px;text-align:center">🔍 Index</th>
+        <th style="padding:7px 8px;text-align:left">Ghi chú</th>
+        <th style="padding:7px 8px;width:30px"></th>
+      </tr></thead>
+      <tbody>${entries.map((e,i)=>{
+        const prev=entries[i+1];
+        const rD=prev&&prev.rank&&e.rank?e.rank-prev.rank:null;
+        const bD=prev&&prev.backlinks&&e.backlinks?e.backlinks-prev.backlinks:null;
+        return `<tr style="border-bottom:1px solid #f0f0f0">
+          <td style="padding:7px 8px;font-weight:${i===0?'600':'400'}">${e.date}</td>
+          <td style="padding:7px 8px;text-align:center">${e.rank||'—'}${rD!==null?` <span style="font-size:10px;color:${rD<0?'#27ae60':'#e74c3c'}">${rD<0?'▲'+Math.abs(rD):'▼'+rD}</span>`:''}</td>
+          <td style="padding:7px 8px;text-align:center">${e.backlinks||'—'}${bD!==null?` <span style="font-size:10px;color:${bD>0?'#27ae60':'#e74c3c'}">${bD>0?'+'+bD:bD}</span>`:''}</td>
+          <td style="padding:7px 8px;text-align:center">${indexBadge(e.indexed)}</td>
+          <td style="padding:7px 8px;color:var(--text-muted);max-width:160px">${e.note||'—'}</td>
+          <td style="padding:7px 8px"><button onclick="wstDeleteEntry(${wsId},'${e.id}')" style="background:none;border:none;cursor:pointer;color:var(--text-muted);opacity:.4;font-size:13px" onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.4;this.style.color='var(--text-muted)'">🗑</button></td>
+        </tr>`}).join('')}</tbody>
+    </table>`}
+  </div>`;
+  document.body.appendChild(ov);
+}
+
 
 function wstSelectWeb(wsId){
   _wstSelectedWsId = wsId;
