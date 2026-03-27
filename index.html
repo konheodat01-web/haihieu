@@ -5190,10 +5190,10 @@ function doneRecurringToday(id){
     doneList.push({id, name:r.name, date:today, doneAt:today, person:r.person||''});
     saveRecurDoneToday(doneList);
   }
-  // Advance next date
+  // Advance next date THEN save once
   r.lastDone = today;
   r.nextDate = calcNextDate(today, r);
-  saveRecurring();
+  saveRecurring(); // saves recurringTasks + recurDoneToday together
   setTimeout(()=>renderRecurringTasks(), 50);
   toast(`✅ Done: ${r.name} — lần tới: ${r.nextDate}`, '#27ae60', 4000);
 }
@@ -5211,14 +5211,16 @@ function undoDoneRecurring(id){
   const r = recurringTasks.find(x=>x.id===id);
   if(!r) return;
   const today = todayVN();
-  let doneList = getRecurDoneToday();
-  doneList = doneList.filter(d=>!(d.id===id && d.date===today));
-  setRecurDoneToday(doneList); saveAppData();
-  // Restore nextDate back to today
+  // Restore nextDate FIRST before any save
   r.nextDate = today;
   r.lastDone = '';
-  saveRecurring();
-  renderRecurringTasks();
+  // Remove from done list
+  let doneList = getRecurDoneToday();
+  doneList = doneList.filter(d=>!(d.id===id && d.date===today));
+  setRecurDoneToday(doneList);
+  // Single save with both updated
+  saveRecurring(); // includes recurDoneToday via getRecurDoneToday()
+  setTimeout(()=>renderRecurringTasks(), 50);
   toast('↩ Đã hoàn tác — task trở lại chưa done', '#e67e22', 3000);
 }
 
