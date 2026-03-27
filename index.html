@@ -3790,7 +3790,9 @@ function initFirebaseListener(){
       if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); deduplicateWebsiteIds(); }
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
-      if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1; }
+      if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1;
+        // Clean undefined values that Firebase rejects
+        indexTasks.forEach(t=>{ if(t.parentIds===undefined) t.parentIds=[]; }); }
       if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); }
       if(Array.isArray(r.recurDoneToday)){ const _td=r.recurDoneToday.filter(d=>d.date===todayVN()); const _cur=localStorage.getItem('wt_recur_done_today'); if(JSON.stringify(_td)!==_cur){ setRecurDoneToday(_td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
@@ -8849,7 +8851,7 @@ function saveAddIndexTask(){
     pendingNewDue: '',
     _id: itNextId++,
     isSubTask: isSubTask||false,
-    parentIds: parentIds.length ? parentIds : undefined,
+    parentIds: parentIds.length ? parentIds : [],
   };
   indexTasks.push(newItTask);
   try{ addToKhoId(newItTask); }catch(e){ console.warn('khoId err:',e); }
