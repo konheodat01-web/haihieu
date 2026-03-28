@@ -1560,10 +1560,16 @@
         <select id="wst_filter_group" onchange="renderWsTrack()" style="height:32px;font-size:12px">
           <option value="">Tất cả nhóm</option>
         </select>
-        <select id="wst_filter_check" onchange="renderWsTrack()" style="height:32px;font-size:12px">
-          <option value="">Tất cả checklist</option>
-          <option value="all_done">✅ Hoàn thành hết</option>
-          <option value="partial">⚠️ Chưa hoàn thành</option>
+        <select id="wst_filter_mobot" onchange="renderWsTrack()" style="height:32px;font-size:12px">
+          <option value="">Tất cả bot</option>
+          <option value="Mở">🟢 Mở bot</option>
+          <option value="Đóng">🔴 Đóng bot</option>
+        </select>
+        <select id="wst_filter_index" onchange="renderWsTrack()" style="height:32px;font-size:12px">
+          <option value="">Tất cả index</option>
+          <option value="Đã index">✅ Đã index</option>
+          <option value="Một phần">⚠️ Một phần</option>
+          <option value="Chưa index">❌ Chưa index</option>
         </select>
         <button onclick="openWstChecklistManager()" class="btn btn-outline btn-sm">⚙ Checklist</button>
         <button onclick="openWstPickModal()" class="btn btn-outline btn-sm">+ Thêm web</button>
@@ -4735,6 +4741,62 @@ function getWstSite(wsId){
   return siteTracking.find(s=>s.wsId===wsId);
 }
 
+
+let _wstSelected = new Set();
+
+function wstToggleSelect(wsId, cb){
+  if(cb.checked) _wstSelected.add(wsId);
+  else _wstSelected.delete(wsId);
+  wstRenderBulkBar();
+  const allCk = document.getElementById('wstSelectAll');
+  if(allCk){
+    const all = document.querySelectorAll('.wst-chk');
+    allCk.checked = all.length && [...all].every(c=>c.checked);
+  }
+}
+
+function wstToggleSelectAll(cb){
+  document.querySelectorAll('.wst-chk').forEach(c=>{
+    c.checked = cb.checked;
+    const id = parseInt(c.dataset.id);
+    if(cb.checked) _wstSelected.add(id); else _wstSelected.delete(id);
+  });
+  wstRenderBulkBar();
+}
+
+function wstRenderBulkBar(){
+  let bar = document.getElementById('wstBulkBar');
+  if(!bar){
+    bar = document.createElement('div');
+    bar.id = 'wstBulkBar';
+    bar.style.cssText='position:sticky;top:0;z-index:20;background:#fff8e1;border-bottom:2px solid #ffe082;padding:8px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    const tbl = document.getElementById('wstTable');
+    if(tbl) tbl.parentElement.insertBefore(bar, tbl);
+  }
+  if(!_wstSelected.size){ bar.style.display='none'; return; }
+  bar.style.display='flex';
+  bar.innerHTML = `<span style="font-weight:600;font-size:13px">${_wstSelected.size} web đã chọn</span>
+    <button onclick="wstCopySelected('source')" class="btn btn-sm btn-outline" style="font-size:11px">🔗 Copy URL gốc</button>
+    <button onclick="wstCopySelected('301')" class="btn btn-sm btn-outline" style="font-size:11px;color:#6c5ce7;border-color:#c3b1e1">🔀 Copy URL 301</button>
+    <button onclick="wstCopySelected('both')" class="btn btn-sm btn-outline" style="font-size:11px">📋 Copy cả hai</button>
+    <button onclick="_wstSelected.clear();renderWsTrack()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:18px;margin-left:auto">×</button>`;
+}
+
+function wstCopySelected(mode){
+  const lines = [];
+  _wstSelected.forEach(wsId=>{
+    const w = websites.find(x=>x.id===wsId);
+    if(!w) return;
+    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+    const latest301 = kids.length?kids[kids.length-1]:null;
+    if(mode==='source') lines.push(w.url||'');
+    else if(mode==='301') lines.push(latest301?.url||w.url||'');
+    else lines.push((w.url||'')+'\t'+(latest301?.url||''));
+  });
+  copyText(lines.join('\n'), null);
+  toast('✓ Đã copy '+lines.length+' URL','#27ae60',2000);
+}
+
 function renderWsTrack(){
   const tbody = document.getElementById('wstTbody');
   const thead = document.getElementById('wstThead');
@@ -4747,12 +4809,11 @@ function renderWsTrack(){
   // Populate filters
   const gSel = document.getElementById('wst_filter_group');
   if(gSel){ const cur=gSel.value; const groups=[...new Set(allTrackedWs.map(w=>w.group||'').filter(Boolean))].sort(); gSel.innerHTML='<option value="">Tất cả nhóm</option>'+groups.map(g=>`<option value="${g}" ${g===cur?'selected':''}>${g}</option>`).join(''); }
-  const fCheckSel = document.getElementById('wst_filter_check');
-  if(fCheckSel){ const curF=fCheckSel.value; fCheckSel.innerHTML='<option value="">Tất cả checklist</option><option value="all_done">✅ Hoàn thành hết</option><option value="partial">⚠️ Chưa hoàn thành</option>'+chkItems.map(item=>`<option value="done_${item}" ${curF==='done_'+item?'selected':''}>${item}: ✅</option><option value="undone_${item}" ${curF==='undone_'+item?'selected':''}>${item}: ⬜</option>`).join(''); if(curF) fCheckSel.value=curF; }
+
 
   const q=(document.getElementById('wst_search')?.value||'').toLowerCase();
   const fGroup=gSel?.value||'';
-  const fCheck=fCheckSel?.value||'';
+  const fCheck='';
 
   let list = allTrackedWs.filter(w=>{
     if(q && !w.brand.toLowerCase().includes(q) && !(w.url||'').toLowerCase().includes(q)) return false;
@@ -4770,16 +4831,46 @@ function renderWsTrack(){
   if(!list.length){ tbody.innerHTML=''; if(thead) thead.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
 
-  // Build dynamic columns: fixed + checklist items + last entry fields
+  // Get 301 children helper
+  function getW301Children(w){
+    return websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+  }
+
+  // Filters: moBot, index
+  const fMobot = document.getElementById('wst_filter_mobot')?.value||'';
+  const fIndex = document.getElementById('wst_filter_index')?.value||'';
+  list = list.filter(w=>{
+    if(fMobot){
+      const site=getWstSite(w.id);
+      const entries=(site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+      const mb=entries[0]?.moBot||site?.moBot||'';
+      if(mb!==fMobot) return false;
+    }
+    if(fIndex){
+      const site=getWstSite(w.id);
+      const entries=(site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+      if(entries[0]?.indexed!==fIndex) return false;
+    }
+    return true;
+  });
+
+  // Checklist filter (from fCheck already computed above)
+  // (fCheck handled inline in list filter)
+
+  if(!list.length){ tbody.innerHTML=''; if(thead) thead.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  // Build table header
   if(thead){
-    thead.innerHTML = `<tr style="border-bottom:2px solid var(--gray-border)">
-      <th style="padding:8px 10px;text-align:left;white-space:nowrap;font-size:11px">Website</th>
+    thead.innerHTML = `<tr style="background:#f8f9fa;border-bottom:2px solid var(--gray-border)">
+      <th style="padding:8px 6px;text-align:center;width:30px"><input type="checkbox" id="wstSelectAll" onchange="wstToggleSelectAll(this)" style="cursor:pointer;accent-color:var(--red)"></th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">Website (gốc)</th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">URL 301 gần nhất</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Nhóm</th>
       ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">Mở bot</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🔍 Index</th>
-      <th style="padding:8px 10px;text-align:center;font-size:11px">🔀 301</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Cập nhật</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">Thao tác</th>
     </tr>`;
@@ -4790,45 +4881,51 @@ function renderWsTrack(){
     const cl = site?.checklist||{};
     const entries = (site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
     const last = entries[0];
-    const indexColor = last?.indexed==='Đã index'?'#27ae60':last?.indexed==='Chưa index'?'#e74c3c':'#e67e22';
-    const indexIcon = last?.indexed==='Đã index'?'✅':last?.indexed==='Chưa index'?'❌':last?.indexed==='Một phần'?'⚠️':'—';
     const allDone = chkItems.length && chkItems.every(i=>cl[i]);
+    const kids = getW301Children(w);
+    // Latest 301: sort by added order (last in array), use url or sourceUrl
+    const latest301 = kids.length ? kids[kids.length-1] : null;
+    const display301Url = latest301 ? (latest301.url||latest301.sourceUrl||'—') : (w.url||'—');
+    const isSameAsSource = !latest301;
+    const isSelected = _wstSelected.has(w.id);
+    const indexIcon = last?.indexed==='Đã index'?'✅':last?.indexed==='Chưa index'?'❌':last?.indexed==='Một phần'?'⚠️':'—';
+    const mb = last?.moBot||site?.moBot||'';
 
-    return `<tr style="border-bottom:1px solid #f0f0f0;${allDone?'background:#f6fff8':''}" onmouseover="this.style.background='#fdf9f9'" onmouseout="this.style.background='${allDone?'#f6fff8':''}'">
-      <td style="padding:8px 10px;white-space:nowrap">
+    return `<tr style="border-bottom:1px solid #f0f0f0;${allDone?'background:#f6fff8':''};${isSelected?'background:#fdf2f2;':''}" onmouseover="if(!${isSelected})this.style.background='#fafafa'" onmouseout="if(!${isSelected})this.style.background='${allDone?'#f6fff8':''}'">
+      <td style="padding:6px;text-align:center">
+        <input type="checkbox" class="wst-chk" data-id="${w.id}" onchange="wstToggleSelect(${w.id},this)" ${isSelected?'checked':''} style="cursor:pointer;accent-color:var(--red)">
+      </td>
+      <td style="padding:8px 10px">
         <div style="font-weight:600;font-size:12px">${w.brand}</div>
-        <div style="font-size:10px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;max-width:140px">${w.url||''}</div>
+        <div style="font-size:10px;color:var(--blue);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
+      </td>
+      <td style="padding:8px 10px">
+        ${isSameAsSource
+          ? `<span style="font-size:10px;color:var(--text-muted);font-style:italic">Chưa có site 301</span>`
+          : `<div style="font-size:11px;font-weight:600">${latest301.brand}</div><div style="font-size:10px;color:#6c5ce7;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest301.url||''}</div>`}
       </td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">${w.group||'—'}</td>
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
-        <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:18px" title="${item}">${cl[item]?'✅':'⬜'}</span>
+        <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:16px" title="${item}">${cl[item]?'✅':'⬜'}</span>
       </td>`).join('')}
-      <td style="padding:8px 10px;text-align:center;font-size:12px">
-        ${(()=>{
-          const mb=last?.moBot||site?.moBot||'';
-          if(mb==='Mở') return '<span style="color:#27ae60;font-weight:600">🟢 Mở</span>';
-          if(mb==='Đóng') return '<span style="color:#e74c3c;font-weight:600">🔴 Đóng</span>';
-          return '<span style="color:var(--text-muted)">—</span>';
-        })()}
+      <td style="padding:8px 10px;text-align:center;font-size:11px">
+        ${mb==='Mở'?'<span style="color:#27ae60;font-weight:600">🟢 Mở</span>':mb==='Đóng'?'<span style="color:#e74c3c;font-weight:600">🔴 Đóng</span>':'<span style="color:var(--text-muted)">—</span>'}
       </td>
-      <td style="padding:8px 10px;text-align:center;font-size:12px">${(()=>{
-        if(!last) return '<span style="color:var(--text-muted)">N/A</span>';
-        if(last.moBot==='Đóng') return '<span style="color:#e74c3c;font-weight:600">CMB</span>';
-        return last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>';
-      })()}</td>
+      <td style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
+        ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>'}
+      </td>
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
-      <td style="padding:8px 10px;text-align:center">${(()=>{
-        const kids=websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===w.url?.replace(/\/$/,'')));
-        return kids.length?`<button onclick="showW301s(${w.id})" style="font-size:11px;padding:1px 8px;border-radius:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;cursor:pointer">🔀 ×${kids.length}</button>`:'<span style="color:var(--text-muted);font-size:11px">—</span>';
-      })()}</td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted);white-space:nowrap">${last?.date||'—'}</td>
       <td style="padding:8px 10px;text-align:center;white-space:nowrap">
-        <button onclick="wstOpenDetail(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 7px" title="Xem lịch sử">📋</button>
-        <button onclick="wstAddEntry(${w.id})" class="btn btn-sm btn-primary" style="font-size:11px;padding:2px 7px;background:var(--red);border-color:var(--red)" title="Thêm dữ liệu">+</button>
-        <button onclick="wstRemoveTracking(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 6px;color:#e74c3c;border-color:#e74c3c" title="Bỏ theo dõi">×</button>
+        <button onclick="wstOpenDetail(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 6px" title="Xem lịch sử">📋</button>
+        <button onclick="wstAddEntry(${w.id})" class="btn btn-sm" style="font-size:11px;padding:2px 7px;background:var(--red);color:#fff;border:none" title="Thêm dữ liệu">+</button>
+        <button onclick="wstRemoveTracking(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 5px;color:#e74c3c;border-color:#e74c3c" title="Bỏ theo dõi">×</button>
       </td>
     </tr>`;
   }).join('');
+
+  // Render bulk bar
+  wstRenderBulkBar();
 }
 
 
