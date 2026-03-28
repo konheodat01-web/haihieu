@@ -11360,7 +11360,7 @@ window._websites = websites;
   let restoredPage = 'dashboard';
   try{
     const saved = localStorage.getItem('wt_activePage');
-    const validPages = ['dashboard','hai','hieu','add','import','tasks','links','index','prompts'];
+    const validPages = ['dashboard','hai','hieu','add','import','tasks','links','index','prompts','recurring','wstrack'];
     const cfg = MEMBER_CONFIG[currentMember] || MEMBER_CONFIG['admin'];
     if(saved && validPages.includes(saved) && cfg.pages.includes(saved)){
       restoredPage = saved;
