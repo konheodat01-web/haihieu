@@ -4896,13 +4896,21 @@ function renderWsTrack(){
         <input type="checkbox" class="wst-chk" data-id="${w.id}" onchange="wstToggleSelect(${w.id},this)" ${isSelected?'checked':''} style="cursor:pointer;accent-color:var(--red)">
       </td>
       <td style="padding:8px 10px">
-        ${isSameAsSource
-          ? `<div style="font-weight:600;font-size:12px">${w.brand}</div><div style="font-size:10px;color:var(--blue);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>`
-          : `<div style="font-size:12px;font-weight:600">${latest301.brand}</div><div style="font-size:10px;color:#6c5ce7;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest301.url||''}</div>`}
+        ${isSameAsSource ? `
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:15px" title="${w.brand} — ${w.status||''}">${WS_STATUS_ICON[w.status]||'🌐'}</span>
+            <div><div style="font-weight:600;font-size:12px">${w.brand}</div><div style="font-size:10px;color:var(--blue);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div></div>
+          </div>` : `
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:15px" title="${latest301.brand} — ${latest301.status||''}">${WS_STATUS_ICON[latest301.status]||'🌐'}</span>
+            <div><div style="font-size:12px;font-weight:600">${latest301.brand}</div><div style="font-size:10px;color:#6c5ce7;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest301.url||''}</div></div>
+          </div>`}
       </td>
       <td style="padding:8px 10px">
-        <div style="font-weight:600;font-size:12px">${w.brand}</div>
-        <div style="font-size:10px;color:var(--blue);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <span style="font-size:15px" title="${w.brand} — ${w.status||''}">${WS_STATUS_ICON[w.status]||'🌐'}</span>
+          <div><div style="font-weight:600;font-size:12px">${w.brand}</div><div style="font-size:10px;color:var(--blue);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div></div>
+        </div>
       </td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">${w.group||'—'}</td>
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
