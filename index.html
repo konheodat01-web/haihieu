@@ -1739,6 +1739,7 @@
             <button onclick="wsVidcoCopyBulk(this)" class="btn btn-sm" style="background:#2c3e50;color:#fff;border:none">📋 Copy VIDCO</button>
             <button onclick="wsBulkCopyUrls(this)" class="btn btn-sm" style="background:#2980b9;color:#fff;border:none" title="Copy tất cả URL đã chọn">🔗 Copy URL</button>
             <button onclick="wsBulkEditToggle()" class="btn btn-sm btn-outline" id="wsBulkEditBtn">✏ Sửa hàng loạt</button>
+            <button onclick="wsBulkAddToTracking()" class="btn btn-sm btn-outline" style="color:#27ae60;border-color:#27ae60" title="Thêm vào theo dõi web">📈 Theo dõi</button>
             <button onclick="wsBulkDelete()" class="btn btn-sm" style="background:#e74c3c;color:#fff;border:none">🗑 Xoá</button>
             <button onclick="wsClearSelect()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:18px;margin-left:auto;line-height:1">×</button>
           </div>
@@ -4683,7 +4684,7 @@ function saveWsTrack(){
 
 
 function getWstChecklist(){
-  try{ return JSON.parse(localStorage.getItem('wst_checklist')||'null') || ['Dựng web','Content','Mở bot']; }catch(e){ return ['Dựng web','Content','Mở bot']; }
+  try{ return JSON.parse(localStorage.getItem('wst_checklist')||'null') || ['Dựng web','Content']; }catch(e){ return ['Dựng web','Content']; }
 }
 function saveWstChecklist(items){ localStorage.setItem('wst_checklist', JSON.stringify(items)); }
 
@@ -4775,8 +4776,8 @@ function renderWsTrack(){
       <th style="padding:8px 10px;text-align:left;white-space:nowrap;font-size:11px">Website</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Nhóm</th>
       ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
+      <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">Mở bot</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
-      <th style="padding:8px 10px;text-align:center;font-size:11px">🔗 BL</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🔍 Index</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🔀 301</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Cập nhật</th>
@@ -4802,8 +4803,19 @@ function renderWsTrack(){
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
         <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:18px" title="${item}">${cl[item]?'✅':'⬜'}</span>
       </td>`).join('')}
-      <td style="padding:8px 10px;text-align:center;font-size:12px">${last?.rank||'—'}</td>
-      <td style="padding:8px 10px;text-align:center;font-size:12px">${last?.backlinks||'—'}</td>
+      <td style="padding:8px 10px;text-align:center;font-size:12px">
+        ${(()=>{
+          const mb=last?.moBot||site?.moBot||'';
+          if(mb==='Mở') return '<span style="color:#27ae60;font-weight:600">🟢 Mở</span>';
+          if(mb==='Đóng') return '<span style="color:#e74c3c;font-weight:600">🔴 Đóng</span>';
+          return '<span style="color:var(--text-muted)">—</span>';
+        })()}
+      </td>
+      <td style="padding:8px 10px;text-align:center;font-size:12px">${(()=>{
+        if(!last) return '<span style="color:var(--text-muted)">N/A</span>';
+        if(last.moBot==='Đóng') return '<span style="color:#e74c3c;font-weight:600">CMB</span>';
+        return last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>';
+      })()}</td>
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
       <td style="padding:8px 10px;text-align:center">${(()=>{
         const kids=websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===w.url?.replace(/\/$/,'')));
@@ -4817,6 +4829,52 @@ function renderWsTrack(){
       </td>
     </tr>`;
   }).join('');
+}
+
+
+function wsQuickAddTracking(wsId){
+  const w = websites.find(x=>x.id===wsId);
+  if(!w) return;
+  if(w.is301){
+    toast('Web 301 không thể theo dõi trực tiếp — hãy thêm web gốc','#e67e22',3000);
+    return;
+  }
+  if(siteTracking.some(s=>s.wsId===wsId)){
+    toast(w.brand+' đã có trong theo dõi','#e67e22',2000);
+    return;
+  }
+  siteTracking.push({wsId,entries:[]});
+  saveWsTrack();
+  renderWebsites();
+  toast('📈 Đã thêm '+w.brand+' vào theo dõi','#27ae60',2500);
+}
+
+function wsBulkAddToTracking(){
+  const sel = _wsSelected;
+  if(!sel||!sel.size){ toast('Chưa chọn website nào','#e74c3c'); return; }
+  let added=0, skipped=0, is301=0;
+  sel.forEach(wsId=>{
+    const id=typeof wsId==='number'?wsId:parseInt(wsId);
+    const w=websites.find(x=>x.id===id);
+    if(!w) return;
+    if(w.is301){ is301++; return; }
+    if(siteTracking.some(s=>s.wsId===id)){ skipped++; return; }
+    siteTracking.push({wsId:id,entries:[]});
+    added++;
+  });
+  if(added) saveWsTrack();
+  renderWebsites();
+  let msg = added?`✅ Đã thêm ${added} web vào theo dõi`:'';
+  if(skipped) msg += (msg?', ':'')+`${skipped} web đã có`;
+  if(is301) msg += (msg?', ':'')+`${is301} web 301 bỏ qua`;
+  toast(msg||'Không có web nào được thêm','#27ae60',3500);
+}
+
+function wstSaveMoBot(wsId, val){
+  let site = getWstSite(wsId);
+  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
+  site.moBot = val.trim();
+  saveWsTrack();
 }
 
 function wstAddEntry(wsId){
@@ -5030,11 +5088,15 @@ function openWstAddModal(){
         <input type="date" id="wst_date" style="width:100%" value="${todayVN()}">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="form-group"><label>🤖 Mở bot</label>
+          <select id="wst_mobot" style="width:100%">
+            <option value="">-- Không đổi --</option>
+            <option value="Đóng" selected>🔴 Đóng</option>
+            <option value="Mở">🟢 Mở</option>
+          </select>
+        </div>
         <div class="form-group"><label>🏆 Rank trung bình</label>
           <input type="number" id="wst_rank" min="1" style="width:100%" placeholder="VD: 15">
-        </div>
-        <div class="form-group"><label>🔗 Backlink</label>
-          <input type="number" id="wst_bl" min="0" style="width:100%" placeholder="VD: 120">
         </div>
       </div>
       <div class="form-group"><label>🔍 Trạng thái Index Google</label>
@@ -5068,7 +5130,7 @@ function wstSaveEntry(){
     id: 'wste'+Date.now(),
     date: document.getElementById('wst_date').value||todayVN(),
     rank: parseInt(document.getElementById('wst_rank').value)||null,
-    backlinks: parseInt(document.getElementById('wst_bl').value)||null,
+    moBot: document.getElementById('wst_mobot')?.value||'',
     indexed: document.getElementById('wst_indexed').value||'',
     note: (document.getElementById('wst_note').value||'').trim(),
   };
@@ -7252,6 +7314,7 @@ function renderWebsites(){
         <button onclick="event.stopPropagation();copyText(this.dataset.url,this)" data-url="${(w.url||'').replace(/"/g,'&quot;')}" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;color:var(--blue);border-color:#b8d4ea" title="Copy URL">🔗</button>
         <button onclick="event.stopPropagation();wsCopyAccount(${w.id},this)" class="btn btn-sm" style="font-size:11px;padding:2px 10px;background:#27ae60;color:#fff;border:none;font-weight:600" title="Copy tài khoản">👤 TK</button>
         <button onclick="event.stopPropagation();wsCopyPassword(${w.id},this)" class="btn btn-sm" style="font-size:11px;padding:2px 10px;background:#2980b9;color:#fff;border:none;font-weight:600" title="Copy mật khẩu">🔑 MK</button>
+        <button onclick="event.stopPropagation();wsQuickAddTracking(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 7px;${siteTracking.some(s=>s.wsId===w.id)?'color:#27ae60;border-color:#a8deba':'color:var(--text-muted)'}" title="${siteTracking.some(s=>s.wsId===w.id)?'Đang theo dõi':'Thêm vào theo dõi'}">📈</button>
         <button onclick="event.stopPropagation();openWebsiteForm(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:3px 7px" title="Sửa website">✏️</button>
         <button onclick="event.stopPropagation();wsVidcoCopy(${w.id},this)" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;color:var(--text-muted)" title="Copy VIDCO">📋</button>
       </div>
