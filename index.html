@@ -3720,7 +3720,7 @@ function initFirebaseListener(){
         if(gvPanel && gvPanel.style.display!=='none') renderGiaoViec();
       }
       // Update recurDoneToday even on own push
-      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); }
+      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack(); }
       if(Array.isArray(r.recurDoneToday)){
         setRecurDoneToday(r.recurDoneToday.filter(d=>d.date===todayVN()));
       }
@@ -3785,7 +3785,7 @@ function initFirebaseListener(){
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1;
         // Clean undefined values that Firebase rejects
         indexTasks.forEach(t=>{ if(t.parentIds===undefined) t.parentIds=[]; }); }
-      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); }
+      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack(); }
       if(Array.isArray(r.recurDoneToday)){ const _td=r.recurDoneToday.filter(d=>d.date===todayVN()); const _cur=localStorage.getItem('wt_recur_done_today'); if(JSON.stringify(_td)!==_cur){ setRecurDoneToday(_td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
@@ -4778,6 +4778,7 @@ function renderWsTrack(){
       <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🔗 BL</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🔍 Index</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px">🔀 301</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Cập nhật</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">Thao tác</th>
     </tr>`;
@@ -4804,6 +4805,10 @@ function renderWsTrack(){
       <td style="padding:8px 10px;text-align:center;font-size:12px">${last?.rank||'—'}</td>
       <td style="padding:8px 10px;text-align:center;font-size:12px">${last?.backlinks||'—'}</td>
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
+      <td style="padding:8px 10px;text-align:center">${(()=>{
+        const kids=websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===w.url?.replace(/\/$/,'')));
+        return kids.length?`<button onclick="showW301s(${w.id})" style="font-size:11px;padding:1px 8px;border-radius:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;cursor:pointer">🔀 ×${kids.length}</button>`:'<span style="color:var(--text-muted);font-size:11px">—</span>';
+      })()}</td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted);white-space:nowrap">${last?.date||'—'}</td>
       <td style="padding:8px 10px;text-align:center;white-space:nowrap">
         <button onclick="wstOpenDetail(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 7px" title="Xem lịch sử">📋</button>
@@ -4941,9 +4946,9 @@ function renderWstContent(wsId){
 }
 
 function openWstPickModal(){
-  // Show list of all websites to add to tracking
+  // Only show source websites (not 301), plus find parent of 301
   const tracked = new Set(siteTracking.map(s=>s.wsId));
-  const available = websites.filter(w=>!tracked.has(w.id));
+  const available = websites.filter(w=>!tracked.has(w.id) && !w.is301);
   const overlay = document.createElement('div');
   overlay.id = 'wstPickOverlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
