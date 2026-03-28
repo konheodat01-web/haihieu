@@ -4864,8 +4864,8 @@ function renderWsTrack(){
   if(thead){
     thead.innerHTML = `<tr style="background:#f8f9fa;border-bottom:2px solid var(--gray-border)">
       <th style="padding:8px 6px;text-align:center;width:30px"><input type="checkbox" id="wstSelectAll" onchange="wstToggleSelectAll(this)" style="cursor:pointer;accent-color:var(--red)"></th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">URL hiện tại (301)</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">Website (gốc)</th>
-      <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">URL 301 gần nhất</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Nhóm</th>
       ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">Mở bot</th>
@@ -4896,13 +4896,13 @@ function renderWsTrack(){
         <input type="checkbox" class="wst-chk" data-id="${w.id}" onchange="wstToggleSelect(${w.id},this)" ${isSelected?'checked':''} style="cursor:pointer;accent-color:var(--red)">
       </td>
       <td style="padding:8px 10px">
-        <div style="font-weight:600;font-size:12px">${w.brand}</div>
-        <div style="font-size:10px;color:var(--blue);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
+        ${isSameAsSource
+          ? `<div style="font-weight:600;font-size:12px">${w.brand}</div><div style="font-size:10px;color:var(--blue);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>`
+          : `<div style="font-size:12px;font-weight:600">${latest301.brand}</div><div style="font-size:10px;color:#6c5ce7;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest301.url||''}</div>`}
       </td>
       <td style="padding:8px 10px">
-        ${isSameAsSource
-          ? `<span style="font-size:10px;color:var(--text-muted);font-style:italic">Chưa có site 301</span>`
-          : `<div style="font-size:11px;font-weight:600">${latest301.brand}</div><div style="font-size:10px;color:#6c5ce7;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${latest301.url||''}</div>`}
+        <div style="font-weight:600;font-size:12px">${w.brand}</div>
+        <div style="font-size:10px;color:var(--blue);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${w.url||''}</div>
       </td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">${w.group||'—'}</td>
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
