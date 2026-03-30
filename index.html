@@ -4928,7 +4928,7 @@ function renderWsTrack(){
         <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:16px" title="${item}">${cl[item]?'✅':'⬜'}</span>
       </td>`).join('')}
       <td style="padding:8px 10px;text-align:center;font-size:11px">
-        ${mb==='Mở'?'<span style="color:#27ae60;font-weight:600">🟢 Mở</span>':mb==='Đóng'?'<span style="color:#e74c3c;font-weight:600">🔴 Đóng</span>':'<span style="color:var(--text-muted)">—</span>'}
+        ${last?.moBot==='Mở'?'<span style="color:#27ae60;font-weight:600">🟢 Mở</span>':last?.moBot==='Đóng'?'<span style="color:#e74c3c;font-weight:600">🔴 Đóng</span>':'<span style="color:var(--text-muted)">—</span>'}
       </td>
       <td style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
         ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>'}
@@ -5213,7 +5213,6 @@ function openWstAddModal(){
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div class="form-group"><label>🤖 Mở bot</label>
           <select id="wst_mobot" style="width:100%">
-            <option value="">-- Không đổi --</option>
             <option value="Đóng" selected>🔴 Đóng</option>
             <option value="Mở">🟢 Mở</option>
           </select>
