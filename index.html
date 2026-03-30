@@ -4927,8 +4927,8 @@ function renderWsTrack(){
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
         <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:16px" title="${item}">${cl[item]?'✅':'⬜'}</span>
       </td>`).join('')}
-      <td style="padding:8px 10px;text-align:center;font-size:11px">
-        ${last?.moBot==='Mở'?'<span style="color:#27ae60;font-weight:600">🟢 Mở</span>':last?.moBot==='Đóng'?'<span style="color:#e74c3c;font-weight:600">🔴 Đóng</span>':'<span style="color:var(--text-muted)">—</span>'}
+      <td style="padding:8px 10px;text-align:center">
+        <input type="checkbox" onchange="wstToggleMoBot(${w.id},this.checked)" ${last?.moBot==='Mở'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#27ae60" title="${last?.moBot==='Mở'?'Đang Mở — click để Đóng':'Đang Đóng — click để Mở'}">
       </td>
       <td style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
         ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>'}
@@ -4991,6 +4991,24 @@ function wstShowWebInfo(wsId){
   if(!w) return;
   websiteInfoTarget = w;
   showWebsiteInfo(w, true);
+}
+
+function wstToggleMoBot(wsId, checked){
+  let site = getWstSite(wsId);
+  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
+  if(!site.entries) site.entries=[];
+  // Get last entry and update its moBot, or create new entry
+  const entries = site.entries.slice().sort((a,b)=>b.date.localeCompare(a.date));
+  const last = entries[0];
+  if(last){
+    // Update moBot on latest entry
+    const idx = site.entries.findIndex(e=>e.id===last.id);
+    if(idx>=0) site.entries[idx].moBot = checked?'Mở':'Đóng';
+  } else {
+    site.entries.push({id:'wste'+Date.now(),date:todayVN(),moBot:checked?'Mở':'Đóng',rank:null,indexed:'',note:''});
+  }
+  saveWsTrack();
+  renderWsTrack();
 }
 
 function wstSaveMoBot(wsId, val){
@@ -5252,7 +5270,6 @@ function wstSaveEntry(){
     id: 'wste'+Date.now(),
     date: document.getElementById('wst_date').value||todayVN(),
     rank: parseInt(document.getElementById('wst_rank').value)||null,
-    moBot: document.getElementById('wst_mobot')?.value||'',
     indexed: document.getElementById('wst_indexed').value||'',
     note: (document.getElementById('wst_note').value||'').trim(),
   };
