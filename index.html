@@ -7931,6 +7931,23 @@ function deleteWebsiteFromModal(id){
 // ===== AUTOCOMPLETE =====
 function acGetValues(field){
   const all = new Set();
+  // Với field website: lấy từ danh sách Link Tổng (websites) thay vì từ bài đã import
+  if(field === 'website'){
+    if(typeof websites !== 'undefined' && Array.isArray(websites)){
+      websites.forEach(w=>{
+        const v = (w.url||'').trim();
+        if(v) all.add(v);
+      });
+    }
+    // Bổ sung thêm các website đã có trong sheet bài (phòng trường hợp chưa có trong link tổng)
+    const person = document.getElementById('fPerson')?.value || '';
+    const sheet = person==='Hải' ? data.hai : person==='Hiếu' ? data.hieu : [...data.hai,...data.hieu];
+    (Array.isArray(sheet)?sheet:[...sheet]).forEach(r=>{
+      const v = (r[field]||'').trim();
+      if(v) all.add(v);
+    });
+    return [...all].sort();
+  }
   const person = document.getElementById('fPerson')?.value || '';
   const sheet = person==='Hải' ? data.hai : person==='Hiếu' ? data.hieu : [...data.hai,...data.hieu];
   (Array.isArray(sheet)?sheet:[...sheet]).forEach(r=>{
@@ -7943,10 +7960,11 @@ function acGetValues(field){
 function acInput(input, listId, field){
   const list = document.getElementById(listId);
   if(!list) return;
-  const q = (input.value||'').toLowerCase();
+  const q = (input.value||'').toLowerCase().trim();
   const vals = acGetValues(field).filter(v=> !q || v.toLowerCase().includes(q));
   if(!vals.length){ list.classList.remove('open'); return; }
-  list.innerHTML = vals.slice(0,10).map(v=>
+  // Tăng giới hạn hiển thị lên 50 kết quả (trước là 10)
+  list.innerHTML = vals.slice(0,50).map(v=>
     `<div class="ac-item" onmousedown="acSelect('${input.id}','${listId}','${v.replace(/'/g,"\\'")}')">
       ${v}
     </div>`
