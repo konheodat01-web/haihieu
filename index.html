@@ -606,6 +606,7 @@
         <div id="bulk-drop-copy-hai" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
           <div onclick="bulkCopyField('hai','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
           <div onclick="bulkCopyField('hai','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
+          <div onclick="bulkCopyField('hai','keyword');closeAllBulkDropdowns()" class="edit-menu-item">🔑 Từ khóa</div>
           <div onclick="bulkCopyExcel('hai');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
         </div>
       </div>
@@ -723,6 +724,7 @@
         <div id="bulk-drop-copy-hieu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
           <div onclick="bulkCopyField('hieu','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
           <div onclick="bulkCopyField('hieu','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
+          <div onclick="bulkCopyField('hieu','keyword');closeAllBulkDropdowns()" class="edit-menu-item">🔑 Từ khóa</div>
           <div onclick="bulkCopyExcel('hieu');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
         </div>
       </div>
@@ -3456,6 +3458,8 @@ function bulkCopyField(sheet, field){
   const rows = data[sheet].filter(r=>ids.has(r.id));
   const vals = rows.map(r=>r[field]||'').join('\n');
   copyText(vals, null);
+  const label = field==='keyword'?'từ khóa':field==='link'?'link bài':'spin';
+  toast(`✓ Đã copy ${rows.length} ${label}`, '#27ae60', 2500);
 }
 
 // Excel column mapping:
@@ -7931,23 +7935,6 @@ function deleteWebsiteFromModal(id){
 // ===== AUTOCOMPLETE =====
 function acGetValues(field){
   const all = new Set();
-  // Với field website: lấy từ danh sách Link Tổng (websites) thay vì từ bài đã import
-  if(field === 'website'){
-    if(typeof websites !== 'undefined' && Array.isArray(websites)){
-      websites.forEach(w=>{
-        const v = (w.url||'').trim();
-        if(v) all.add(v);
-      });
-    }
-    // Bổ sung thêm các website đã có trong sheet bài (phòng trường hợp chưa có trong link tổng)
-    const person = document.getElementById('fPerson')?.value || '';
-    const sheet = person==='Hải' ? data.hai : person==='Hiếu' ? data.hieu : [...data.hai,...data.hieu];
-    (Array.isArray(sheet)?sheet:[...sheet]).forEach(r=>{
-      const v = (r[field]||'').trim();
-      if(v) all.add(v);
-    });
-    return [...all].sort();
-  }
   const person = document.getElementById('fPerson')?.value || '';
   const sheet = person==='Hải' ? data.hai : person==='Hiếu' ? data.hieu : [...data.hai,...data.hieu];
   (Array.isArray(sheet)?sheet:[...sheet]).forEach(r=>{
@@ -7960,11 +7947,10 @@ function acGetValues(field){
 function acInput(input, listId, field){
   const list = document.getElementById(listId);
   if(!list) return;
-  const q = (input.value||'').toLowerCase().trim();
+  const q = (input.value||'').toLowerCase();
   const vals = acGetValues(field).filter(v=> !q || v.toLowerCase().includes(q));
   if(!vals.length){ list.classList.remove('open'); return; }
-  // Tăng giới hạn hiển thị lên 50 kết quả (trước là 10)
-  list.innerHTML = vals.slice(0,50).map(v=>
+  list.innerHTML = vals.slice(0,10).map(v=>
     `<div class="ac-item" onmousedown="acSelect('${input.id}','${listId}','${v.replace(/'/g,"\\'")}')">
       ${v}
     </div>`
