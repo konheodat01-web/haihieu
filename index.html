@@ -606,7 +606,6 @@
         <div id="bulk-drop-copy-hai" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
           <div onclick="bulkCopyField('hai','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
           <div onclick="bulkCopyField('hai','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
-          <div onclick="bulkCopyField('hai','keyword');closeAllBulkDropdowns()" class="edit-menu-item">🔑 Từ khóa</div>
           <div onclick="bulkCopyExcel('hai');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
         </div>
       </div>
@@ -724,7 +723,6 @@
         <div id="bulk-drop-copy-hieu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
           <div onclick="bulkCopyField('hieu','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
           <div onclick="bulkCopyField('hieu','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
-          <div onclick="bulkCopyField('hieu','keyword');closeAllBulkDropdowns()" class="edit-menu-item">🔑 Từ khóa</div>
           <div onclick="bulkCopyExcel('hieu');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
         </div>
       </div>
@@ -2163,12 +2161,49 @@ let wsNextId = 2;
 let editingWsId = null;
 const WS_STATUS_COLOR = {'Tốt':'#27ae60','Chờ cấp lại mật khẩu':'#e67e22','Lỗi web':'#e74c3c'};
 const WS_STATUS_ICON  = {'Tốt':'✅','Chờ cấp lại mật khẩu':'🔒','Lỗi web':'⚠️'};
-const LOAI_CONFIG = {
+const LOAI_CONFIG_DEFAULT = {
   'Tinh Gọn':      {price: 14000, color: 'red'},
   'Chỉ Viết':      {price:  4000, color: 'blue'},
   'Chỉ Đăng':      {price:  4000, color: 'blue'},
   'Tinh Gọn Nhanh':{price:  7000, color: 'green'},
 };
+let LOAI_CONFIG = Object.assign({}, LOAI_CONFIG_DEFAULT);
+
+// Load custom article types from localStorage
+function _loadCustomLoai(){
+  try{
+    const s = localStorage.getItem('wt_loai_config');
+    if(s){
+      const custom = JSON.parse(s);
+      LOAI_CONFIG = Object.assign({}, LOAI_CONFIG_DEFAULT, custom);
+    }
+  }catch(e){}
+}
+_loadCustomLoai();
+
+function _saveCustomLoai(){
+  try{ localStorage.setItem('wt_loai_config', JSON.stringify(LOAI_CONFIG)); }catch(e){}
+  syncLoaiBaiDropdowns();
+}
+
+function syncLoaiBaiDropdowns(){
+  const loais = Object.keys(LOAI_CONFIG);
+  // Update all <select> elements that contain loai bai options
+  document.querySelectorAll('select[id$="_loai"], select#fLoai, select#si_loai, select#we_loai').forEach(sel=>{
+    const cur = sel.value;
+    sel.innerHTML = loais.map(l=>`<option value="${l}">${l} — ${(LOAI_CONFIG[l].price/1000).toFixed(0)}k</option>`).join('');
+    if(loais.includes(cur)) sel.value = cur;
+  });
+  // Also update any other select with loai bai options (detected by options matching)
+  document.querySelectorAll('select').forEach(sel=>{
+    const opts = [...sel.options].map(o=>o.value);
+    if(opts.includes('Tinh Gọn') && opts.includes('Chỉ Viết')){
+      const cur = sel.value;
+      sel.innerHTML = loais.map(l=>`<option value="${l}">${l} — ${(LOAI_CONFIG[l].price/1000).toFixed(0)}k</option>`).join('');
+      if(loais.includes(cur)) sel.value = cur;
+    }
+  });
+}
 function loaiPrice(loai){ return (LOAI_CONFIG[loai]||{price:14000}).price; }
 function nghiemThuBadge(val){
   const v = (val===undefined||val===null) ? 100 : Number(val);
@@ -3458,8 +3493,6 @@ function bulkCopyField(sheet, field){
   const rows = data[sheet].filter(r=>ids.has(r.id));
   const vals = rows.map(r=>r[field]||'').join('\n');
   copyText(vals, null);
-  const label = field==='keyword'?'từ khóa':field==='link'?'link bài':'spin';
-  toast(`✓ Đã copy ${rows.length} ${label}`, '#27ae60', 2500);
 }
 
 // Excel column mapping:
@@ -3667,6 +3700,7 @@ function fbPayload(ts){
     _salary_config: _salaryConfig,
     _salary_rates: _salaryRates,
     _flex_salary: _flexSalary,
+    _loai_config: LOAI_CONFIG,
     _ts: ts, _sid: _sessionId
   };
 }
@@ -3787,6 +3821,7 @@ function initFirebaseListener(){
       if(r._salary_config&&typeof r._salary_config==='object'){ _salaryConfig=r._salary_config; ['hai','hieu'].forEach(sh=>{if(!_salaryConfig[sh])_salaryConfig[sh]={chiPhi:[],phuCap:[]};}); try{localStorage.setItem('wt_salary_config',JSON.stringify(_salaryConfig));}catch(e){} }
       if(r._salary_rates&&typeof r._salary_rates==='object'){ _salaryRates=r._salary_rates; ['hai','hieu'].forEach(sh=>{if(!_salaryRates[sh])_salaryRates[sh]={};}); try{localStorage.setItem('wt_salary_rates',JSON.stringify(_salaryRates));}catch(e){} }
       if(r._flex_salary&&typeof r._flex_salary==='object'){ _flexSalary=r._flex_salary; ['hai','hieu'].forEach(sh=>{if(!_flexSalary[sh])_flexSalary[sh]=[];}); try{localStorage.setItem('wt_flex_salary',JSON.stringify(_flexSalary));}catch(e){} }
+      if(r._loai_config&&typeof r._loai_config==='object'){ Object.assign(LOAI_CONFIG, r._loai_config); try{localStorage.setItem('wt_loai_config',JSON.stringify(LOAI_CONFIG));}catch(e){} syncLoaiBaiDropdowns(); }
 
       links         = arr(r.links, links);
       linkCategories= r.linkCategories != null ? r.linkCategories : linkCategories;
@@ -11417,6 +11452,8 @@ window._tasks = tasks;
 window._links = links;
 window._linkCategories = linkCategories;
 window._websites = websites;
+// Sync dropdowns with custom loai config after DOM is ready
+setTimeout(syncLoaiBaiDropdowns, 100);
 
 // Restore last active page & sub-board
 (function restorePosition(){
@@ -11732,7 +11769,16 @@ function saveSalaryConfig(){
 }
 
 // ===== SỬA MỨC LƯƠNG THEO LOẠI BÀI =====
-function openSalaryRatesModal(){ renderSalaryRatesForm(); document.getElementById('salaryRatesPin').value=''; document.getElementById('salaryRatesErr').style.display='none'; document.getElementById('salaryRatesModal').style.display='flex'; }
+function openSalaryRatesModal(){
+  renderSalaryRatesForm();
+  renderLoaiManager();
+  document.getElementById('salaryRatesPin').value='';
+  document.getElementById('salaryRatesErr').style.display='none';
+  // Show loai manager only for admin
+  const sec = document.getElementById('loaiManagerSection');
+  if(sec) sec.style.display = (currentMember==='admin') ? 'block' : 'none';
+  document.getElementById('salaryRatesModal').style.display='flex';
+}
 function closeSalaryRatesModal(){ document.getElementById('salaryRatesModal').style.display='none'; }
 function renderSalaryRatesForm(){
   const loais=Object.keys(LOAI_CONFIG);
@@ -11746,15 +11792,93 @@ function renderSalaryRatesForm(){
   }).join('');
 }
 function _rateInput(input){ const raw=_parseVND(input.value); if(raw>0){const f=raw.toLocaleString('vi-VN');if(input.value!==f)input.value=f;} }
+
+// ===== LOAI BAI MANAGER =====
+const LOAI_COLORS = ['red','blue','green','gray','orange'];
+const LOAI_COLOR_LABELS = {red:'Đỏ',blue:'Xanh dương',green:'Xanh lá',gray:'Xám',orange:'Cam'};
+
+function renderLoaiManager(){
+  const tbody = document.getElementById('loaiManagerTbody'); if(!tbody)return;
+  const loais = Object.keys(LOAI_CONFIG);
+  tbody.innerHTML = loais.map((loai, idx)=>{
+    const cfg = LOAI_CONFIG[loai];
+    const isDefault = loai in LOAI_CONFIG_DEFAULT;
+    const colorOpts = LOAI_COLORS.map(c=>`<option value="${c}" ${cfg.color===c?'selected':''}>${LOAI_COLOR_LABELS[c]||c}</option>`).join('');
+    return `<tr data-loai-idx="${idx}">
+      <td><input type="text" class="loai-name-input" data-orig="${loai}" value="${loai}" style="width:140px;font-size:12px;height:28px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px" ${isDefault?'':''}></td>
+      <td style="text-align:center"><input type="text" class="loai-price-input" data-loai="${loai}" value="${cfg.price.toLocaleString('vi-VN')}" style="width:100px;font-size:12px;height:28px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px;text-align:right" oninput="_rateInput(this)" onfocus="this.value=_parseVND(this.value)||'';this.select()" onblur="this.value=(_parseVND(this.value)||0).toLocaleString('vi-VN')"></td>
+      <td style="text-align:center"><select class="loai-color-select" data-loai="${loai}" style="font-size:12px;height:28px;border:1px solid var(--gray-border);border-radius:5px;padding:0 4px">${colorOpts}</select></td>
+      <td style="text-align:center">${isDefault?`<span style="font-size:10px;color:var(--text-muted)">Gốc</span>`:`<button onclick="deleteLoaiBai('${loai}')" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:0 4px" title="Xoá">✕</button>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+function addLoaiBaiRow(){
+  // Add a blank new loai row
+  const tbody = document.getElementById('loaiManagerTbody'); if(!tbody)return;
+  const newRow = document.createElement('tr');
+  newRow.dataset.loaiIdx = 'new_' + Date.now();
+  newRow.innerHTML = `
+    <td><input type="text" class="loai-name-input" data-orig="" value="" placeholder="Tên loại bài..." style="width:140px;font-size:12px;height:28px;border:1px solid var(--green);border-radius:5px;padding:0 8px"></td>
+    <td style="text-align:center"><input type="text" class="loai-price-input" value="0" style="width:100px;font-size:12px;height:28px;border:1px solid var(--gray-border);border-radius:5px;padding:0 8px;text-align:right" oninput="_rateInput(this)" onfocus="this.value=_parseVND(this.value)||'';this.select()" onblur="this.value=(_parseVND(this.value)||0).toLocaleString('vi-VN')"></td>
+    <td style="text-align:center"><select class="loai-color-select" style="font-size:12px;height:28px;border:1px solid var(--gray-border);border-radius:5px;padding:0 4px">
+      ${LOAI_COLORS.map(c=>`<option value="${c}">${LOAI_COLOR_LABELS[c]||c}</option>`).join('')}
+    </select></td>
+    <td style="text-align:center"><button onclick="this.closest('tr').remove()" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:0 4px">✕</button></td>`;
+  tbody.appendChild(newRow);
+  newRow.querySelector('.loai-name-input').focus();
+}
+
+function deleteLoaiBai(loai){
+  // Check if any data uses this loai
+  const used = [...data.hai, ...data.hieu].some(r=>r.loai===loai);
+  if(used){ toast('⚠ Không thể xoá: loại bài này đang có bài viết!','#e74c3c',3000); return; }
+  if(!confirm(`Xoá loại bài "${loai}"?`)) return;
+  delete LOAI_CONFIG[loai];
+  _saveCustomLoai();
+  renderSalaryRatesForm();
+  renderLoaiManager();
+  toast(`✓ Đã xoá loại bài "${loai}"`,'#27ae60');
+}
+
 function saveSalaryRates(){
   const pin=document.getElementById('salaryRatesPin').value;
   if(pin!==ADMIN_PIN){document.getElementById('salaryRatesErr').style.display='block';document.getElementById('salaryRatesPin').value='';document.getElementById('salaryRatesPin').focus();return;}
+
+  // 1. Save loai manager changes (admin only)
+  if(currentMember==='admin'){
+    const rows = document.querySelectorAll('#loaiManagerTbody tr');
+    const newConfig = {};
+    let hasError = false;
+    rows.forEach(row=>{
+      const nameInput = row.querySelector('.loai-name-input');
+      const priceInput = row.querySelector('.loai-price-input');
+      const colorSel = row.querySelector('.loai-color-select');
+      if(!nameInput||!priceInput||!colorSel) return;
+      const name = nameInput.value.trim();
+      const price = _parseVND(priceInput.value) || 0;
+      const color = colorSel.value;
+      if(!name){ hasError=true; nameInput.style.borderColor='#e74c3c'; return; }
+      nameInput.style.borderColor='';
+      newConfig[name] = {price, color};
+    });
+    if(hasError){ toast('⚠ Tên loại bài không được để trống!','#e74c3c',3000); return; }
+    // Merge: keep defaults for existing, apply changes
+    Object.assign(LOAI_CONFIG, newConfig);
+    // Remove deleted ones (those in LOAI_CONFIG but not in newConfig and not default)
+    Object.keys(LOAI_CONFIG).forEach(k=>{
+      if(!(k in newConfig) && !(k in LOAI_CONFIG_DEFAULT)) delete LOAI_CONFIG[k];
+    });
+    _saveCustomLoai();
+  }
+
+  // 2. Save salary rates per person
   document.querySelectorAll('#salaryRatesTbody input').forEach(inp=>{
     const sheet=inp.dataset.sheet, loai=inp.dataset.loai;
     _salaryRates[sheet][loai]=_parseVND(inp.value)||LOAI_CONFIG[loai]?.price||14000;
   });
   try{localStorage.setItem('wt_salary_rates',JSON.stringify(_salaryRates));}catch(e){}
-  saveAppData(); closeSalaryRatesModal(); renderDashboard(); toast('✅ Đã cập nhật mức lương');
+  saveAppData(); closeSalaryRatesModal(); renderDashboard(); toast('✅ Đã cập nhật mức lương & loại bài');
 }
 
 // ===== THƯỞNG / PHẠT LINH HOẠT =====
@@ -12524,18 +12648,33 @@ function applyBulkNT(sheet, val){
 
 <!-- SALARY RATES MODAL -->
 <div class="modal-overlay" id="salaryRatesModal" onclick="if(event.target===this)closeSalaryRatesModal()" style="display:none">
-  <div class="modal" style="max-width:500px" onclick="event.stopPropagation()">
+  <div class="modal" style="max-width:580px" onclick="event.stopPropagation()">
     <div class="modal-header"><h3>💵 Mức lương theo loại bài</h3><button class="modal-close" onclick="closeSalaryRatesModal()">&times;</button></div>
-    <div class="modal-body" style="gap:12px">
+    <div class="modal-body" style="gap:14px">
+      <!-- Salary rates per person -->
       <div style="font-size:12px;color:var(--text-muted);background:#f8f9fa;padding:8px 12px;border-radius:6px">Mức lương riêng cho từng người. Cột <b>Mặc định</b> là giá chung của hệ thống.</div>
       <table class="report-table" style="font-size:13px">
         <thead><tr><th>Loại bài</th><th style="text-align:center">Hải (đ)</th><th style="text-align:center">Hiếu (đ)</th><th>Mặc định</th></tr></thead>
         <tbody id="salaryRatesTbody"></tbody>
       </table>
+
+      <!-- Article type management (admin only) -->
+      <div id="loaiManagerSection" style="border-top:2px solid var(--gray-border);padding-top:12px;display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:13px;font-weight:600;color:var(--text)">⚙ Quản lý loại bài</span>
+          <button onclick="addLoaiBaiRow()" class="btn btn-sm btn-outline" style="height:26px;font-size:11px;color:var(--green);border-color:var(--green)">+ Thêm loại</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Thêm, sửa hoặc xoá loại bài. Không thể xoá loại bài đang có dữ liệu.</div>
+        <table class="report-table" style="font-size:12px;width:100%">
+          <thead><tr><th>Tên loại bài</th><th style="text-align:center">Giá mặc định (đ)</th><th style="text-align:center">Màu</th><th style="text-align:center">Xoá</th></tr></thead>
+          <tbody id="loaiManagerTbody"></tbody>
+        </table>
+      </div>
+
       <div class="form-group" style="width:100%"><label>Mã PIN xác nhận *</label><input type="password" id="salaryRatesPin" style="width:100%" placeholder="Nhập mã PIN..." onkeydown="if(event.key==='Enter')saveSalaryRates()"></div>
       <div id="salaryRatesErr" style="display:none;color:#e74c3c;font-size:12px">Mã PIN không đúng.</div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeSalaryRatesModal()">Huỷ</button><button class="btn btn-primary" onclick="saveSalaryRates()">✓ Lưu</button></div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeSalaryRatesModal()">Huỷ</button><button class="btn btn-primary" onclick="saveSalaryRates()">✓ Lưu tất cả</button></div>
   </div>
 </div>
 
