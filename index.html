@@ -604,6 +604,7 @@
       <div style="position:relative;display:inline-block">
         <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('copy-hai')" style="color:#555">📋 Copy ▾</button>
         <div id="bulk-drop-copy-hai" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="bulkCopyField('hai','keyword');closeAllBulkDropdowns()" class="edit-menu-item">🔑 Từ khóa</div>
           <div onclick="bulkCopyField('hai','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
           <div onclick="bulkCopyField('hai','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
           <div onclick="bulkCopyExcel('hai');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
@@ -721,6 +722,7 @@
       <div style="position:relative;display:inline-block">
         <button class="btn btn-sm btn-outline" onclick="toggleBulkDropdown('copy-hieu')" style="color:#555">📋 Copy ▾</button>
         <div id="bulk-drop-copy-hieu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;background:#fff;border:1px solid var(--gray-border);border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:300;min-width:150px;overflow:hidden">
+          <div onclick="bulkCopyField('hieu','keyword');closeAllBulkDropdowns()" class="edit-menu-item">🔑 Từ khóa</div>
           <div onclick="bulkCopyField('hieu','link');closeAllBulkDropdowns()" class="edit-menu-item">📋 Link bài</div>
           <div onclick="bulkCopyField('hieu','spin');closeAllBulkDropdowns()" class="edit-menu-item">📋 Spin</div>
           <div onclick="bulkCopyExcel('hieu');closeAllBulkDropdowns()" class="edit-menu-item">📊 Copy Excel</div>
@@ -3482,6 +3484,8 @@ function bulkCopyField(sheet, field){
   const rows = data[sheet].filter(r=>ids.has(r.id));
   const vals = rows.map(r=>r[field]||'').join('\n');
   copyText(vals, null);
+  const fieldLabel = {keyword:'từ khóa',link:'link bài',spin:'spin'}[field]||field;
+  toast(`✓ Đã copy ${rows.length} ${fieldLabel}`,'#27ae60',2500);
 }
 
 // Excel column mapping:
