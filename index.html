@@ -5676,7 +5676,7 @@ function saveProject(){
       t.from=document.getElementById('npm_from').value;
       t.deadline=document.getElementById('npm_deadline').value;
       t.desc=document.getElementById('npm_desc').value.trim();
-      t.cols=cols;
+      if(cols!==null) t.cols=cols;
       t.team=document.getElementById('npm_team')?.value||t.team||'Team 01';
       t.recurring=document.getElementById('npm_recurring')?.checked?{type:document.getElementById('npm_recur_type')?.value||'weekly',days:parseInt(document.getElementById('npm_recur_days')?.value||7)}:null;
       if(currentProjectId===editingProjectId){
