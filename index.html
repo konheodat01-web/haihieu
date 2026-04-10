@@ -8218,7 +8218,8 @@ function wsImportParseLines(){
     if(parts.length>=2){
       const brandRaw = parts[0]||'';
       const urlRaw = parts[1]||'';
-      const url = normalizeUrl(urlRaw||brandRaw);
+      const urlFull = normalizeUrl(urlRaw||brandRaw);
+      const url = urlFull.split('/')[0]; // chỉ giữ domain, bỏ path
       // brand = phần trước dấu chấm đầu tiên của domain nếu không điền
       const brand = brandRaw || url.split('.')[0];
       return {
