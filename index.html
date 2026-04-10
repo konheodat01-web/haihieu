@@ -2314,7 +2314,8 @@ let _salaryRates = { hai: {}, hieu: {} };
 (function loadSalaryRates(){
   try{ const s=localStorage.getItem('wt_salary_rates'); if(s) _salaryRates=JSON.parse(s); ['hai','hieu'].forEach(sh=>{ if(!_salaryRates[sh]) _salaryRates[sh]={}; }); }catch(e){}
 })();
-function getLoaiPrice(loai, sheet){
+function getLoaiPrice(loai, sheet, row){
+  if(row && row.donGia > 0) return row.donGia;
   const custom = sheet && _salaryRates[sheet] && _salaryRates[sheet][loai];
   return custom || (LOAI_CONFIG[loai]||{price:14000}).price;
 }
@@ -2340,10 +2341,10 @@ const NT_CONFIG = {
 
 // ===== TOTALS (period-based) =====
 function totalHai(){
-  return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai')*(r.nghiemThu===undefined?1:r.nghiemThu/100)+(r.chiDang||0)*4000,0);
+  return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100)+(r.chiDang||0)*4000,0);
 }
 function totalHieu(){
-  return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu')*(r.nghiemThu===undefined?1:r.nghiemThu/100)+(r.chiDang||0)*4000,0);
+  return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100)+(r.chiDang||0)*4000,0);
 }
 function totalBaiHai(){ return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).length; }
 function totalBaiHieu(){ return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).length; }
@@ -2384,7 +2385,7 @@ function renderDashboard(){
       const key = loai+'__'+nt;
       if(!dayMap[d].slots[key]) dayMap[d].slots[key]={loai, nt, count:0, tien:0};
       dayMap[d].slots[key].count++;
-      dayMap[d].slots[key].tien += getLoaiPrice(loai, sheet) * (nt/100);
+      dayMap[d].slots[key].tien += getLoaiPrice(loai, sheet, r) * (nt/100);
       dayMap[d].chiDang += (r.chiDang||0);
       dayMap[d].totalBai++;
     });
@@ -2481,7 +2482,7 @@ function renderDashboard(){
     const earMap = {};
     data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
       const nt = r.nghiemThu===undefined?100:r.nghiemThu;
-      earMap[r.ngay] = (earMap[r.ngay]||0) + getLoaiPrice(r.loai,sheet)*(nt/100);
+      earMap[r.ngay] = (earMap[r.ngay]||0) + getLoaiPrice(r.loai,sheet,r)*(nt/100);
     });
     const maxEar = Math.max(1, ...allDates.map(d=>earMap[d]||0));
     const barW = Math.max(20, Math.min(40, Math.floor(700/allDates.length)));
@@ -2642,7 +2643,7 @@ function renderDashboard(){
     const dayTotals = {};
     data[sheet].filter(r=>r.ngay>=ps).forEach(r=>{
       const nt = r.nghiemThu===undefined?100:r.nghiemThu;
-      dayTotals[r.ngay] = (dayTotals[r.ngay]||0) + getLoaiPrice(r.loai,sheet)*(nt/100) + (r.chiDang||0)*4000;
+      dayTotals[r.ngay] = (dayTotals[r.ngay]||0) + getLoaiPrice(r.loai,sheet,r)*(nt/100) + (r.chiDang||0)*4000;
     });
     const maxVal = Math.max(1,...allDays.map(d=>dayTotals[d]||0));
     const barH = 80;
@@ -3576,10 +3577,13 @@ function addEntry(){
   const keyword = document.getElementById('fKeyword').value.trim();
   if(!person||!date||!keyword){toast('Vui lòng điền đủ thông tin bắt buộc (*)','#e74c3c');return;}
   
+  const _entryLoai = document.getElementById('fType').value;
+  const _entrySheet = person==='Hải'?'hai':'hieu';
   const entry = {
-    id: nextId[person==='Hải'?'hai':'hieu']++,
+    id: nextId[_entrySheet]++,
     ngay: date, keyword,
-    loai: document.getElementById('fType').value,
+    loai: _entryLoai,
+    donGia: getLoaiPrice(_entryLoai, _entrySheet),
     website: document.getElementById('fWebsite').value,
     anchor: document.getElementById('fAnchor').value,
     chuyenMuc: document.getElementById('fCategory').value,
@@ -4000,8 +4004,9 @@ function doImport(){
   const chiDang = 0;
 
   let maxId = Math.max(0,...data[sheet].map(r=>r.id));
+  const _donGiaImport = getLoaiPrice(loai, sheet);
   const toAdd = keywords.map((kw,i)=>({
-    id:maxId+i+1, ngay, keyword:kw.trim(), loai,
+    id:maxId+i+1, ngay, keyword:kw.trim(), loai, donGia:_donGiaImport,
     website, anchor:'', chuyenMuc, link:'', spin:'', index:'', status, chiDang
   }));
 
@@ -6807,7 +6812,6 @@ function editLink(id){ const idx=links.findIndex(l=>l.id===id); if(idx>=0) lkSel
 function saveLink(){ lkSaveLink(); }
 function deleteLink(){ lkDeleteLink(); }
 function clearLinkForm(){ lkClearForm(); }
-
 // ===== CATEGORY MANAGER =====
 let linkCategories = {
   work: ['WordPress', 'SEO', 'Tool', 'Google', 'Khác'],
@@ -7079,11 +7083,13 @@ function doSheetImport(){
   const toAdd=keywords.map((kw,i)=>{
     const row = hasFullData ? siFullRows[i] : null;
     const ngay = (row?.ngay && row.ngay.match(/^\d{4}-\d{2}-\d{2}$/)) ? row.ngay : defaultNgay;
+    const rowLoai = row?.loai || defaultLoai;
     return {
       id:maxId+i+1,
       ngay,
       keyword: kw.trim(),
-      loai:      row?.loai || defaultLoai,
+      loai:      rowLoai,
+      donGia:    getLoaiPrice(rowLoai, siSheet),
       website:   row?.website || defaultWebsite,
       anchor:    row?.anchor || '',
       chuyenMuc: row?.chuyenMuc || defaultChuyenMuc,
@@ -7650,7 +7656,7 @@ function clearWebsiteForm(){
 }
 
 function normalizeAdmin(v){ return (v||'').trim().replace(/^\/+|\/+$/g,''); }
-function normalizeUrl(v){ return (v||'').trim().replace(/^https?:\/\//i,'').replace(/[\/\\:]+$/g,''); }
+function normalizeUrl(v){ let s=(v||'').trim().replace(/^https?:\/\//i,'').replace(/^www\./i,''); return s.split('/')[0].replace(/[:]+$/,''); }
 function joinAdminUrl(url, admin){ let u=(url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; const a=normalizeAdmin(admin); return a ? u+'/'+a : u; }
 function ensureHttps(url){ let u=(url||'').trim().replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; return u; }
 
@@ -7800,7 +7806,7 @@ function showWebsiteInfo(w, found, url=''){
     const rows=[
       ['Brand', w.brand],
       ['URL', `<a href="${ensureHttps(w.url)}" target="_blank" style="color:var(--blue)">${w.url}</a>`],
-      ['Quản trị', w.url&&w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" style="color:var(--blue)">${joinAdminUrl(w.url,w.admin)}</a>`:(w.admin||'—')],
+      ['Quản trị', w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" style="color:var(--blue)">${w.admin}</a>`:'—'],
       ['Tài khoản', w.account ? `<div style="display:flex;align-items:center;gap:6px">
         <span style="flex:1;user-select:all">${w.account}</span>
         <button onclick="_cp('wi_acc',this)" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 7px;font-size:12px;color:var(--text-muted)" title="Copy">📋</button>
@@ -8206,31 +8212,33 @@ function wsImportParseLines(){
   const owner = document.getElementById('wsImportOwner').value;
   const status = document.getElementById('wsImportStatus').value;
   return lines.map(line=>{
-    // Support pipe | separator (e.g. url | brand | admin | account | password | owner | group | team)
+    // CSV format: brand, url, admin, account, password, status, team, owner, group, note
     const sep = line.includes('|') ? '|' : ',';
     const parts = line.split(sep).map(p=>p.trim());
     if(parts.length>=2){
-      const urlRaw = parts[0]||'';
-      const url = normalizeUrl(urlRaw);
+      const brandRaw = parts[0]||'';
+      const urlRaw = parts[1]||'';
+      const url = normalizeUrl(urlRaw||brandRaw);
+      const brand = brandRaw || url.split('.')[0];
       return {
-        brand: parts[1]||urlRaw.replace(/https?:\/\//,'').split('.')[0],
+        brand,
         url,
         admin: normalizeAdmin(parts[2]||''),
         account: parts[3]||'',
         password: parts[4]||'',
         status: parts[5]||status,
-        owner: parts[6]||owner,
-        group: parts[7]||'',
-        team: parts[8]||team,
+        team: parts[6]||team,
+        owner: parts[7]||owner,
+        group: parts[8]||'',
         note: parts[9]||''
       };
     } else {
       // Plain URL only - derive brand
       const urlRaw = parts[0];
       const url = normalizeUrl(urlRaw);
-      let brand = urlRaw.replace(/https?:\/\//,'').replace(/^www\./,'').split('/')[0].split('.')[0];
+      let brand = url.split('.')[0];
       brand = brand.charAt(0).toUpperCase()+brand.slice(1);
-      return { brand, url, admin:'wp-admin', account:'', password:'', status, team, owner, group:'', note:'' };
+      return { brand, url, admin:'', account:'', password:'', status, team, owner, group:'', note:'' };
     }
   });
 }
@@ -11547,7 +11555,7 @@ function openNghiemThu(sheet, id){
   const r = data[sheet].find(x=>x.id===id);
   if(!r) return;
   const cur = r.nghiemThu===undefined ? 100 : r.nghiemThu;
-  const basePrice = getLoaiPrice(r.loai, sheet);
+  const basePrice = getLoaiPrice(r.loai, sheet, r);
   document.getElementById('ntKeyword').textContent = r.keyword;
   document.getElementById('ntLoai').textContent = r.loai + ' — ' + fmt(basePrice) + ' đ';
   _ntVal = cur;
@@ -11690,8 +11698,8 @@ function renderPeriodHistoryList(){
 function _calcPeriodStats(start, end){
   const hBai=data.hai.filter(r=>r.ngay>=start&&r.ngay<=end).length;
   const hieuBai=data.hieu.filter(r=>r.ngay>=start&&r.ngay<=end).length;
-  const hTien=data.hai.filter(r=>r.ngay>=start&&r.ngay<=end).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
-  const hieuTien=data.hieu.filter(r=>r.ngay>=start&&r.ngay<=end).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  const hTien=data.hai.filter(r=>r.ngay>=start&&r.ngay<=end).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  const hieuTien=data.hieu.filter(r=>r.ngay>=start&&r.ngay<=end).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
   return `Hải: ${hBai} bài — ${fmt(hTien)} · Hiếu: ${hieuBai} bài — ${fmt(hieuTien)}`;
 }
 function viewPeriod(idx){ const h=_periodHistory[idx]; _viewingPeriod=h; closePeriodHistoryModal(); renderDashboardForPeriod(h.start,h.end); }
@@ -11702,10 +11710,10 @@ function renderDashboardForPeriod(start,end){
   if(periodEl) periodEl.innerHTML=`<span style="color:var(--red);font-weight:600">📋 Đang xem: ${sd}/${sm}/${sy} → ${ed}/${em}/${ey}</span><button onclick="backToCurrentPeriod()" style="margin-left:8px;background:none;border:1px solid var(--gray-border);border-radius:5px;padding:1px 8px;font-size:11px;cursor:pointer;color:var(--text-muted)">← Về tháng hiện tại</button>`;
   const filterFn=r=>r.ngay>=start&&r.ngay<=end;
   const hBai=data.hai.filter(filterFn).length, hieuBai=data.hieu.filter(filterFn).length;
-  const hTien=data.hai.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
-  const hieuTien=data.hieu.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu')*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  const hTien=data.hai.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
+  const hieuTien=data.hieu.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
   document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div class="label">Tổng bài Hải</div><div class="value red">${hBai}</div></div><div class="stat-card"><div class="label">Lương Hải</div><div class="value green">${fmt(hTien)}</div></div><div class="stat-card"><div class="label">Tổng bài Hiếu</div><div class="value blue">${hieuBai}</div></div><div class="stat-card"><div class="label">Lương Hiếu</div><div class="value green">${fmt(hieuTien)}</div></div><div class="stat-card"><div class="label">Tổng chi trả</div><div class="value">${fmt(hTien+hieuTien)}</div></div>`;
-  function buildRows(sheet){ const dm={}; data[sheet].filter(filterFn).forEach(r=>{const d=fmtDate(r.ngay)||'?';if(!dm[d])dm[d]={ngay:d,bai:0,tien:0};dm[d].bai++;dm[d].tien+=getLoaiPrice(r.loai,sheet)*(r.nghiemThu===undefined?1:r.nghiemThu/100);}); return Object.values(dm).sort((a,b)=>a.ngay.localeCompare(b.ngay)).map(r=>`<tr><td>${r.ngay}</td><td class="num">${r.bai}</td><td class="num money">${fmt(r.tien)}</td><td></td></tr>`).join(''); }
+  function buildRows(sheet){ const dm={}; data[sheet].filter(filterFn).forEach(r=>{const d=fmtDate(r.ngay)||'?';if(!dm[d])dm[d]={ngay:d,bai:0,tien:0};dm[d].bai++;dm[d].tien+=getLoaiPrice(r.loai,sheet,r)*(r.nghiemThu===undefined?1:r.nghiemThu/100);}); return Object.values(dm).sort((a,b)=>a.ngay.localeCompare(b.ngay)).map(r=>`<tr><td>${r.ngay}</td><td class="num">${r.bai}</td><td class="num money">${fmt(r.tien)}</td><td></td></tr>`).join(''); }
   document.getElementById('reportGrid').innerHTML=`<div class="report-card hai"><div class="rh">👤 BÁO CÁO CV HẢI</div><table class="report-table"><thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th><th></th></tr></thead><tbody>${buildRows('hai')}</tbody><tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${hBai}</b></td><td class="num money"><b>${fmt(hTien)}</b></td><td></td></tr></tfoot></table></div><div class="report-card hieu"><div class="rh">👤 BÁO CÁO CV HIẾU</div><table class="report-table"><thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th><th></th></tr></thead><tbody>${buildRows('hieu')}</tbody><tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${hieuBai}</b></td><td class="num money"><b>${fmt(hieuTien)}</b></td><td></td></tr></tfoot></table></div>`;
 }
 
