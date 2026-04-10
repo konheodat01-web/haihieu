@@ -11162,13 +11162,16 @@ function qi_parseUrl(){
   const priority=document.getElementById('qi_priority')?.value||'Bình thường';
   const team=document.getElementById('qi_team')?.value||'Team 01';
 
+  const manualSteps=(document.getElementById('qi_steps')?.value||'').trim();
+  const cols = manualSteps ? parseSteps(manualSteps) : null;
+  const firstColId = cols ? cols[0].id : 'todo';
   const startId = cardNextId;
   cardNextId += urls.length;
   qi_parsedTasks=[{
     name:taskName, person, type:'SEO', dang:'url',
     from, deadline, desc:'', priority, team,
-    cols:null,
-    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:'todo', name:u, desc:''}))
+    cols,
+    cards: urls.map((u,i)=>({id:'qcu'+(startId+i), colId:firstColId, name:u, desc:''}))
   }];
 
   // Show preview
