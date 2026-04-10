@@ -7656,7 +7656,7 @@ function clearWebsiteForm(){
 }
 
 function normalizeAdmin(v){ return (v||'').trim().replace(/^\/+|\/+$/g,''); }
-function normalizeUrl(v){ let s=(v||'').trim().replace(/^https?:\/\//i,'').replace(/^www\./i,''); return s.split('/')[0].replace(/[:]+$/,''); }
+function normalizeUrl(v){ return (v||'').trim().replace(/^https?:\/\//i,'').replace(/\/+$/,''); }
 function joinAdminUrl(url, admin){ let u=(url||'').replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; const a=normalizeAdmin(admin); return a ? u+'/'+a : u; }
 function ensureHttps(url){ let u=(url||'').trim().replace(/\/$/,''); if(u&&!/^https?:\/\//i.test(u)) u='https://'+u; return u; }
 
@@ -8219,6 +8219,7 @@ function wsImportParseLines(){
       const brandRaw = parts[0]||'';
       const urlRaw = parts[1]||'';
       const url = normalizeUrl(urlRaw||brandRaw);
+      // brand = phần trước dấu chấm đầu tiên của domain nếu không điền
       const brand = brandRaw || url.split('.')[0];
       return {
         brand,
@@ -8233,10 +8234,11 @@ function wsImportParseLines(){
         note: parts[9]||''
       };
     } else {
-      // Plain URL only - derive brand
+      // Plain URL only - derive brand from domain prefix
       const urlRaw = parts[0];
       const url = normalizeUrl(urlRaw);
-      let brand = url.split('.')[0];
+      const domain = url.split('/')[0];
+      let brand = domain.replace(/^www\./, '').split('.')[0];
       brand = brand.charAt(0).toUpperCase()+brand.slice(1);
       return { brand, url, admin:'', account:'', password:'', status, team, owner, group:'', note:'' };
     }
