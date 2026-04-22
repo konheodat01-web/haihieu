@@ -4799,8 +4799,8 @@ async function wstFetchRank(wsId) {
   const url = 'https://google.serper.dev/search';
   const headers = { 'X-API-KEY': wtApiKey, 'Content-Type': 'application/json' };
   
-  const bodyD = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'desktop' });
-  const bodyM = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'mobile' });
+  const bodyD = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'desktop', num: 100 });
+  const bodyM = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'mobile', num: 100 });
   
   try {
     const [resD, resM] = await Promise.all([
