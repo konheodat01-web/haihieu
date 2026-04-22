@@ -4892,7 +4892,7 @@ async function wstBulkCheckRank() {
        if(!site.entries) site.entries = [];
        const entries = site.entries.slice().sort((a,b)=>b.date.localeCompare(a.date));
        let last = entries[0];
-       let errMsg = res.error.includes("hết lượt") ? "API khoá" : "Lỗi API";
+       let errMsg = res.error.includes("lỗi") ? "Lỗi mạng" : "Lỗi API/Hết lượt";
        if(last && last.date === tbDay) {
          last.rank = `<span style="color:#e74c3c">${errMsg}</span>`;
        } else {
@@ -4900,8 +4900,8 @@ async function wstBulkCheckRank() {
        }
        saveWsTrack();
        
-       if(res.error.includes("hết lượt") || res.error.includes("API Key")) {
-           toast("Dừng check bulk do lỗi API: " + res.error, "#e74c3c", 4000);
+       if(!res.error.includes("Lỗi kết nối API")) {
+           toast("🛑 Dừng do lỗi: " + res.error, "#e74c3c", 5000);
            break;
        }
     } else {
