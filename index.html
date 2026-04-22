@@ -4759,7 +4759,10 @@ async function wstFetchRank(wsId) {
   if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
   if(!wtApiKey) return {error: "Chưa có API Key"};
 
-  const url = `https://api.valueserp.com/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi`;
+  const originalUrl = `https://api.valueserp.com/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi`;
+  // Sử dụng CORS Proxy để tránh lỗi trình duyệt chặn request API trực tiếp
+  const url = 'https://corsproxy.io/?' + encodeURIComponent(originalUrl);
+  
   try {
     const res = await fetch(url);
     const data = await res.json();
@@ -4813,13 +4816,25 @@ async function wstBulkCheckRank() {
     
     const res = await wstFetchRank(w.id);
     if(res.error) {
-       if(rankTd) rankTd.innerHTML = `<span style="font-size:10px;color:red">${res.error}</span>`;
+       // Cập nhật state thành lỗi để renderWsTrack giữ lại nội dung lỗi
+       const tbDay = todayVN();
+       let site = getWstSite(w.id);
+       if(!site.entries) site.entries = [];
+       const entries = site.entries.slice().sort((a,b)=>b.date.localeCompare(a.date));
+       let last = entries[0];
+       let errMsg = res.error.includes("hết lượt") ? "API khoá" : "Lỗi API";
+       if(last && last.date === tbDay) {
+         last.rank = `<span style="color:#e74c3c">${errMsg}</span>`;
+       } else {
+         site.entries.push({id:'wste'+Date.now(), date:tbDay, rank: `<span style="color:#e74c3c">${errMsg}</span>`, indexed:'', moBot:site.moBot||'Mở', note:''});
+       }
+       saveWsTrack();
+       
        if(res.error.includes("hết lượt") || res.error.includes("API Key")) {
            toast("Dừng check bulk do lỗi API: " + res.error, "#e74c3c", 4000);
            break;
        }
     } else {
-       if(rankTd) rankTd.innerHTML = res.rank;
        successCount++;
     }
     
