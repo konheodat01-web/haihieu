@@ -4759,14 +4759,14 @@ async function wstFetchRank(wsId) {
   if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
   if(!wtApiKey) return {error: "Chưa có API Key"};
 
-  const url = \`https://api.valueserp.com/search?api_key=\${wtApiKey}&q=\${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi\`;
+  const url = `https://api.valueserp.com/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi`;
   try {
     const res = await fetch(url);
     const data = await res.json();
     if(data.request_info && data.request_info.success === false) return {error: data.request_info.message || "Tài khoản API hết lượt hoặc bị khoá"};
     
     // Find rank by matching url domain
-    const cleanMainDom = (w.url||'').replace(/^https?:\\/\\//,'').replace(/\\/.*$/,'').toLowerCase();
+    const cleanMainDom = (w.url||'').replace(/^https?:\/\//,'').replace(/\/(.*)$/,'').toLowerCase();
     
     let rank = null;
     if(data.organic_results) {
@@ -4803,7 +4803,7 @@ async function wstBulkCheckRank() {
   const targets = allTrackedWs.filter(w => getWstSite(w.id)?.mainKeyword);
   if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO'!", "#e74c3c"); return; }
   
-  toast(\`Bắt đầu check \${targets.length} website... Vui lòng chờ.\`);
+  toast(`Bắt đầu check ${targets.length} website... Vui lòng chờ.`);
   let successCount = 0;
   for(let i=0; i<targets.length; i++) {
     const w = targets[i];
@@ -4813,7 +4813,7 @@ async function wstBulkCheckRank() {
     
     const res = await wstFetchRank(w.id);
     if(res.error) {
-       if(rankTd) rankTd.innerHTML = \`<span style="font-size:10px;color:red">\${res.error}</span>\`;
+       if(rankTd) rankTd.innerHTML = `<span style="font-size:10px;color:red">${res.error}</span>`;
        if(res.error.includes("hết lượt") || res.error.includes("API Key")) {
            toast("Dừng check bulk do lỗi API: " + res.error, "#e74c3c", 4000);
            break;
@@ -4829,7 +4829,7 @@ async function wstBulkCheckRank() {
        await new Promise(r => setTimeout(r, 1500));
     }
   }
-  toast(\`Hoàn thành check tự động! Thành công \${successCount}/\${targets.length}\`, "#27ae60", 4000);
+  toast(`Hoàn thành check tự động! Thành công ${successCount}/${targets.length}`, "#27ae60", 4000);
 }
 
 function saveWsTrack(){
