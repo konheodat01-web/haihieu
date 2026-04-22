@@ -4759,9 +4759,7 @@ async function wstFetchRank(wsId) {
   if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
   if(!wtApiKey) return {error: "Chưa có API Key"};
 
-  const originalUrl = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi`;
-  // Sử dụng CORS Proxy để tránh lỗi trình duyệt chặn request API trực tiếp
-  const url = 'https://corsproxy.io/?' + encodeURIComponent(originalUrl);
+  const url = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi`;
   
   try {
     const res = await fetch(url);
