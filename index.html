@@ -4824,6 +4824,29 @@ async function wstFetchRank(wsId) {
   }
 }
 
+function wstFormatRankUI(rankStr) {
+    if(!rankStr) return '<span style="color:var(--text-muted)">N/A</span>';
+    if(typeof rankStr !== 'string') rankStr = rankStr.toString();
+    if(rankStr === "Out 100") return '<span style="color:#7f8c8d;background:#f1f2f6;padding:2px 6px;border-radius:4px;font-size:11px">Out 100</span>';
+    
+    let isError = rankStr.includes('Lỗi') || rankStr.includes('API');
+    if(isError) return rankStr; 
+
+    let rawNum = parseInt(rankStr.replace(/<[^>]*>?/gm, ''));
+    if(isNaN(rawNum)) return rankStr; 
+    
+    let deviceSuffix = rankStr.includes('MB') ? '(MB)' : rankStr.includes('PC') ? '(PC)' : '';
+    
+    let color = "#fff";
+    let bg = "#95a5a6";
+    if(rawNum >= 1 && rawNum <= 10) bg = "#27ae60"; // Green
+    else if(rawNum >= 11 && rawNum <= 20) bg = "#2980b9"; // Blue
+    else if(rawNum >= 21 && rawNum <= 50) bg = "#e67e22"; // Orange
+    else if(rawNum >= 51 && rawNum <= 100) bg = "#7f8c8d"; // Gray
+
+    return `<span style="background:${bg};color:${color};padding:2px 6px;border-radius:4px;font-weight:700;display:inline-block">${rawNum} <span style="font-size:9px;opacity:0.8">${deviceSuffix}</span></span>`;
+}
+
 async function wstBulkCheckRank() {
   const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
   if(!allTrackedWs.length) { toast("Không có web nào đang theo dõi!"); return; }
@@ -4832,10 +4855,27 @@ async function wstBulkCheckRank() {
   const targets = allTrackedWs.filter(w => getWstSite(w.id)?.mainKeyword);
   if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO'!", "#e74c3c"); return; }
   
-  toast(`Bắt đầu check ${targets.length} website... Vui lòng chờ.`);
+  window.wstCancelBulkCheck = false;
+  const overlay = document.createElement('div');
+  overlay.id = 'wstBulkOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(4px)';
+  overlay.innerHTML = `
+    <div style="font-size:24px;margin-bottom:16px;font-weight:700">🔄 Đang kiểm tra Rank phân luồng PC & Mobile...</div>
+    <div id="wstBulkProgress" style="font-size:16px;margin-bottom:24px;font-weight:600">Đang khởi động hệ thống...</div>
+    <div style="font-size:12px;margin-bottom:24px;color:#bbb">Vui lòng thiết bị không rời trang hoặc tắt trình duyệt khi đang làm việc.</div>
+    <button onclick="window.wstCancelBulkCheck=true" class="btn" style="background:#e74c3c;color:#fff;border:none;padding:10px 20px;font-size:14px;border-radius:8px;font-weight:600;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,.2)">🛑 Dừng thao tác & Đóng lại</button>
+  `;
+  document.body.appendChild(overlay);
+
   let successCount = 0;
   for(let i=0; i<targets.length; i++) {
+    if(window.wstCancelBulkCheck) {
+        toast("🛑 Đã ngắt thao tác check rank!", "#e74c3c", 3000);
+        break;
+    }
+    
     const w = targets[i];
+    document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${w.url || w.brand} (${i+1}/${targets.length})`;
     
     const rankTd = document.getElementById('rank_td_' + w.id);
     if(rankTd) rankTd.innerHTML = '<span style="font-size:11px">⏳ Đang lấy...</span>';
@@ -4866,11 +4906,14 @@ async function wstBulkCheckRank() {
     
     renderWsTrack();
     
-    if(i < targets.length - 1) {
+    if(i < targets.length - 1 && !window.wstCancelBulkCheck) {
        await new Promise(r => setTimeout(r, 1500));
     }
   }
-  toast(`Hoàn thành check tự động! Thành công ${successCount}/${targets.length}`, "#27ae60", 4000);
+  
+  if(document.getElementById('wstBulkOverlay')) document.getElementById('wstBulkOverlay').remove();
+  
+  if(!window.wstCancelBulkCheck) toast(`Hoàn thành check tự động! Thành công ${successCount}/${targets.length}`, "#27ae60", 4000);
 }
 
 function saveWsTrack(){
@@ -5147,7 +5190,7 @@ function renderWsTrack(){
         <input type="checkbox" onchange="wstToggleMoBot(${w.id},this.checked)" ${last?.moBot==='Mở'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#27ae60" title="${last?.moBot==='Mở'?'Đang Mở — click để Đóng':'Đang Đóng — click để Mở'}">
       </td>
       <td id="rank_td_${w.id}" style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
-        ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>'}
+        ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':wstFormatRankUI(last.rank)}
       </td>
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted);white-space:nowrap">${last?.date||'—'}</td>
