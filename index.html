@@ -1574,6 +1574,8 @@
           <option value="Chưa index">❌ Chưa index</option>
         </select>
         <button onclick="openWstChecklistManager()" class="btn btn-outline btn-sm">⚙ Checklist</button>
+        <button onclick="openWstApiSettings()" class="btn btn-outline btn-sm">🔑 API Rank</button>
+        <button onclick="wstBulkCheckRank()" class="btn btn-sm" style="background:#e67e22;color:#fff;border:none">🔁 Tự động check Rank (All)</button>
         <button onclick="openWstPickModal()" class="btn btn-outline btn-sm">+ Thêm web</button>
       </div>
     </div>
@@ -4719,6 +4721,117 @@ function saveTaskTypeManager(){
 let siteTracking = []; // [{wsId, entries:[{id,date,rank,backlinks,indexed,note}]}]
 let _wstSelectedWsId = null;
 
+let wtApiKey = localStorage.getItem('wt_valueserp_api_key') || '';
+function openWstApiSettings() {
+  const overlay = document.createElement('div');
+  overlay.id = 'wstApiModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
+  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-weight:700;font-size:15px;margin-bottom:8px">🔑 Thiết lập API ValueSERP</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Nhập API Key cung cấp bởi <a href="https://valueserp.com" target="_blank" style="color:var(--blue)">ValueSERP</a>. API này cần có tài khoản và trả phí cực rẻ để có thể check hàng loạt.</div>
+    <div class="form-group" style="margin-bottom:16px"><label>ValueSERP API Key</label>
+      <input type="text" id="wstApiInput" value="${wtApiKey}" style="width:100%" placeholder="Nhập API Key...">
+    </div>
+    <div style="display:flex;justify-content:space-between">
+      <button onclick="document.getElementById('wstApiModal').remove()" class="btn btn-outline">Huỷ</button>
+      <button onclick="saveWstApiSettings()" class="btn btn-primary">✓ Lưu</button>
+    </div>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+function saveWstApiSettings() {
+  wtApiKey = document.getElementById('wstApiInput').value.trim();
+  localStorage.setItem('wt_valueserp_api_key', wtApiKey);
+  document.getElementById('wstApiModal').remove();
+  toast('✓ Đã lưu API Key');
+}
+
+function wstSaveKeyword(wsId, kw) {
+  let site = getWstSite(wsId);
+  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
+  site.mainKeyword = kw;
+  saveWsTrack();
+}
+
+async function wstFetchRank(wsId) {
+  const w = websites.find(x => x.id === wsId);
+  const site = getWstSite(wsId);
+  if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
+  if(!wtApiKey) return {error: "Chưa có API Key"};
+
+  const url = \`https://api.valueserp.com/search?api_key=\${wtApiKey}&q=\${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi\`;
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if(data.request_info && data.request_info.success === false) return {error: data.request_info.message || "Tài khoản API hết lượt hoặc bị khoá"};
+    
+    // Find rank by matching url domain
+    const cleanMainDom = (w.url||'').replace(/^https?:\\/\\//,'').replace(/\\/.*$/,'').toLowerCase();
+    
+    let rank = null;
+    if(data.organic_results) {
+      for(let res of data.organic_results) {
+        if((res.link||'').toLowerCase().includes(cleanMainDom)) {
+          rank = res.position;
+          break;
+        }
+      }
+    }
+    
+    // auto save to latest entry or new entry for today
+    const tbDay = todayVN();
+    if(!site.entries) site.entries = [];
+    const entries = site.entries.slice().sort((a,b)=>b.date.localeCompare(a.date));
+    let last = entries[0];
+    if(last && last.date === tbDay) {
+      last.rank = rank || "Out 100";
+    } else {
+      site.entries.push({id:'wste'+Date.now(), date:tbDay, rank: rank || "Out 100", indexed:'', moBot:site.moBot||'Mở', note:''});
+    }
+    saveWsTrack();
+    return {success: true, rank: rank || "Out 100"};
+  } catch(e) {
+    return {error: "Lỗi kết nối API"};
+  }
+}
+
+async function wstBulkCheckRank() {
+  const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
+  if(!allTrackedWs.length) { toast("Không có web nào đang theo dõi!"); return; }
+  if(!wtApiKey) { toast("Vui lòng thiết lập ValueSERP API Key trước!", "#e74c3c"); openWstApiSettings(); return; }
+
+  const targets = allTrackedWs.filter(w => getWstSite(w.id)?.mainKeyword);
+  if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO'!", "#e74c3c"); return; }
+  
+  toast(\`Bắt đầu check \${targets.length} website... Vui lòng chờ.\`);
+  let successCount = 0;
+  for(let i=0; i<targets.length; i++) {
+    const w = targets[i];
+    
+    const rankTd = document.getElementById('rank_td_' + w.id);
+    if(rankTd) rankTd.innerHTML = '<span style="font-size:11px">⏳ Đang lấy...</span>';
+    
+    const res = await wstFetchRank(w.id);
+    if(res.error) {
+       if(rankTd) rankTd.innerHTML = \`<span style="font-size:10px;color:red">\${res.error}</span>\`;
+       if(res.error.includes("hết lượt") || res.error.includes("API Key")) {
+           toast("Dừng check bulk do lỗi API: " + res.error, "#e74c3c", 4000);
+           break;
+       }
+    } else {
+       if(rankTd) rankTd.innerHTML = res.rank;
+       successCount++;
+    }
+    
+    renderWsTrack();
+    
+    if(i < targets.length - 1) {
+       await new Promise(r => setTimeout(r, 1500));
+    }
+  }
+  toast(\`Hoàn thành check tự động! Thành công \${successCount}/\${targets.length}\`, "#27ae60", 4000);
+}
+
 function saveWsTrack(){
   try{ localStorage.setItem('wt_site_tracking', JSON.stringify(siteTracking)); }catch(e){}
   // Push to Firebase in fbPayload via saveAppData
@@ -4922,6 +5035,7 @@ function renderWsTrack(){
       <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">URL hiện tại (301)</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">Website (gốc)</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Nhóm</th>
+      <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:140px">Từ khóa SEO</th>
       ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">Mở bot</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
@@ -4979,13 +5093,19 @@ function renderWsTrack(){
         })()}
       </td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">${w.group||'—'}</td>
+      <td style="padding:8px 10px;font-size:11px;">
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="text" placeholder="Nhập từ khóa..." value="${site?.mainKeyword||''}" onchange="wstSaveKeyword(${w.id}, this.value)" style="width:110px;font-size:11px;padding:3px 6px;height:24px">
+          <button onclick="var btn=this;btn.innerHTML='⏳'; wstFetchRank(${w.id}).then(r=>{btn.innerHTML='↺'; renderWsTrack(); if(r.error)toast(r.error,'#e74c3c'); else toast('Xong!','#27ae60')})" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 4px;font-size:10px" title="Kiểm tra rank ngay">↺</button>
+        </div>
+      </td>
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
         <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:16px" title="${item}">${cl[item]?'✅':'⬜'}</span>
       </td>`).join('')}
       <td style="padding:8px 10px;text-align:center">
         <input type="checkbox" onchange="wstToggleMoBot(${w.id},this.checked)" ${last?.moBot==='Mở'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#27ae60" title="${last?.moBot==='Mở'?'Đang Mở — click để Đóng':'Đang Đóng — click để Mở'}">
       </td>
-      <td style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
+      <td id="rank_td_${w.id}" style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
         ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':last.rank?last.rank:'<span style="color:var(--text-muted)">N/A</span>'}
       </td>
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
