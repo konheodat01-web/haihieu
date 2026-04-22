@@ -4793,14 +4793,16 @@ function wstSaveKeyword(wsId, kw) {
 async function wstFetchRank(wsId) {
   const w = websites.find(x => x.id === wsId);
   const site = getWstSite(wsId);
-  if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
+  const keyword = (site && site.mainKeyword) ? site.mainKeyword : (w ? w.brand : '');
+  
+  if(!w || !keyword) return {error: "Chưa có từ khóa"};
   if(!wtApiKey) return {error: "Chưa có API Key"};
 
   const url = 'https://google.serper.dev/search';
   const headers = { 'X-API-KEY': wtApiKey, 'Content-Type': 'application/json' };
   
-  const bodyD = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'desktop', num: 100 });
-  const bodyM = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'mobile', num: 100 });
+  const bodyD = JSON.stringify({ q: keyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'desktop', num: 100 });
+  const bodyM = JSON.stringify({ q: keyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'mobile', num: 100 });
   
   try {
     const [resD, resM] = await Promise.all([
@@ -5243,7 +5245,7 @@ function renderWsTrack(){
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted)">${w.group||'—'}</td>
       <td style="padding:8px 10px;font-size:11px;">
         <div style="display:flex;align-items:center;gap:4px">
-          <input type="text" placeholder="Nhập từ khóa..." value="${site?.mainKeyword||''}" onchange="wstSaveKeyword(${w.id}, this.value)" style="width:110px;font-size:11px;padding:3px 6px;height:24px">
+          <input type="text" placeholder="${w.brand||'Nhập từ khóa...'}" value="${site?.mainKeyword || w.brand || ''}" onchange="wstSaveKeyword(${w.id}, this.value)" style="width:110px;font-size:11px;padding:3px 6px;height:24px">
           <button onclick="var btn=this;btn.innerHTML='⏳'; wstFetchRank(${w.id}).then(r=>{btn.innerHTML='↺'; renderWsTrack(); if(r.error)toast(r.error,'#e74c3c'); else toast('Xong!','#27ae60')})" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 4px;font-size:10px" title="Kiểm tra rank ngay">↺</button>
         </div>
       </td>
