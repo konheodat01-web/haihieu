@@ -1577,6 +1577,7 @@
         <button onclick="openWstApiSettings()" class="btn btn-outline btn-sm">🔑 API Rank</button>
         <button onclick="wstBulkCheckRank()" class="btn btn-sm" style="background:#e67e22;color:#fff;border:none">🔁 Tự động check Rank (All)</button>
         <button onclick="openWstPickModal()" class="btn btn-outline btn-sm">+ Thêm web</button>
+        <span id="wstApiBadge" style="font-size:13px;font-weight:700;color:#2980b9;margin-left:8px;padding:4px 8px;background:#ebf5fb;border-radius:6px;display:none;border:1px solid #d6eaf8" title="Số token (lượt check) API còn lại trong tài khoản SerpWow của bạn">💎 ---</span>
       </div>
     </div>
     <!-- TABLE -->
@@ -4744,6 +4745,19 @@ function saveWstApiSettings() {
   localStorage.setItem('wt_valueserp_api_key', wtApiKey);
   document.getElementById('wstApiModal').remove();
   toast('✓ Đã lưu API Key');
+  wstUpdateAPIUsage();
+}
+
+async function wstUpdateAPIUsage() {
+    if(!wtApiKey) return;
+    try {
+        const res = await fetch(`https://api.serpwow.com/live/account?api_key=${wtApiKey}`);
+        const data = await res.json();
+        if(data.account_info && data.account_info.credits_remaining !== undefined) {
+             const bdg = document.getElementById('wstApiBadge');
+             if(bdg) { bdg.style.display='inline-block'; bdg.innerText = `💎 Tokens: ` + data.account_info.credits_remaining; }
+        }
+    }catch(e){}
 }
 
 function wstSaveKeyword(wsId, kw) {
@@ -4769,6 +4783,11 @@ async function wstFetchRank(wsId) {
     
     if((dataD.request_info && dataD.request_info.success === false) || (dataM.request_info && dataM.request_info.success === false)) {
         return {error: dataD.request_info?.message || dataM.request_info?.message || "Tài khoản API hết lượt hoặc bị khoá"};
+    }
+    
+    if(dataD.request_info && dataD.request_info.credits_remaining !== undefined) {
+        const bdg = document.getElementById('wstApiBadge');
+        if(bdg) { bdg.style.display='inline-block'; bdg.innerText = `💎 Tokens: ` + dataD.request_info.credits_remaining; }
     }
     
     // Find rank by matching url domain (or its latest 301 target)
@@ -5061,6 +5080,11 @@ function renderWsTrack(){
 
   const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
   const chkItems = getWstChecklist();
+
+  if(wtApiKey && !window._wstApiLoaded) {
+      window._wstApiLoaded = true;
+      wstUpdateAPIUsage();
+  }
 
   // Populate filters
   const gSel = document.getElementById('wst_filter_group');
