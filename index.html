@@ -4848,12 +4848,16 @@ function wstFormatRankUI(rankStr) {
 }
 
 async function wstBulkCheckRank() {
-  const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
-  if(!allTrackedWs.length) { toast("Không có web nào đang theo dõi!"); return; }
+  const visibleRowCheckboxes = document.querySelectorAll('.wst-chk');
+  if(!visibleRowCheckboxes.length) { toast("Không có web nào đang hiển thị trên bảng!"); return; }
+  
+  const visibleWsIds = Array.from(visibleRowCheckboxes).map(c => parseInt(c.dataset.id));
+  const allTrackedWs = visibleWsIds.map(id => websites.find(w => w.id === id)).filter(Boolean);
+  
   if(!wtApiKey) { toast("Vui lòng thiết lập ValueSERP API Key trước!", "#e74c3c"); openWstApiSettings(); return; }
 
   const targets = allTrackedWs.filter(w => getWstSite(w.id)?.mainKeyword);
-  if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO'!", "#e74c3c"); return; }
+  if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO' trong danh sách đang hiển thị!", "#e74c3c"); return; }
   
   window.wstCancelBulkCheck = false;
   const overlay = document.createElement('div');
