@@ -4759,12 +4759,17 @@ async function wstFetchRank(wsId) {
   if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
   if(!wtApiKey) return {error: "Chưa có API Key"};
 
-  const url = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi`;
+  const urlD = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi&device=desktop`;
+  const urlM = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi&device=mobile`;
   
   try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if(data.request_info && data.request_info.success === false) return {error: data.request_info.message || "Tài khoản API hết lượt hoặc bị khoá"};
+    const [resD, resM] = await Promise.all([fetch(urlD), fetch(urlM)]);
+    const dataD = await resD.json();
+    const dataM = await resM.json();
+    
+    if((dataD.request_info && dataD.request_info.success === false) || (dataM.request_info && dataM.request_info.success === false)) {
+        return {error: dataD.request_info?.message || dataM.request_info?.message || "Tài khoản API hết lượt hoặc bị khoá"};
+    }
     
     // Find rank by matching url domain (or its latest 301 target)
     const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
@@ -4772,14 +4777,34 @@ async function wstFetchRank(wsId) {
     const targetUrl = latest301 ? (latest301.url || latest301.sourceUrl || w.url) : w.url;
     const cleanMainDom = (targetUrl||'').replace(/^https?:\/\//,'').replace(/\/(.*)$/,'').toLowerCase();
     
-    let rank = null;
-    if(data.organic_results) {
-      for(let res of data.organic_results) {
+    let rankD = null;
+    if(dataD.organic_results) {
+      for(let res of dataD.organic_results) {
         if((res.link||'').toLowerCase().includes(cleanMainDom)) {
-          rank = res.position;
+          rankD = res.position;
           break;
         }
       }
+    }
+    
+    let rankM = null;
+    if(dataM.organic_results) {
+      for(let res of dataM.organic_results) {
+        if((res.link||'').toLowerCase().includes(cleanMainDom)) {
+          rankM = res.position;
+          break;
+        }
+      }
+    }
+    
+    let finalRankStr = null;
+    if(rankD && rankM) {
+        if(rankD <= rankM) finalRankStr = rankD + " <span style='font-size:9px;color:var(--text-muted)'>(PC)</span>";
+        else finalRankStr = rankM + " <span style='font-size:9px;color:var(--text-muted)'>(MB)</span>";
+    } else if(rankD) {
+        finalRankStr = rankD + " <span style='font-size:9px;color:var(--text-muted)'>(PC)</span>";
+    } else if(rankM) {
+        finalRankStr = rankM + " <span style='font-size:9px;color:var(--text-muted)'>(MB)</span>";
     }
     
     // auto save to latest entry or new entry for today
@@ -4788,12 +4813,12 @@ async function wstFetchRank(wsId) {
     const entries = site.entries.slice().sort((a,b)=>b.date.localeCompare(a.date));
     let last = entries[0];
     if(last && last.date === tbDay) {
-      last.rank = rank || "Out 100";
+      last.rank = finalRankStr || "Out 100";
     } else {
-      site.entries.push({id:'wste'+Date.now(), date:tbDay, rank: rank || "Out 100", indexed:'', moBot:site.moBot||'Mở', note:''});
+      site.entries.push({id:'wste'+Date.now(), date:tbDay, rank: finalRankStr || "Out 100", indexed:'', moBot:site.moBot||'Mở', note:''});
     }
     saveWsTrack();
-    return {success: true, rank: rank || "Out 100"};
+    return {success: true, rank: finalRankStr || "Out 100"};
   } catch(e) {
     return {error: "Lỗi kết nối API"};
   }
