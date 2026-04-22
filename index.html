@@ -1577,7 +1577,7 @@
         <button onclick="openWstApiSettings()" class="btn btn-outline btn-sm">🔑 API Rank</button>
         <button onclick="wstBulkCheckRank()" class="btn btn-sm" style="background:#e67e22;color:#fff;border:none">🔁 Tự động check Rank (All)</button>
         <button onclick="openWstPickModal()" class="btn btn-outline btn-sm">+ Thêm web</button>
-        <span id="wstApiBadge" style="font-size:13px;font-weight:700;color:#2980b9;margin-left:8px;padding:4px 8px;background:#ebf5fb;border-radius:6px;display:none;border:1px solid #d6eaf8" title="Số token (lượt check) API còn lại trong tài khoản SerpWow của bạn">💎 ---</span>
+        <span id="wstApiBadge" style="font-size:13px;font-weight:700;color:#2980b9;margin-left:8px;padding:4px 8px;background:#ebf5fb;border-radius:6px;display:none;border:1px solid #d6eaf8" title="Trạng thái kết nối Serper.dev">💎 ---</span>
       </div>
     </div>
     <!-- TABLE -->
@@ -4728,9 +4728,9 @@ function openWstApiSettings() {
   overlay.id = 'wstApiModal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
   overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="font-weight:700;font-size:15px;margin-bottom:8px">🔑 Thiết lập API ValueSERP</div>
-    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Nhập API Key cung cấp bởi <a href="https://valueserp.com" target="_blank" style="color:var(--blue)">ValueSERP</a>. API này cần có tài khoản và trả phí cực rẻ để có thể check hàng loạt.</div>
-    <div class="form-group" style="margin-bottom:16px"><label>ValueSERP API Key</label>
+    <div style="font-weight:700;font-size:15px;margin-bottom:8px">🔑 Thiết lập API Serper.dev</div>
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Nhập API Key cung cấp bởi <a href="https://serper.dev" target="_blank" style="color:var(--blue)">Serper.dev</a>. Đăng ký mới sẽ được tặng ngay 2.500 lượt miễn phí.</div>
+    <div class="form-group" style="margin-bottom:16px"><label>Serper.dev API Key</label>
       <input type="text" id="wstApiInput" value="${wtApiKey}" style="width:100%" placeholder="Nhập API Key...">
     </div>
     <div style="display:flex;justify-content:space-between">
@@ -4751,12 +4751,8 @@ function saveWstApiSettings() {
 async function wstUpdateAPIUsage() {
     if(!wtApiKey) return;
     try {
-        const res = await fetch(`https://api.serpwow.com/live/account?api_key=${wtApiKey}`);
-        const data = await res.json();
-        if(data.account_info && data.account_info.credits_remaining !== undefined) {
-             const bdg = document.getElementById('wstApiBadge');
-             if(bdg) { bdg.style.display='inline-block'; bdg.innerText = `💎 Tokens: ` + data.account_info.credits_remaining; }
-        }
+        const bdg = document.getElementById('wstApiBadge');
+        if(bdg) { bdg.style.display='inline-block'; bdg.innerText = `💎 Serper: Sẵn sàng`; }
     }catch(e){}
 }
 
@@ -4773,21 +4769,22 @@ async function wstFetchRank(wsId) {
   if(!w || !site || !site.mainKeyword) return {error: "Chưa có từ khóa"};
   if(!wtApiKey) return {error: "Chưa có API Key"};
 
-  const urlD = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi&device=desktop`;
-  const urlM = `https://api.serpwow.com/live/search?api_key=${wtApiKey}&q=${encodeURIComponent(site.mainKeyword)}&gl=vn&hl=vi&device=mobile`;
+  const url = 'https://google.serper.dev/search';
+  const headers = { 'X-API-KEY': wtApiKey, 'Content-Type': 'application/json' };
+  
+  const bodyD = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'desktop' });
+  const bodyM = JSON.stringify({ q: site.mainKeyword, gl: 'vn', hl: 'vi', location: 'Vietnam', device: 'mobile' });
   
   try {
-    const [resD, resM] = await Promise.all([fetch(urlD), fetch(urlM)]);
+    const [resD, resM] = await Promise.all([
+        fetch(url, { method: 'POST', headers, body: bodyD }),
+        fetch(url, { method: 'POST', headers, body: bodyM })
+    ]);
     const dataD = await resD.json();
     const dataM = await resM.json();
     
-    if((dataD.request_info && dataD.request_info.success === false) || (dataM.request_info && dataM.request_info.success === false)) {
-        return {error: dataD.request_info?.message || dataM.request_info?.message || "Tài khoản API hết lượt hoặc bị khoá"};
-    }
-    
-    if(dataD.request_info && dataD.request_info.credits_remaining !== undefined) {
-        const bdg = document.getElementById('wstApiBadge');
-        if(bdg) { bdg.style.display='inline-block'; bdg.innerText = `💎 Tokens: ` + dataD.request_info.credits_remaining; }
+    if(dataD.message === "Unauthorized." || dataD.statusCode === 403) {
+        return {error: "API Key bị sai hoặc đã hết lượt!"};
     }
     
     // Find rank by matching url domain (or its latest 301 target)
@@ -4797,8 +4794,8 @@ async function wstFetchRank(wsId) {
     const cleanMainDom = (targetUrl||'').replace(/^https?:\/\//,'').replace(/\/(.*)$/,'').toLowerCase();
     
     let rankD = null;
-    if(dataD.organic_results) {
-      for(let res of dataD.organic_results) {
+    if(dataD.organic) {
+      for(let res of dataD.organic) {
         if((res.link||'').toLowerCase().includes(cleanMainDom)) {
           rankD = res.position;
           break;
@@ -4807,8 +4804,8 @@ async function wstFetchRank(wsId) {
     }
     
     let rankM = null;
-    if(dataM.organic_results) {
-      for(let res of dataM.organic_results) {
+    if(dataM.organic) {
+      for(let res of dataM.organic) {
         if((res.link||'').toLowerCase().includes(cleanMainDom)) {
           rankM = res.position;
           break;
