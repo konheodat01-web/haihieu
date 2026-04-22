@@ -4766,8 +4766,11 @@ async function wstFetchRank(wsId) {
     const data = await res.json();
     if(data.request_info && data.request_info.success === false) return {error: data.request_info.message || "Tài khoản API hết lượt hoặc bị khoá"};
     
-    // Find rank by matching url domain
-    const cleanMainDom = (w.url||'').replace(/^https?:\/\//,'').replace(/\/(.*)$/,'').toLowerCase();
+    // Find rank by matching url domain (or its latest 301 target)
+    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+    const latest301 = kids.length ? kids[kids.length-1] : null;
+    const targetUrl = latest301 ? (latest301.url || latest301.sourceUrl || w.url) : w.url;
+    const cleanMainDom = (targetUrl||'').replace(/^https?:\/\//,'').replace(/\/(.*)$/,'').toLowerCase();
     
     let rank = null;
     if(data.organic_results) {
