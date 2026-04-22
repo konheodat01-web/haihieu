@@ -4759,7 +4759,27 @@ async function wstUpdateAPIUsage() {
     if(!wtApiKey) return;
     try {
         const bdg = document.getElementById('wstApiBadge');
-        if(bdg) { bdg.style.display='inline-block'; bdg.innerText = `💎 Serper: Sẵn sàng`; }
+        if(!bdg) return;
+        bdg.style.display='inline-block';
+        if(wtSerperCredits > 0) bdg.innerText = `💎 Tokens: ${wtSerperCredits}`;
+        else bdg.innerText = `💎 Serper: Đang kiểm tra...`;
+
+        const urls = ['https://google.serper.dev/account', 'https://api.serper.dev/account'];
+        for(let u of urls) {
+            try {
+                const res = await fetch(u, { headers: { 'X-API-KEY': wtApiKey } });
+                if(res.ok) {
+                    const data = await res.json();
+                    let bestVal = data.credits_remaining || data.creditsLeft || data.available || data.remaining || data.creditsRemaining || data.balance;
+                    if(bestVal !== undefined) {
+                        wtSerperCredits = parseInt(bestVal);
+                        localStorage.setItem('wt_serper_credits_left', wtSerperCredits);
+                        bdg.innerText = `💎 Tokens: ${wtSerperCredits}`;
+                        break;
+                    }
+                }
+            } catch(e2) {}
+        }
     }catch(e){}
 }
 
