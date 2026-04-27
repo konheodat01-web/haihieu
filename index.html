@@ -4738,6 +4738,17 @@ function openWstApiSettings() {
       <div style="font-size:11px;color:#aaa;margin-bottom:4px">Nhập "Credits left" trên web Serper để bảng đếm ngược trừ lùi giúp bạn mỗi khi quét.</div>
       <input type="number" id="wstApiCreditsInput" value="${wtSerperCredits}" style="width:100%" placeholder="Vd: 2500">
     </div>
+    <hr style="border:0; border-top:1px solid var(--gray-border); margin:15px 0;">
+    <div style="font-weight:700;font-size:14px;margin-bottom:8px;color:#2980b9">🤖 Báo cáo Telegram (Auto Check Rank)</div>
+    <div class="form-group" style="margin-bottom:12px"><label>Bot Token</label>
+      <input type="password" id="wstTeleToken" value="${localStorage.getItem('tele_token_rank') || ''}" style="width:100%" placeholder="Nhập Bot Token...">
+    </div>
+    <div class="form-group" style="margin-bottom:16px"><label>Chat ID</label>
+      <div style="display:flex;gap:6px">
+        <input type="text" id="wstTeleChatId" value="${localStorage.getItem('tele_chat_id_rank') || ''}" style="flex:1" placeholder="Nhập Chat ID...">
+        <button onclick="testTeleRank()" class="btn btn-sm btn-outline" style="border-color:var(--success);color:var(--success)">🔔 Test</button>
+      </div>
+    </div>
     <div style="display:flex;justify-content:space-between">
       <button onclick="document.getElementById('wstApiModal').remove()" class="btn btn-outline">Huỷ</button>
       <button onclick="saveWstApiSettings()" class="btn btn-primary">✓ Lưu</button>
@@ -4745,13 +4756,49 @@ function openWstApiSettings() {
   </div>`;
   document.body.appendChild(overlay);
 }
+
+async function sendToTelegramRank(msg) {
+    const t = localStorage.getItem('tele_token_rank'), c = localStorage.getItem('tele_chat_id_rank');
+    if(!t || !c) return false;
+    try {
+        const res = await fetch(`https://api.telegram.org/bot${t}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: c, text: msg, parse_mode: 'HTML', disable_web_page_preview: true })
+        });
+        return res.ok;
+    } catch(e) { return false; }
+}
+
+async function testTeleRank() {
+    const tInput = document.getElementById('wstTeleToken').value.trim();
+    const cInput = document.getElementById('wstTeleChatId').value.trim();
+    if(!tInput || !cInput) { alert("Vui lòng điền đủ Token và Chat ID trước khi test!"); return; }
+    
+    // Tạm thời lưu để test
+    const oldT = localStorage.getItem('tele_token_rank'), oldC = localStorage.getItem('tele_chat_id_rank');
+    localStorage.setItem('tele_token_rank', tInput);
+    localStorage.setItem('tele_chat_id_rank', cInput);
+    
+    const ok = await sendToTelegramRank('<b>🔔 Test thành công!</b>\nTool Quản lý công việc đã kết nối được với Telegram của sếp.');
+    if(ok) alert("✅ Bot đã gửi tin nhắn test thành công! Sếp kiểm tra Telegram nhé.");
+    else {
+        alert("❌ Lỗi! Sếp kiểm tra lại Token hoặc Chat ID xem đúng chưa nhé.");
+        // Khôi phục nếu lỗi
+        if(oldT) localStorage.setItem('tele_token_rank', oldT); else localStorage.removeItem('tele_token_rank');
+        if(oldC) localStorage.setItem('tele_chat_id_rank', oldC); else localStorage.removeItem('tele_chat_id_rank');
+    }
+}
 function saveWstApiSettings() {
   wtApiKey = document.getElementById('wstApiInput').value.trim();
   wtSerperCredits = parseInt(document.getElementById('wstApiCreditsInput').value) || 0;
   localStorage.setItem('wt_valueserp_api_key', wtApiKey);
   localStorage.setItem('wt_serper_credits_left', wtSerperCredits);
+  
+  localStorage.setItem('tele_token_rank', document.getElementById('wstTeleToken').value.trim());
+  localStorage.setItem('tele_chat_id_rank', document.getElementById('wstTeleChatId').value.trim());
+  
   document.getElementById('wstApiModal').remove();
-  toast('✓ Đã lưu cấu hình API');
+  toast('✓ Đã lưu cấu hình API & Telegram');
   wstUpdateAPIUsage();
 }
 
@@ -4929,6 +4976,7 @@ async function wstBulkCheckRank() {
   document.body.appendChild(overlay);
 
   let successCount = 0;
+  let reportLines = [];
   for(let i=0; i<targets.length; i++) {
     if(window.wstCancelBulkCheck) {
         toast("🛑 Đã ngắt thao tác check rank!", "#e74c3c", 3000);
@@ -4942,6 +4990,8 @@ async function wstBulkCheckRank() {
     if(rankTd) rankTd.innerHTML = '<span style="font-size:11px">⏳ Đang lấy...</span>';
     
     const res = await wstFetchRank(w.id);
+    let rankText = "N/A";
+    
     if(res.error) {
        // Cập nhật state thành lỗi để renderWsTrack giữ lại nội dung lỗi
        const tbDay = todayVN();
@@ -4957,13 +5007,22 @@ async function wstBulkCheckRank() {
        }
        saveWsTrack();
        
+       rankText = "Lỗi API";
+       
        if(!res.error.includes("Lỗi kết nối API")) {
            toast("🛑 Dừng do lỗi: " + res.error, "#e74c3c", 5000);
            break;
        }
     } else {
        successCount++;
+       rankText = res.rank || "N/A";
+       rankText = rankText.replace(/<[^>]*>?/gm, ''); // Xóa thẻ HTML (PC/MB)
+       if(rankText.includes("Out 100")) rankText = "N/A";
     }
+    
+    let siteGoc = w.sourceUrl || w.url;
+    let site301 = w.url;
+    reportLines.push(`${siteGoc} -> ${site301} -> ${rankText.trim()}`);
     
     renderWsTrack();
     
@@ -4974,7 +5033,16 @@ async function wstBulkCheckRank() {
   
   if(document.getElementById('wstBulkOverlay')) document.getElementById('wstBulkOverlay').remove();
   
-  if(!window.wstCancelBulkCheck) toast(`Hoàn thành check tự động! Thành công ${successCount}/${targets.length}`, "#27ae60", 4000);
+  if(!window.wstCancelBulkCheck) {
+      toast(`Hoàn thành check tự động! Thành công ${successCount}/${targets.length}`, "#27ae60", 4000);
+      
+      // Send Telegram Report
+      if (reportLines.length > 0 && localStorage.getItem('tele_token_rank') && localStorage.getItem('tele_chat_id_rank')) {
+          let teleMsg = `<b>📊 BÁO CÁO RANK WEBSITE</b>\n\n`;
+          teleMsg += reportLines.join('\n');
+          await sendToTelegramRank(teleMsg);
+      }
+  }
 }
 
 function saveWsTrack(){
@@ -8508,7 +8576,7 @@ function wsImport301Run(){
 
     // Check if 301 target already exists
     const dupCheck = websites.find(x=> x.url && x.url.replace(/\/$/,'')===newDomain.replace(/\/$/,''));
-    if(dupCheck){ skipped++; return; }
+    if(dupCheck){ skipped++; continue; }
 
     // Find source website in existing list
     const source = websites.find(x=> x.url && (
