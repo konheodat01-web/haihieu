@@ -8486,21 +8486,23 @@ function wsImpSwitchTab(mode){
 }
 
 function wsImport301Run(){
-  const raw = document.getElementById('wsImport301Text').value.trim();
-  if(!raw){ toast('Chưa dán dữ liệu 301!','#e74c3c'); return; }
-  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  const rawSource = document.getElementById('wsImport301Source').value.trim();
+  const rawTarget = document.getElementById('wsImport301Target').value.trim();
+  if(!rawSource || !rawTarget){ toast('Vui lòng dán URL vào cả 2 cột!','#e74c3c'); return; }
+  const sourceLines = rawSource.split('\n').map(l=>l.trim()).filter(l=>l);
+  const targetLines = rawTarget.split('\n').map(l=>l.trim()).filter(l=>l);
+  if(sourceLines.length !== targetLines.length){
+    toast('Số dòng 2 cột không khớp! Gốc: '+sourceLines.length+', 301: '+targetLines.length,'#e74c3c');
+    return;
+  }
   const team = document.getElementById('wsImportTeam').value;
   const owner = document.getElementById('wsImportOwner').value;
   const status = document.getElementById('wsImportStatus').value;
 
   let added = 0, skipped = 0, notFound = [];
-  lines.forEach(line=>{
-    const sep = line.includes('\t') ? '\t' : '|';
-    const parts = line.split(sep).map(p=>p.trim()).filter(p=>p);
-    if(parts.length < 2) return;
-
-    const sourceUrlRaw = normalizeUrl(parts[0]);
-    const newUrlRaw = normalizeUrl(parts[1]);
+  for(let i = 0; i < sourceLines.length; i++){
+    const sourceUrlRaw = normalizeUrl(sourceLines[i]);
+    const newUrlRaw = normalizeUrl(targetLines[i]);
     const sourceDomain = sourceUrlRaw.split('/')[0];
     const newDomain = newUrlRaw.split('/')[0];
 
@@ -8536,7 +8538,7 @@ function wsImport301Run(){
     websites.push(entry);
     added++;
     if(!source) notFound.push(sourceDomain);
-  });
+  }
 
   saveAppData(); renderWebsites(); autoFillAnchors(); updateWsIcons();
   closeWsImportModal();
@@ -12902,13 +12904,18 @@ function applyBulkNT(sheet, val){
       <!-- 301 MODE -->
       <div id="wsImpPanel301" style="display:none">
         <div style="font-size:12px;color:var(--text-muted);background:#f8f0ff;padding:10px 12px;border-radius:6px;line-height:1.7;border:1px solid #c3b1e1">
-          <b>Dán 2 cột</b> (cách nhau bằng Tab hoặc dấu |):<br>
-          Cột 1: <b>Website gốc</b> — Cột 2: <b>Website 301 mới</b><br>
+          Dán danh sách URL vào <b>2 cột tương ứng</b> (mỗi dòng 1 URL).<br>
           <span style="font-size:11px">Thông tin (tài khoản, mật khẩu, admin) sẽ tự sao chép từ web gốc trong kho.</span>
         </div>
-        <div class="form-group" style="width:100%;margin-top:8px">
-          <label>Dán danh sách (web gốc → web 301)</label>
-          <textarea id="wsImport301Text" rows="8" style="width:100%;font-size:12px;font-family:monospace" placeholder="debets.sbs&#9;debets301.com&#10;ggwin.llc&#9;ggwin301.net&#10;..."></textarea>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <div class="form-group" style="margin:0">
+            <label style="font-weight:600;color:#c0392b">🌐 Website gốc</label>
+            <textarea id="wsImport301Source" rows="8" style="width:100%;font-size:12px;font-family:monospace" placeholder="debets.sbs&#10;ggwin.llc&#10;..."></textarea>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="font-weight:600;color:#6c5ce7">🔀 Website 301 mới</label>
+            <textarea id="wsImport301Target" rows="8" style="width:100%;font-size:12px;font-family:monospace" placeholder="debets301.com&#10;ggwin301.net&#10;..."></textarea>
+          </div>
         </div>
       </div>
 
