@@ -3701,6 +3701,10 @@ function fbPayload(ts){
     _salary_rates: _salaryRates,
     _flex_salary: _flexSalary,
     _loai_config: LOAI_CONFIG,
+    wtApiKey: wtApiKey,
+    wtSerperCredits: wtSerperCredits,
+    teleTokenRank: localStorage.getItem('tele_token_rank') || '',
+    teleChatIdRank: localStorage.getItem('tele_chat_id_rank') || '',
     _ts: ts, _sid: _sessionId
   };
 }
@@ -3822,6 +3826,11 @@ function initFirebaseListener(){
       if(r._salary_rates&&typeof r._salary_rates==='object'){ _salaryRates=r._salary_rates; ['hai','hieu'].forEach(sh=>{if(!_salaryRates[sh])_salaryRates[sh]={};}); try{localStorage.setItem('wt_salary_rates',JSON.stringify(_salaryRates));}catch(e){} }
       if(r._flex_salary&&typeof r._flex_salary==='object'){ _flexSalary=r._flex_salary; ['hai','hieu'].forEach(sh=>{if(!_flexSalary[sh])_flexSalary[sh]=[];}); try{localStorage.setItem('wt_flex_salary',JSON.stringify(_flexSalary));}catch(e){} }
       if(r._loai_config&&typeof r._loai_config==='object'){ Object.assign(LOAI_CONFIG,r._loai_config); try{localStorage.setItem('wt_loai_config',JSON.stringify(LOAI_CONFIG));}catch(e){} syncLoaiBaiDropdowns(); }
+
+      if(r.wtApiKey !== undefined){ wtApiKey = r.wtApiKey; localStorage.setItem('wt_valueserp_api_key', wtApiKey); }
+      if(r.wtSerperCredits !== undefined){ wtSerperCredits = r.wtSerperCredits; localStorage.setItem('wt_serper_credits_left', wtSerperCredits); }
+      if(r.teleTokenRank !== undefined) localStorage.setItem('tele_token_rank', r.teleTokenRank);
+      if(r.teleChatIdRank !== undefined) localStorage.setItem('tele_chat_id_rank', r.teleChatIdRank);
 
       links         = arr(r.links, links);
       linkCategories= r.linkCategories != null ? r.linkCategories : linkCategories;
