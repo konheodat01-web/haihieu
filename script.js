@@ -1631,6 +1631,12 @@ function initFirebaseListener(){
     const timeSinceLoad = Date.now() - _pageLoadTime;
     if(timeSinceLoad < 5000 && (r._ts||0) < localTs){
       console.log('Skipped stale Firebase data (within 5s of load): fb_ts=', r._ts, 'local_ts=', localTs);
+      // Still restore siteTracking - it has no local timestamp so always trust Firebase
+      if(Array.isArray(r.siteTracking) && r.siteTracking.length > 0){
+        siteTracking = r.siteTracking;
+        localStorage.setItem('wt_site_tracking', JSON.stringify(siteTracking));
+        if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack();
+      }
       return;
     }
 
