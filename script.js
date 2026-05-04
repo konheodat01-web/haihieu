@@ -2710,13 +2710,8 @@ async function wstFetchRank(wsId) {
   const w = websites.find(x => x.id === wsId);
   const site = getWstSite(wsId);
   
-  let targetW = w;
-  if(w && !w.is301) {
-    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
-    if(kids.length) targetW = kids[kids.length-1];
-  }
-  
-  const keyword = (site && site.mainKeyword) ? site.mainKeyword : (targetW ? targetW.brand : '');
+  // Từ khóa tìm kiếm mặc định lấy theo w.brand (của web gốc)
+  const keyword = (site && site.mainKeyword) ? site.mainKeyword : (w ? w.brand : '');
   
   if(!w || !keyword) return {error: "Chua c\u00f3 t\u1eeb kh\u00f3a"};
   if(!wtApiKey) return {error: "Chua c\u00f3 API Key"};
@@ -2876,14 +2871,14 @@ async function wstBulkCheckRank() {
     }
     
     const w = targets[i];
-        let targetW = w;
+        // Dò xem web này có URL 301 không
+    let targetUrl = w.url || w.brand;
     if(!w.is301) {
       const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
-      if(kids.length) targetW = kids[kids.length-1];
+      const latest301 = kids.length ? kids[kids.length-1] : null;
+      if(latest301) targetUrl = latest301.url || latest301.sourceUrl || targetUrl;
     }
-    // Luôn ưu tiên hiển thị tên brand của web đích (vì brand thường chứa URL hoặc tên gọi mà user dễ nhận diện)
-    let displayUrl = targetW.brand || targetW.url;
-    document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${displayUrl} (${i+1}/${targets.length})`;
+    document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${targetUrl} (${i+1}/${targets.length})`;
     
     const rankTd = document.getElementById('rank_td_' + w.id);
     if(rankTd) rankTd.innerHTML = '<span style="font-size:11px">⏳ Đang lấy...</span>';
