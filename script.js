@@ -2862,7 +2862,15 @@ async function wstBulkCheckRank() {
     }
     
     const w = targets[i];
-    document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${w.url || w.brand} (${i+1}/${targets.length})`;
+        let displayUrl = w.url || w.brand;
+    if(w.is301 && w.url) {
+      displayUrl = w.url;
+    } else {
+      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+      const latest301 = kids.length ? kids[kids.length-1] : null;
+      if(latest301) displayUrl = latest301.url || latest301.sourceUrl || displayUrl;
+    }
+    document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${displayUrl} (${i+1}/${targets.length})`;
     
     const rankTd = document.getElementById('rank_td_' + w.id);
     if(rankTd) rankTd.innerHTML = '<span style="font-size:11px">⏳ Đang lấy...</span>';
