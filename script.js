@@ -2709,10 +2709,17 @@ function wstSaveKeyword(wsId, kw) {
 async function wstFetchRank(wsId) {
   const w = websites.find(x => x.id === wsId);
   const site = getWstSite(wsId);
-  const keyword = (site && site.mainKeyword) ? site.mainKeyword : (w ? w.brand : '');
   
-  if(!w || !keyword) return {error: "Chưa có từ khóa"};
-  if(!wtApiKey) return {error: "Chưa có API Key"};
+  let targetW = w;
+  if(w && !w.is301) {
+    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
+    if(kids.length) targetW = kids[kids.length-1];
+  }
+  
+  const keyword = (site && site.mainKeyword) ? site.mainKeyword : (targetW ? targetW.brand : '');
+  
+  if(!w || !keyword) return {error: "Chua c\u00f3 t\u1eeb kh\u00f3a"};
+  if(!wtApiKey) return {error: "Chua c\u00f3 API Key"};
 
   const url = 'https://google.serper.dev/search';
   const headers = { 'X-API-KEY': wtApiKey, 'Content-Type': 'application/json' };
@@ -2838,7 +2845,14 @@ async function wstBulkCheckRank() {
   allTrackedWs.forEach(w => {
     if(!getWstSite(w.id)) siteTracking.push({wsId: w.id, entries: []});
   });
-  const targets = allTrackedWs.filter(w => (getWstSite(w.id)?.mainKeyword) || w.brand);
+  const targets = allTrackedWs.filter(w => {
+    let targetW = w;
+    if(!w.is301) {
+      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
+      if(kids.length) targetW = kids[kids.length-1];
+    }
+    return (getWstSite(w.id)?.mainKeyword) || targetW.brand;
+  });
   if(!targets.length) { toast("Không có web nào có Từ khóa (hoặc tên mặc định)!", "#e74c3c"); return; }
   
   window.wstCancelBulkCheck = false;
@@ -2862,14 +2876,13 @@ async function wstBulkCheckRank() {
     }
     
     const w = targets[i];
-        let displayUrl = w.url || w.brand;
-    if(w.is301 && w.url) {
-      displayUrl = w.url;
-    } else {
+        let targetW = w;
+    if(!w.is301) {
       const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
-      const latest301 = kids.length ? kids[kids.length-1] : null;
-      if(latest301) displayUrl = latest301.url || latest301.sourceUrl || displayUrl;
+      if(kids.length) targetW = kids[kids.length-1];
     }
+    // Luôn ưu tiên hiển thị tên brand của web đích (vì brand thường chứa URL hoặc tên gọi mà user dễ nhận diện)
+    let displayUrl = targetW.brand || targetW.url;
     document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${displayUrl} (${i+1}/${targets.length})`;
     
     const rankTd = document.getElementById('rank_td_' + w.id);
