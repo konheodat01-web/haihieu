@@ -4496,6 +4496,9 @@ function hideLoginScreen(){
   const ls = document.getElementById('loginScreen');
   if(ls) ls.style.display='none';
   document.body.classList.remove('login-mode');
+  // Show app version after login
+  const ver = document.getElementById('appVersion');
+  if(ver) ver.style.display = 'block';
 }
 
 // ===== AVATAR =====
