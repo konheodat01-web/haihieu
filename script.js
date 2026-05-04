@@ -1609,7 +1609,14 @@ function initFirebaseListener(){
         if(gvPanel && gvPanel.style.display!=='none') renderGiaoViec();
       }
       // Update recurDoneToday even on own push
-      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack(); }
+      if(Array.isArray(r.siteTracking) && r.siteTracking.length > 0){ 
+        siteTracking=r.siteTracking; 
+        localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); 
+        if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack(); 
+      } else if(Array.isArray(r.siteTracking) && siteTracking.length === 0) { 
+        // Nếu cả 2 đều rỗng thì thôi, nhưng nếu local có mà server rỗng (do lỗi) thì giữ lại local
+        siteTracking = r.siteTracking;
+      }
       if(Array.isArray(r.recurDoneToday)){
         setRecurDoneToday(r.recurDoneToday.filter(d=>d.date===todayVN()));
       }
@@ -1680,7 +1687,14 @@ function initFirebaseListener(){
       if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1;
         // Clean undefined values that Firebase rejects
         indexTasks.forEach(t=>{ if(t.parentIds===undefined) t.parentIds=[]; }); }
-      if(Array.isArray(r.siteTracking)){ siteTracking=r.siteTracking; localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack(); }
+      if(Array.isArray(r.siteTracking) && r.siteTracking.length > 0){ 
+        siteTracking=r.siteTracking; 
+        localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); 
+        if(document.querySelector('.page.active')?.id==='page-wstrack') renderWsTrack(); 
+      } else if(Array.isArray(r.siteTracking) && siteTracking.length === 0) { 
+        // Nếu cả 2 đều rỗng thì thôi, nhưng nếu local có mà server rỗng (do lỗi) thì giữ lại local
+        siteTracking = r.siteTracking;
+      }
       if(Array.isArray(r.recurDoneToday)){ const _td=r.recurDoneToday.filter(d=>d.date===todayVN()); const _cur=localStorage.getItem('wt_recur_done_today'); if(JSON.stringify(_td)!==_cur){ setRecurDoneToday(_td); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); } }
       if(r.khoId && Array.isArray(r.khoId)){ khoIdList=r.khoId; localStorage.setItem('wt_kho_id',JSON.stringify(khoIdList)); if(document.querySelector('.page.active')?.id==='page-index') renderKhoId(); }
       if(Array.isArray(r.giaoViecList)){ giaoViecList=r.giaoViecList; giaoViecNextId=Math.max(1,...giaoViecList.map(g=>g.id||0))+1; }
