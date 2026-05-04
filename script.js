@@ -2725,9 +2725,14 @@ async function wstFetchRank(wsId) {
     }
     
     // Find rank by matching url domain (or its latest 301 target)
-    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
-    const latest301 = kids.length ? kids[kids.length-1] : null;
-    const targetUrl = latest301 ? (latest301.url || latest301.sourceUrl || w.url) : w.url;
+    // If w.is301=true, w.url is already the 301 target URL - use it directly
+    // Otherwise find child 301 websites whose sourceUrl = w.url
+    let targetUrl = w.url;
+    if(!w.is301) {
+      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+      const latest301 = kids.length ? kids[kids.length-1] : null;
+      if(latest301) targetUrl = latest301.url || latest301.sourceUrl || w.url;
+    }
     const cleanMainDom = (targetUrl||'').replace(/^https?:\/\//,'').replace(/\/(.*)$/,'').toLowerCase();
     
     let rankD = null;
@@ -2809,6 +2814,10 @@ async function wstBulkCheckRank() {
   
   if(!wtApiKey) { toast("Vui lòng thiết lập ValueSERP API Key trước!", "#e74c3c"); openWstApiSettings(); return; }
 
+  // Auto-init siteTracking entry for any newly tracked website
+  allTrackedWs.forEach(w => {
+    if(!getWstSite(w.id)) siteTracking.push({wsId: w.id, entries: []});
+  });
   const targets = allTrackedWs.filter(w => getWstSite(w.id)?.mainKeyword);
   if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO' trong danh sách đang hiển thị!", "#e74c3c"); return; }
   
