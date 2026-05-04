@@ -2749,7 +2749,7 @@ async function wstFetchRank(wsId) {
     // Otherwise find child 301 websites whose sourceUrl = w.url
     let targetUrl = w.url;
     if(!w.is301) {
-      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
       const latest301 = kids.length ? kids[kids.length-1] : null;
       if(latest301) targetUrl = latest301.url || latest301.sourceUrl || w.url;
     }
@@ -2838,8 +2838,8 @@ async function wstBulkCheckRank() {
   allTrackedWs.forEach(w => {
     if(!getWstSite(w.id)) siteTracking.push({wsId: w.id, entries: []});
   });
-  const targets = allTrackedWs.filter(w => getWstSite(w.id)?.mainKeyword);
-  if(!targets.length) { toast("Không có web nào có 'Từ khóa SEO' trong danh sách đang hiển thị!", "#e74c3c"); return; }
+  const targets = allTrackedWs.filter(w => (getWstSite(w.id)?.mainKeyword) || w.brand);
+  if(!targets.length) { toast("Không có web nào có Từ khóa (hoặc tên mặc định)!", "#e74c3c"); return; }
   
   window.wstCancelBulkCheck = false;
   const overlay = document.createElement('div');
@@ -2866,7 +2866,7 @@ async function wstBulkCheckRank() {
     if(w.is301 && w.url) {
       displayUrl = w.url;
     } else {
-      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+      const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
       const latest301 = kids.length ? kids[kids.length-1] : null;
       if(latest301) displayUrl = latest301.url || latest301.sourceUrl || displayUrl;
     }
@@ -3054,7 +3054,7 @@ function wstCopySelected(mode){
   _wstSelected.forEach(wsId=>{
     const w = websites.find(x=>x.id===wsId);
     if(!w) return;
-    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
+    const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
     const latest301 = kids.length?kids[kids.length-1]:null;
     if(mode==='source') lines.push(w.url||'');
     else if(mode==='301') lines.push(latest301?.url||w.url||'');
