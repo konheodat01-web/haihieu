@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -6039,10 +6039,12 @@ function saveProject(){
   } else {
     const recurOn=document.getElementById('npm_recurring')?.checked;
     const _personVal = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':(document.getElementById('npm_person').value||'');
+    const _taskCols = cols || DEFAULT_COLS;
+    const _autoCard = [{id:'card_'+Date.now(),title:name,colId:_taskCols[0].id,note:'',deadline:'',link:''}];
     const t={id:taskNextId++,name,person:_personVal,
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
       deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
-      cols,cards:[],priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01',
+      cols,cards:_autoCard,priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01',
       recurring:recurOn?{type:document.getElementById('npm_recur_type')?.value||'weekly',days:parseInt(document.getElementById('npm_recur_days')?.value||7)}:null};
     tasks.push(t);
   }
