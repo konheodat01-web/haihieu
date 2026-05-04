@@ -8985,8 +8985,8 @@ function bulkTaskDone(){
   tasks.forEach(t=>{
     if(!_doneIds.has(parseInt(t.id))) return;
     const cols = getProjectCols(t);
-    const lastColId = cols[cols.length-1].id;
-    (t.cards||[]).forEach(c=>{ c.colId = lastColId; });
+    const doneColId = cols.length >= 2 ? cols[cols.length-2].id : cols[cols.length-1].id;
+    (t.cards||[]).forEach(c=>{ c.colId = doneColId; });
   });
   selectedTaskIds.clear();
   saveAppData();
