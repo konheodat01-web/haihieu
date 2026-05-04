@@ -2978,8 +2978,8 @@ async function wstBulkCheckRank() {
        if(rankText.includes("Out 100")) rankText = "N/A";
     }
     
-    let siteGoc = w.sourceUrl || w.url;
-    let site301 = w.url;
+    let siteGoc = w.brand || w.url;
+    let site301 = targetUrl; // targetUrl đã được tính toán ở trên (là link 301 nếu có)
     reportLines.push(`${siteGoc} -> ${site301} -> ${rankText.trim()}`);
     
     renderWsTrack();
