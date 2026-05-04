@@ -2713,8 +2713,8 @@ async function wstFetchRank(wsId) {
   // Từ khóa tìm kiếm mặc định lấy theo w.brand (của web gốc)
   const keyword = (site && site.mainKeyword) ? site.mainKeyword : (w ? w.brand : '');
   
-  if(!w || !keyword) return {error: "Chua c\u00f3 t\u1eeb kh\u00f3a"};
-  if(!wtApiKey) return {error: "Chua c\u00f3 API Key"};
+  if(!w || !keyword) return {error: "Chua c\u00f3 t\u1eeb kh\u00f3a", keyword: ''};
+  if(!wtApiKey) return {error: "Chua c\u00f3 API Key", keyword};
 
   const url = 'https://google.serper.dev/search';
   const headers = { 'X-API-KEY': wtApiKey, 'Content-Type': 'application/json' };
@@ -2798,7 +2798,7 @@ async function wstFetchRank(wsId) {
       site.entries.push({id:'wste'+Date.now(), date:tbDay, rank: finalRankStr || "Out 100", indexed:'', moBot:site.moBot||'Mở', note:''});
     }
     saveWsTrack();
-    return {success: true, rank: finalRankStr || "Out 100"};
+    return {success: true, rank: finalRankStr || "Out 100", rankD, rankM, keyword};
   } catch(e) {
     return {error: "Lỗi kết nối API"};
   }
@@ -2853,11 +2853,28 @@ async function wstBulkCheckRank() {
   window.wstCancelBulkCheck = false;
   const overlay = document.createElement('div');
   overlay.id = 'wstBulkOverlay';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(4px)';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;backdrop-filter:blur(4px);padding:20px;box-sizing:border-box';
   overlay.innerHTML = `
-    <div style="font-size:24px;margin-bottom:16px;font-weight:700">🔄 Đang kiểm tra Rank phân luồng PC & Mobile...</div>
-    <div id="wstBulkProgress" style="font-size:16px;margin-bottom:24px;font-weight:600">Đang khởi động hệ thống...</div>
-    <div style="font-size:12px;margin-bottom:24px;color:#bbb">Vui lòng thiết bị không rời trang hoặc tắt trình duyệt khi đang làm việc.</div>
+    <div style="font-size:24px;margin-bottom:12px;font-weight:700">🔄 Đang kiểm tra Rank phân luồng PC & Mobile...</div>
+    <div id="wstBulkProgress" style="font-size:16px;margin-bottom:16px;font-weight:600;color:#f39c12">Đang khởi động hệ thống...</div>
+    
+    <div style="width:100%;max-width:900px;max-height:60vh;overflow-y:auto;background:#2c3e50;border-radius:8px;padding:0;margin-bottom:20px;box-shadow:0 10px 25px rgba(0,0,0,0.5);border:1px solid #34495e">
+      <table style="width:100%;border-collapse:collapse;font-size:13px;text-align:left">
+        <thead style="position:sticky;top:0;background:#1a252f;z-index:10">
+          <tr style="color:#bdc3c7">
+            <th style="padding:12px;border-bottom:2px solid #34495e">Website</th>
+            <th style="padding:12px;border-bottom:2px solid #34495e">Từ khóa chính</th>
+            <th style="padding:12px;border-bottom:2px solid #34495e;text-align:center">Rank PC</th>
+            <th style="padding:12px;border-bottom:2px solid #34495e;text-align:center">Rank Mobile</th>
+            <th style="padding:12px;border-bottom:2px solid #34495e;text-align:center">Kết luận</th>
+            <th style="padding:12px;border-bottom:2px solid #34495e;text-align:center">T.Thái</th>
+          </tr>
+        </thead>
+        <tbody id="wstBulkTableBody">
+        </tbody>
+      </table>
+    </div>
+    
     <button onclick="window.wstCancelBulkCheck=true" class="btn" style="background:#e74c3c;color:#fff;border:none;padding:10px 20px;font-size:14px;border-radius:8px;font-weight:600;cursor:pointer;box-shadow:0 4px 6px rgba(0,0,0,.2)">🛑 Dừng thao tác & Đóng lại</button>
   `;
   document.body.appendChild(overlay);
@@ -2871,14 +2888,42 @@ async function wstBulkCheckRank() {
     }
     
     const w = targets[i];
-        // Dò xem web này có URL 301 không
+    // Dò xem web này có URL 301 không
     let targetUrl = w.url || w.brand;
     if(!w.is301) {
       const kids = websites.filter(x=>x.is301&&x.sourceUrl&&((x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')) || (x.sourceUrl===w.brand)));
       const latest301 = kids.length ? kids[kids.length-1] : null;
       if(latest301) targetUrl = latest301.url || latest301.sourceUrl || targetUrl;
     }
+    
     document.getElementById('wstBulkProgress').innerText = `👉 Đang check: ${targetUrl} (${i+1}/${targets.length})`;
+    
+    // Thêm dòng mới vào UI bảng
+    const tbodyBulk = document.getElementById('wstBulkTableBody');
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid #34495e';
+    const tkId = `br_tk_${w.id}`;
+    const pcId = `br_pc_${w.id}`;
+    const mbId = `br_mb_${w.id}`;
+    const fnId = `br_fn_${w.id}`;
+    const stId = `br_st_${w.id}`;
+    
+    // Từ khóa hiển thị tạm trước khi fetch
+    const site = getWstSite(w.id);
+    const tempKw = (site && site.mainKeyword) ? site.mainKeyword : w.brand;
+    
+    tr.innerHTML = `
+      <td style="padding:12px">${targetUrl}</td>
+      <td style="padding:12px;color:#f1c40f" id="${tkId}">${tempKw}</td>
+      <td style="padding:12px;text-align:center" id="${pcId}">-</td>
+      <td style="padding:12px;text-align:center" id="${mbId}">-</td>
+      <td style="padding:12px;text-align:center" id="${fnId}">-</td>
+      <td style="padding:12px;text-align:center" id="${stId}">⏳</td>
+    `;
+    if(tbodyBulk) {
+        tbodyBulk.appendChild(tr);
+        tr.scrollIntoView({behavior: 'smooth', block: 'end'});
+    }
     
     const rankTd = document.getElementById('rank_td_' + w.id);
     if(rankTd) rankTd.innerHTML = '<span style="font-size:11px">⏳ Đang lấy...</span>';
@@ -2886,7 +2931,21 @@ async function wstBulkCheckRank() {
     const res = await wstFetchRank(w.id);
     let rankText = "N/A";
     
+    // Update bảng sau khi fetch xong
+    const tdKw = document.getElementById(tkId);
+    const tdPc = document.getElementById(pcId);
+    const tdMb = document.getElementById(mbId);
+    const tdFn = document.getElementById(fnId);
+    const tdSt = document.getElementById(stId);
+    
+    if(res.keyword && tdKw) tdKw.innerText = res.keyword;
+    
     if(res.error) {
+       if(tdPc) tdPc.innerText = "Lỗi";
+       if(tdMb) tdMb.innerText = "Lỗi";
+       if(tdFn) tdFn.innerHTML = `<span style="color:#e74c3c">Lỗi API</span>`;
+       if(tdSt) tdSt.innerText = "❌";
+       
        // Cập nhật state thành lỗi để renderWsTrack giữ lại nội dung lỗi
        const tbDay = todayVN();
        let site = getWstSite(w.id);
@@ -2909,6 +2968,11 @@ async function wstBulkCheckRank() {
        }
     } else {
        successCount++;
+       if(tdPc) tdPc.innerText = res.rankD || "Out 100";
+       if(tdMb) tdMb.innerText = res.rankM || "Out 100";
+       if(tdFn) tdFn.innerHTML = res.rank || "Out 100";
+       if(tdSt) tdSt.innerText = "✅";
+       
        rankText = res.rank || "N/A";
        rankText = rankText.replace(/<[^>]*>?/gm, ''); // Xóa thẻ HTML (PC/MB)
        if(rankText.includes("Out 100")) rankText = "N/A";
@@ -2921,7 +2985,7 @@ async function wstBulkCheckRank() {
     renderWsTrack();
     
     if(i < targets.length - 1 && !window.wstCancelBulkCheck) {
-       await new Promise(r => setTimeout(r, 1500));
+       await new Promise(r => setTimeout(r, 1000));
     }
   }
   
