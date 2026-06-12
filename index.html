@@ -10,8 +10,8 @@
 <body>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;background:#0f111a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:inherit">
-  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;padding:32px 24px;background:rgba(255,255,255,0.03);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.37)">
+<div id="loginScreen" class="login-screen-deep">
+  <div class="login-card-glass">
 
     <!-- Logo / Brand -->
     <div style="text-align:center;margin-bottom:40px">
@@ -1465,37 +1465,11 @@
       <h3>⚙ Cài đặt giao diện</h3>
       <button class="modal-close" onclick="closeSettings()">&times;</button>
     </div>
-    <div class="modal-body" style="gap:16px">
-      <div class="form-group" style="width:100%">
-        <label style="font-weight:600">🖼 Ảnh nền sảnh chờ</label>
-        <p style="font-size:12px;color:var(--text-muted);margin:4px 0 10px">Ảnh sẽ hiển thị phía sau các hồ sơ trên màn hình đăng nhập.<br>
-        <b>Kích thước chuẩn:</b> <span style="color:#2980b9">1920 × 1080 px</span> (tỉ lệ 16:9). Tối thiểu 800px chiều ngang. Tối đa 2MB.</p>
-        <!-- Preview -->
-        <div id="settingsBgPreview" style="width:100%;height:140px;border-radius:10px;border:2px dashed var(--gray-border);background:#f8f9fa;display:flex;align-items:center;justify-content:center;margin-bottom:10px;overflow:hidden;position:relative;cursor:pointer" onclick="document.getElementById('settingsBgInput').click()">
-          <div id="settingsBgPlaceholder" style="text-align:center;color:var(--text-muted);font-size:13px;pointer-events:none">
-            <div style="font-size:28px;margin-bottom:6px">🖼</div>
-            <div>Click để chọn ảnh</div>
-            <div style="font-size:11px;margin-top:4px">JPG, PNG, WEBP — tối đa 2MB</div>
-          </div>
-          <img id="settingsBgImg" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
-          <div id="settingsBgOverlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);align-items:center;justify-content:center;font-size:13px;color:#fff;cursor:pointer" onclick="document.getElementById('settingsBgInput').click()">
-            ✏️ Đổi ảnh
-          </div>
-        </div>
-        <label for="settingsBgInput" class="btn btn-outline btn-sm" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
-          📁 Chọn ảnh
-          <input type="file" id="settingsBgInput" accept="image/*" style="display:none" onchange="handleBgUpload(event)">
-        </label>
-        <div style="display:flex;gap:8px">
-          <label for="settingsBgInput" class="btn btn-outline btn-sm" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">📁 Chọn ảnh</label>
-          <button onclick="removeBg()" class="btn btn-outline btn-sm" style="color:#e74c3c;border-color:#f5c6c6" id="settingsBgRemoveBtn">🗑 Xoá ảnh</button>
-        </div>
-        <div id="settingsBgErr" style="display:none;color:#e74c3c;font-size:12px;margin-top:6px"></div>
-      </div>
+    <div class="modal-body" style="gap:16px;text-align:center;padding:30px 20px;color:var(--text-muted)">
+      Giao diện Portal được thiết lập mặc định tối giản và sang trọng.
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeSettings()">Đóng</button>
-      <button class="btn btn-primary" onclick="saveSettings()" id="settingsSaveBtn">✓ Lưu</button>
     </div>
   </div>
 </div>

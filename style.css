@@ -1,4 +1,4 @@
-﻿  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0}
   :root{
     --red:#c0392b;--red-light:#fdf2f2;--red-mid:#e74c3c;
     --green:#27ae60;--green-light:#f0faf4;
@@ -241,4 +241,33 @@ nav button[id^="eco-btn-"].active {
   border-left: 3px solid var(--red, #c0392b);
   color: var(--red, #c0392b);
   font-weight: 700;
+}
+
+/* PREMIUM DARK LOGIN GATE */
+.login-screen-deep {
+  position: fixed;
+  inset: 0;
+  background: #0f111a;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: auto;
+}
+.login-card-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  z-index: 1;
 }

@@ -1018,7 +1018,22 @@ function inDateRange(ngay,from,to){
 function addEntry(){ /* DEAD CODE ELIMINATED */ }
 function deleteEntry(){ /* DEAD CODE ELIMINATED */ }
 function clearForm(){ /* DEAD CODE ELIMINATED */ }
+let _showPageRedirectCount = 0;
 function showPage(name){
+  const target = document.getElementById('page-' + name);
+  if (!target) {
+    console.warn(`Page 'page-${name}' does not exist. Redirecting to dashboard.`);
+    if (_showPageRedirectCount < 3) {
+      _showPageRedirectCount++;
+      showPage('dashboard');
+      _showPageRedirectCount = 0;
+    } else {
+      console.error('Infinite redirect detected in showPage');
+      _showPageRedirectCount = 0;
+    }
+    return;
+  }
+
   const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
   if (workPages.includes(name)) {
     const pWork = document.getElementById('panel-workspace-job');
@@ -1032,7 +1047,7 @@ function showPage(name){
   }
 
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name).classList.add('active');
+  target.classList.add('active');
   document.querySelectorAll('nav button').forEach(btn=>{
     const match = btn.getAttribute('onclick')?.includes("'"+name+"'");
     btn.classList.toggle('active', !!match);
@@ -1071,6 +1086,7 @@ if (fDateEl) fDateEl.value = todayVN();
 function updateStickyTops(sheet){} // no-op: sticky handled by CSS
 
 function saveAppData(){
+  delete _settings.loginBg;
   const ts = saveToLocalStorage();
   if(window._fbReady && window._fbDb){
     console.log('Pushing to Firebase, ts=', ts);
@@ -1139,7 +1155,7 @@ function initFirebaseListener(){
     const s = snap.val();
     if(s && typeof s==='object'){
       _settings = s;
-      applyLoginBg(_settings.loginBg);
+      delete _settings.loginBg;
       applyAllAvatars();
       localStorage.setItem('wt_settings', JSON.stringify(_settings));
     }
@@ -1257,8 +1273,8 @@ function initFirebaseListener(){
       if(r.passwords && typeof r.passwords==='object') localStorage.setItem('wt_passwords', JSON.stringify(r.passwords));
       if(r.settings && typeof r.settings==='object'){
        _settings = r.settings;
+       delete _settings.loginBg;
 if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
-        applyLoginBg(_settings.loginBg);
         applyAllAvatars();
         localStorage.setItem('wt_settings', JSON.stringify(_settings));
       }
@@ -1352,8 +1368,8 @@ function loadAppData(){
     if(st){
       try{
         _settings=JSON.parse(st);
+        delete _settings.loginBg;
        if(!_settings.avatars) _settings.avatars={};
-        applyLoginBg(_settings.loginBg);
         applyAllAvatars();
       }catch(e){}
     }
@@ -3846,74 +3862,25 @@ function applyAllAvatars(){
 }
 
 // ===== SETTINGS =====
-let _settings = { loginBg: null };
-let _pendingBg = undefined; // undefined = no change, null = remove, string = new image
+let _settings = {};
 function openSettings(){
-  _pendingBg = undefined;
-  // Show current bg
-  const cur = _settings.loginBg;
-  const img = document.getElementById('settingsBgImg');
-  const ph  = document.getElementById('settingsBgPlaceholder');
-  const ov  = document.getElementById('settingsBgOverlay');
-  if(cur){ img.src=cur; img.style.display='block'; ph.style.display='none'; ov.style.display='flex'; }
-  else   { img.style.display='none'; ph.style.display='block'; ov.style.display='none'; }
-  document.getElementById('settingsBgErr').style.display='none';
   document.getElementById('settingsModal').classList.add('open');
 }
 function closeSettings(){ document.getElementById('settingsModal').classList.remove('open'); }
 
-function handleBgUpload(event){
-  const file = event.target.files[0];
-  if(!file) return;
-  const err = document.getElementById('settingsBgErr');
-  if(file.size > 2*1024*1024){ err.textContent='Ảnh quá lớn (tối đa 2MB). Vui lòng chọn ảnh nhỏ hơn.'; err.style.display='block'; return; }
-  err.style.display='none';
-  const reader = new FileReader();
-  reader.onload = e => {
-    _pendingBg = e.target.result;
-    const imgPrev = document.getElementById('settingsBgImg');
-    imgPrev.src = _pendingBg; imgPrev.style.display='block';
-    document.getElementById('settingsBgPlaceholder').style.display='none';
-    document.getElementById('settingsBgOverlay').style.display='flex';
-  };
-  reader.readAsDataURL(file);
-  event.target.value=''; // reset so same file can be re-selected
-}
-
-function removeBg(){
-  _pendingBg = null;
-  document.getElementById('settingsBgImg').style.display='none';
-  document.getElementById('settingsBgOverlay').style.display='none';
-  document.getElementById('settingsBgPlaceholder').style.display='block';
-}
-
 function saveSettings(){
-  if(_pendingBg === undefined){ closeSettings(); return; } // no change
   const btn = document.getElementById('settingsSaveBtn');
-  btn.textContent='Đang lưu...'; btn.disabled=true;
-  _settings.loginBg = _pendingBg;
-  applyLoginBg(_settings.loginBg);
-  // Save via Firebase
-  saveAppData();
-  setTimeout(()=>{ btn.textContent='✓ Lưu'; btn.disabled=false; closeSettings(); toast('✓ Đã lưu cài đặt giao diện'); }, 500);
-}
-
-function applyLoginBg(src){
-  const ls = document.getElementById('loginScreen');
-  const overlay = document.getElementById('loginBgOverlay');
-  if(!ls) return;
-  if(src){
-    ls.style.backgroundImage = `url('${src}')`;
-    ls.style.backgroundSize = 'cover';
-    ls.style.backgroundPosition = 'center';
-    ls.style.backgroundRepeat = 'no-repeat';
-    if(overlay) overlay.style.background = 'rgba(0,0,0,.5)';
-  } else {
-    ls.style.backgroundImage = '';
-    ls.style.backgroundSize = '';
-    ls.style.backgroundPosition = '';
-    if(overlay) overlay.style.background = 'rgba(0,0,0,0)';
+  if (btn) {
+    btn.textContent='Đang lưu...'; btn.disabled=true;
   }
+  saveAppData();
+  setTimeout(()=>{
+    if (btn) {
+      btn.textContent='✓ Lưu'; btn.disabled=false;
+    }
+    closeSettings();
+    toast('✓ Đã lưu cài đặt giao diện');
+  }, 500);
 }
 
 // ===== UNIFIED SEARCH =====
