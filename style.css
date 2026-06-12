@@ -271,3 +271,64 @@ nav button[id^="eco-btn-"].active {
   position: relative;
   z-index: 1;
 }
+/* HIERARCHICAL SIDEBAR */
+.sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--text-muted);
+  opacity: 0.65;
+  text-transform: uppercase;
+  padding: 10px 18px 6px;
+}
+.sidebar-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.sidebar-tab:hover {
+  color: var(--text);
+  background: var(--gray-light);
+}
+.sidebar-tab.active {
+  color: var(--red) !important;
+  background: #fdf2f2 !important;
+  border-left-color: var(--red) !important;
+  font-weight: 600 !important;
+}
+.sub-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  margin: 1px 0;
+}
+.sub-tab-btn:hover {
+  color: var(--text);
+  background: var(--gray-light);
+}
+.sub-tab-btn.active {
+  color: var(--red) !important;
+  font-weight: 600;
+  background: rgba(192, 57, 43, 0.05);
+}

@@ -1050,7 +1050,7 @@ function showPage(name){
 
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   target.classList.add('active');
-  document.querySelectorAll('nav button').forEach(btn=>{
+  document.querySelectorAll('nav button, .sub-tab-btn').forEach(btn=>{
     const match = btn.getAttribute('onclick')?.includes("'"+name+"'");
     btn.classList.toggle('active', !!match);
   });
@@ -9008,30 +9008,28 @@ function applyBulkNT(sheet, val){
 
 
 // ===== HE SINH THAI WORKSPACE SWITCHER =====
-function switchWorkspace(target, btnEl) {
-  // Update tab active state (nav buttons)
-  document.querySelectorAll('[id^="eco-btn-"]').forEach(b => b.classList.remove('active'));
-  
-  if (!btnEl) {
-    const btnId = target === 'work' ? 'eco-btn-work' : target === '/finance' ? 'eco-btn-finance' : 'eco-btn-tools';
-    btnEl = document.getElementById(btnId);
+function switchWorkspace(workspaceId, element) {
+  // Update class active for the 3 ecosystem tabs
+  document.querySelectorAll('.sidebar-tab').forEach(el => el.classList.remove('active'));
+  if (element) {
+    element.classList.add('active');
+  } else {
+    // Resolve sidebar element based on workspaceId
+    const resolved = document.querySelector(`[onclick*="switchWorkspace('${workspaceId}'"]`);
+    if (resolved) resolved.classList.add('active');
   }
-  if (btnEl) btnEl.classList.add('active');
 
-  const pWork = document.getElementById('panel-workspace-job');
-  const pEco = document.getElementById('page-ecosystem');
-  const ifrFin   = document.getElementById('frame-finance');
-  const ifrTools = document.getElementById('frame-tools');
+  const subMenu = document.getElementById('workspace-submenu');
+  
+  // Hide all workspace panels
+  document.querySelectorAll('.workspace-panel').forEach(p => p.style.display = 'none');
 
-  // Hide all panels first
-  if (ifrFin)   ifrFin.style.display   = 'none';
-  if (ifrTools) ifrTools.style.display = 'none';
-
-  if (target === 'work') {
-    if (pEco) { pEco.style.display = 'none'; pEco.classList.remove('active'); }
-    if (pWork) pWork.style.display = 'block';
+  if (workspaceId === 'job') {
+    if (subMenu) subMenu.style.display = 'block';
+    const pJob = document.getElementById('panel-workspace-job');
+    if (pJob) pJob.style.display = 'block';
     
-    // Default to show dashboard or last active page if it is a work page
+    // Default to show dashboard or last active page
     const lastPage = localStorage.getItem('wt_activePage') || 'dashboard';
     const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
     if (workPages.includes(lastPage) && document.getElementById('page-' + lastPage)) {
@@ -9040,57 +9038,35 @@ function switchWorkspace(target, btnEl) {
       showPage('dashboard');
     }
   } else {
-    if (pWork) pWork.style.display = 'none';
+    if (subMenu) subMenu.style.display = 'none';
+    const iframePanel = document.getElementById('panel-workspace-' + workspaceId);
+    if (iframePanel) iframePanel.style.display = 'block';
     
-    // Show ecosystem wrapper page
-    showPage('ecosystem');
-    if (pEco) {
-      pEco.style.display = 'flex';
-      pEco.classList.add('active');
-    }
-
-    if (target === '/finance') {
-      if (ifrFin) {
-        ifrFin.style.display = 'flex';
-        const frame = document.getElementById('iframe-finance');
-        if (frame && !frame.src) frame.src = '/finance';
-      }
-    } else if (target === '/my-tools') {
-      if (ifrTools) {
-        ifrTools.style.display = 'flex';
-        const frame = document.getElementById('iframe-tools');
-        if (frame && !frame.src) frame.src = '/my-tools';
-      }
+    // Lazy Loading Iframe
+    const iframe = document.getElementById('iframe-' + workspaceId);
+    if (iframe && !iframe.src) {
+      iframe.src = workspaceId === 'finance' ? '/finance' : '/my-tools';
     }
   }
 }
 
-// ===== SAFE NAVIGATION BADGES =====
 function updateNavBadges() {
   const sidebar = document.querySelector('nav');
   if (!sidebar) return;
-
-  // 1. Recurring tasks badge
   const badgeRecur = document.getElementById('navBadgeRecurring');
   if (badgeRecur) {
     let doneIds = new Set();
-    try {
-      doneIds = new Set(getRecurDoneToday().map(d => d.taskId));
-    } catch(e) {}
+    try { doneIds = new Set(getRecurDoneToday().map(d => d.taskId)); } catch(e) {}
     const activeRecurs = (recurringTasks || []).filter(t => !doneIds.has(t.id)).length;
     badgeRecur.textContent = activeRecurs || '';
     badgeRecur.style.display = activeRecurs ? 'inline-block' : 'none';
   }
-
-  // 2. Work tasks badge
   const badgeTasks = document.getElementById('navBadgeTasks');
   if (badgeTasks) {
     const activeTasksCount = (tasks || []).length;
     badgeTasks.textContent = activeTasksCount || '';
     badgeTasks.style.display = activeTasksCount ? 'inline-block' : 'none';
   }
-
-  // 3. Giao việc pending badge
   const badgeGv = document.getElementById('gvBadge');
   if (badgeGv) {
     const activeGv = (giaoViecList || []).filter(g => g.status !== 'Done' && g.status !== 'Đã Duyệt').length;

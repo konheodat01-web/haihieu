@@ -198,19 +198,35 @@
 </header>
 
 <nav>
-  <div class="nav-section">Tổng quan</div>
-  <button class="active" onclick="showPage('dashboard')">&#128202; Báo cáo</button>
+  <div class="sidebar-section">
+    <span class="section-title">HỆ SINH THÁI</span>
+    
+    <!-- TAB MẸ 1 -->
+    <a href="#" class="sidebar-tab active" onclick="switchWorkspace('job', this)">
+      <i class="fa fa-briefcase"></i> Quản lý Công việc
+    </a>
+    
+    <!-- CONTAINER SUB-MENU (Thụt lề con sang trọng) -->
+    <div id="workspace-submenu" style="padding-left: 20px; border-left: 1px solid rgba(255,255,255,0.1); margin-left: 15px; margin-bottom: 10px; display: block;">
+      <a href="#" class="sub-tab-btn active" onclick="showPage('dashboard')"><i class="fa fa-bar-chart"></i> Báo cáo</a>
+      <a href="#" class="sub-tab-btn" onclick="showPage('recurring')"><i class="fa fa-clock-o"></i> Task định kỳ <span id="navBadgeRecurring" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></a>
+      <a href="#" class="sub-tab-btn" onclick="showPage('tasks')"><i class="fa fa-list-ul"></i> Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></a>
+      <a href="#" class="sub-tab-btn" onclick="showPage('prompts')"><i class="fa fa-code"></i> Prompt</a>
+      <a href="#" class="sub-tab-btn" onclick="showPage('links')"><i class="fa fa-link"></i> Link quan trọng</a>
+      <a href="#" class="sub-tab-btn" onclick="showPage('wstrack')"><i class="fa fa-desktop"></i> Theo dõi web</a>
+    </div>
+
+    <!-- TAB MẸ 2 -->
+    <a href="#" class="sidebar-tab" onclick="switchWorkspace('finance', this)">
+      <i class="fa fa-wallet"></i> Quản lý Tài chính
+    </a>
+    
+    <!-- TAB MẸ 3 -->
+    <a href="#" class="sidebar-tab" onclick="switchWorkspace('tools', this)">
+      <i class="fa fa-cubes"></i> Kho Tool Nhỏ
+    </a>
+  </div>
   
-    <div class="nav-section">Há»‡ Sinh ThÃ¡i</div>
-    <button onclick="switchWorkspace('work', this)" id="eco-btn-work">ðŸ“‹ Quáº£n lÃ½ CÃ´ng viá»‡c</button>
-    <button onclick="switchWorkspace('/finance', this)" id="eco-btn-finance">ðŸ’° Quáº£n lÃ½ TÃ i chÃ­nh</button>
-    <button onclick="switchWorkspace('/my-tools', this)" id="eco-btn-tools">ðŸ§° Kho Tool Nhá»</button>
-    <div class="nav-section">Quản lý</div>
-  <button onclick="showPage('recurring')">🔁 Task định kỳ <span id="navBadgeRecurring" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
-  <button onclick="showPage('tasks')">&#128203; Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
-  <button onclick="showPage('prompts')">&#9997; Prompt</button>
-  <button onclick="showPage('links')">&#128279; Link quan trọng</button>
-  <button onclick="showPage('wstrack')">📈 Theo dõi web</button>
   <div style="flex:1"></div>
   <!-- Bottom actions: hover to expand -->
   <div id="navBottomMenu" style="position:relative;border-top:1px solid rgba(255,255,255,.08)"
@@ -230,7 +246,7 @@
 
 <main>
   <!-- Main Work Workspace Container -->
-  <div id="panel-workspace-job" style="width:100%; height:100%; display:block;">
+  <div id="panel-workspace-job" class="workspace-panel" style="width:100%; height:100%; display:block;">
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
@@ -993,13 +1009,11 @@
   </div> <!-- end panel-workspace-job -->
 
   <!-- ECOSYSTEM PANELS -->
-  <div id="page-ecosystem" class="page" style="display:none;padding:0;overflow:hidden;width:100%;height:100%">
-    <div id="frame-finance" style="display:none;flex:1;height:100%;width:100%">
-      <iframe id="iframe-finance" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
-    </div>
-    <div id="frame-tools" style="display:none;flex:1;height:100%;width:100%">
-      <iframe id="iframe-tools" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
-    </div>
+  <div id="panel-workspace-finance" class="workspace-panel" style="display:none;width:100%;height:100%">
+    <iframe id="iframe-finance" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
+  </div>
+  <div id="panel-workspace-tools" class="workspace-panel" style="display:none;width:100%;height:100%">
+    <iframe id="iframe-tools" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
   </div>
 </main>
 
@@ -1089,7 +1103,7 @@
 </div>
 
 
-  <!-- Há»† SINH THÃI PAGE -->
+  <!-- HỆ SINH THÃI PAGE -->
   
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeBulkEdit()">Huỷ</button>
@@ -1121,8 +1135,8 @@
   <!-- Firebase SDK (v8 compat bundle) -->
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-database.js"></script>
-  <script src="firebase.js?v=post_auth_clean_v3"></script>
-  <script src="script.js?v=post_auth_clean_v3"></script>
+  <script src="firebase.js?v=hierarchical_sidebar_v5"></script>
+  <script src="script.js?v=hierarchical_sidebar_v5"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
