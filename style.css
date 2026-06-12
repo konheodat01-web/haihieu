@@ -1,4 +1,4 @@
-﻿  *{box-sizing:border-box;margin:0;padding:0}
+  *{box-sizing:border-box;margin:0;padding:0}
   :root{
     --red:#c0392b;--red-light:#fdf2f2;--red-mid:#e74c3c;
     --green:#27ae60;--green-light:#f0faf4;
@@ -258,3 +258,14 @@
   .it-row-done td{color:var(--text-muted);text-decoration:line-through;opacity:.65}
   .it-row-done td:first-child,.it-row-done td:last-child{text-decoration:none;opacity:1}
   .it-section-head{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:10px 12px 4px;border-bottom:1px solid var(--gray-border);background:var(--gray-light)}
+
+/* ===== HE SINH THAI ECOSYSTEM TABS ===== */
+.eco-tab {
+  padding: 10px 18px; border: none; border-bottom: 3px solid transparent;
+  background: transparent; font-size: 13px; font-weight: 600;
+  cursor: pointer; color: var(--text-muted, #888); transition: all 0.2s ease;
+}
+.eco-tab:hover { color: var(--blue,#3498db); background:rgba(52,152,219,0.05); }
+.eco-tab.eco-tab-active { color:var(--blue,#3498db); border-bottom-color:var(--blue,#3498db); background:rgba(52,152,219,0.08); }
+#page-ecosystem { display:none; flex-direction:column; height:calc(100vh - 76px); }
+#page-ecosystem.active { display:flex !important; }

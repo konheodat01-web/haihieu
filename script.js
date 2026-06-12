@@ -50,51 +50,9 @@ function loaiBadge(loai){
   return `<span class="badge ${cls}" style="font-size:11px">${loai}</span>`;
 }
 
-let data = {
-  hai: [
-    {id:1,ngay:'2026-03-14',keyword:'GEBYAR123',loai:'Tinh Gọn',website:'https://gebyar123.vip/',anchor:'',chuyenMuc:'',link:'https://gebyar123.vip/',spin:'https://qyazo.com',index:'',status:'Đã Gửi',chiDang:0},
-    {id:2,ngay:'2026-03-14',keyword:'MELODI99',loai:'Tinh Gọn',website:'https://melodi99.vip/',anchor:'',chuyenMuc:'',link:'https://melodi99.vip/',spin:'https://qyazo.com',index:'',status:'Đã Gửi',chiDang:0},
-    {id:3,ngay:'2026-03-14',keyword:'RUSIA777',loai:'Tinh Gọn',website:'https://rusia777.club/',anchor:'',chuyenMuc:'',link:'https://rusia777.club/',spin:'https://qyazo.com',index:'',status:'Đã Gửi',chiDang:0},
-    {id:4,ngay:'2026-03-14',keyword:'WARUNGHOKI88',loai:'Tinh Gọn',website:'https://warunghoki88.vip/',anchor:'',chuyenMuc:'',link:'https://warunghoki88.vip/',spin:'https://qyazo.com',index:'',status:'Đã Gửi',chiDang:0},
-    {id:5,ngay:'2026-03-14',keyword:'INO777',loai:'Tinh Gọn',website:'https://ino777.id/',anchor:'',chuyenMuc:'',link:'https://ino777.id/',spin:'https://qyazo.com',index:'',status:'Đã Gửi',chiDang:0},
-    {id:6,ngay:'2026-03-14',keyword:'Login GEBYAR123',loai:'Tinh Gọn',website:'https://gebyar123.vip/logingebyar123vipadminht/',anchor:'',chuyenMuc:'',link:'https://gebyar123.vip/login-gebyar123/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:7,ngay:'2026-03-14',keyword:'Daftar GEBYAR123',loai:'Tinh Gọn',website:'',anchor:'',chuyenMuc:'',link:'https://gebyar123.vip/daftar-gebyar123/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:8,ngay:'2026-03-14',keyword:'Deposit GEBYAR123',loai:'Tinh Gọn',website:'',anchor:'',chuyenMuc:'',link:'https://gebyar123.vip/deposit-gebyar123/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:9,ngay:'2026-03-14',keyword:'Penarikan GEBYAR123',loai:'Tinh Gọn',website:'',anchor:'',chuyenMuc:'',link:'https://gebyar123.vip/penarikan-gebyar123/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:10,ngay:'2026-03-14',keyword:'Olahraga GEBYAR123',loai:'Tinh Gọn',website:'',anchor:'',chuyenMuc:'',link:'https://gebyar123.vip/olahraga-gebyar123/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:11,ngay:'2026-03-16',keyword:'Login RUSIA777',loai:'Tinh Gọn',website:'https://rusia777.club/loginrusia777clubadminht/',anchor:'',chuyenMuc:'',link:'https://rusia777.club/login-rusia777/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-  ],
-  hieu: [
-    {id:1,ngay:'2026-03-18',keyword:'Debet',loai:'Tinh Gọn',website:'https://debets.sbs/wp-adm',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:2,ngay:'2026-03-18',keyword:'Quyền Riêng Tư',loai:'Tinh Gọn',website:'dybala585858@gmai',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/quyen-rieng-tu/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:3,ngay:'2026-03-18',keyword:'Chơi Có Trách Nhiệm',loai:'Tinh Gọn',website:'Mktb2022@',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/choi-co-trach-nhiem/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:4,ngay:'2026-03-18',keyword:'Miễn Trừ Trách Nhiệm',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/mien-tru-trach-nhiem/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:5,ngay:'2026-03-18',keyword:'Chăm Sóc Khách Hàng',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/cham-soc-khach-hang/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:6,ngay:'2026-03-18',keyword:'Đối Tác Debet',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/doi-lac-debet/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:7,ngay:'2026-03-18',keyword:'Cờ Bạc Có Trách Nhiệm',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/co-bac-co-trach-nhiem/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:8,ngay:'2026-03-18',keyword:'Chính Sách Cookie',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/chinh-sach-cookie/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:9,ngay:'2026-03-18',keyword:'Giấy Phép Kinh Doanh',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/giay-phep-kinh-doanh/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:10,ngay:'2026-03-18',keyword:'Bảo Trì',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/bao-tri/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:11,ngay:'2026-03-17',keyword:'Đăng Nhập Debet',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/dang-nhap-debet/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:12,ngay:'2026-03-17',keyword:'Đăng Ký Debet',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/dang-ky-debet/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:13,ngay:'2026-03-17',keyword:'Nạp Tiền Debet',loai:'Tinh Gọn',website:'',anchor:'Debet',chuyenMuc:'Trang',link:'https://debets.sbs/nap-tien-debet/',spin:'https://qyazo.com',index:'',status:'Chưa gửi',chiDang:0},
-    {id:14,ngay:'2026-03-18',keyword:'Giá cà phê hôm nay 18/3/2026',loai:'Tinh Gọn',website:'https://cafelegend.vn/',anchor:'Giá cà phê hôm',chuyenMuc:'',link:'https://cafelegend.vn/gia-ca-phe-hom-nay-18-03-2026/',spin:'https://qyazo.com/ab43029e7fe48176399bd59b6409f069',index:'',status:'Chưa gửi',chiDang:0},
-  ]
-};
+let data = { hai: [], hieu: [] };
 
-let reportData = {
-  hai: [
-    {ngay:'13/3',bai:0,chiDang:0},{ngay:'14/3',bai:54,chiDang:0},
-    {ngay:'15/3',bai:0,chiDang:0},{ngay:'16/3',bai:10,chiDang:0},
-    {ngay:'17/3',bai:0,chiDang:0},{ngay:'18/3',bai:0,chiDang:0},
-  ],
-  hieu: [
-    {ngay:'12/3',bai:10,chiDang:0},{ngay:'13/3',bai:7,chiDang:0},
-    {ngay:'14/3',bai:15,chiDang:0},{ngay:'15/3',bai:9,chiDang:24},
-    {ngay:'16/3',bai:8,chiDang:30},{ngay:'17/3',bai:31,chiDang:0},
-    {ngay:'18/3',bai:31,chiDang:0},
-  ]
-};
+let reportData = { hai: [], hieu: [] };
 
 function calcMoney(bai, chiDang, loai){
   return bai * loaiPrice(loai||'Tinh Gọn') + (chiDang||0) * 4000;
@@ -905,7 +863,7 @@ function applyFilters(sheet, rows){
 }
 
 // Active date filter per sheet (null = show all, or 'YYYY-MM-DD')
-const activeDate = {hai: undefined, hieu: undefined};
+// activeDate removed
 
 function getSheetDates(sheet){
   const all = [...new Set(data[sheet].map(r=>r.ngay).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
@@ -1175,7 +1133,8 @@ function getIndexStatusBadge(r){
   if(st==='Đã gửi index') return '<span style="font-size:10px;color:#2980b9">Đã gửi</span>';
   return '<span style="font-size:10px;color:var(--text-muted)">'+st+'</span>';
 }
-function renderHai(){
+// [REMOVED: function renderHai\(\)] /* DEAD CODE ELIMINATED */
+function _removed_placeholder_0f6d6bf5(){
   renderDateNav('hai');
   const rows = getVisibleRows('hai');
   const cnt=document.getElementById('haiCount');
@@ -1221,7 +1180,8 @@ function renderHai(){
   setTimeout(()=>updateStickyTops('hai'),0);
 }
 
-function renderHieu(){
+// [REMOVED: function renderHieu\(\)] /* DEAD CODE ELIMINATED */
+function _removed_placeholder_1d36d5b3(){
   renderDateNav('hieu');
   const rows = getVisibleRows('hieu');
   const cnt=document.getElementById('hieuCount');
@@ -1476,14 +1436,11 @@ function showPage(name){
     btn.classList.toggle('active', !!match);
   });
   if(name==='dashboard') renderDashboard();
-  if(name==='hai'){ activeDate['hai']=todayVN(); renderHai(); }
-  if(name==='hieu'){ activeDate['hieu']=todayVN(); renderHieu(); }
   if(name==='tasks') renderTasksOverview();
   if(name==='recurring') renderRecurringTasks();
   if(name==='wstrack') renderWsTrack();
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
-  if(name==='index') renderIndexTasks();
   if(name==='prompts') renderPrompts();
   try{ localStorage.setItem('wt_activePage', name); } catch(e){}
 }
@@ -1525,11 +1482,10 @@ function saveAppData(){
 
 function fbPayload(ts){
   return {
-    hai: data.hai, hieu: data.hieu,
-    tasks, taskOrder: tasks.map(t=>t.id),
+        tasks, taskOrder: tasks.map(t=>t.id),
     deletedTasks, links, linkCategories,
     websites, wsGroups,
-    indexTasks, giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
+    giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
     recurDoneToday: getRecurDoneToday(),
     siteTracking,
     passwords: getProfilePasswords(),
@@ -1552,8 +1508,6 @@ function fbPayload(ts){
 function saveToLocalStorage(){
   const ts = Date.now();
   try{
-    localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
-    localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
     localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
     if(deletedTasks.length>50) deletedTasks=deletedTasks.slice(-50); // cap trash at 50
     localStorage.setItem('wt_deleted_tasks',   JSON.stringify(deletedTasks));
@@ -1716,8 +1670,6 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
       }
 
       // Mirror everything to localStorage
-      localStorage.setItem('wt_data_hai',        JSON.stringify(data.hai));
-      localStorage.setItem('wt_data_hieu',       JSON.stringify(data.hieu));
       localStorage.setItem('wt_tasks',           JSON.stringify(tasks));
       if(r.recurringTasks && Array.isArray(r.recurringTasks)){ recurringTasks=r.recurringTasks; recurNextId=Math.max(1,...recurringTasks.map(x=>x.id||0))+1; localStorage.setItem('wt_recurring',JSON.stringify(recurringTasks)); if(document.querySelector('.page.active')?.id==='page-recurring') renderRecurringTasks(); }
       localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
@@ -3660,9 +3612,9 @@ function renderRecurringTasks(){
   const _today = todayVN();
   // Done today section
   const _allDoneToday = getRecurDoneToday();
-  const doneTodayList = _allDoneToday.filter(d=>d.date===_today && (currentMember==='admin'||d.person===(currentMember==='hai'?'Hải':'Hiếu')));
+  const doneTodayList = _allDoneToday.filter(d=>d.date===_today && (currentMember==='admin'||d.person===('')));
 
-  const visibleRecurring = currentMember==='admin' ? recurringTasks : recurringTasks.filter(r=>r.person===(currentMember==='hai'?'Hải':'Hiếu'));
+  const visibleRecurring = currentMember==='admin' ? recurringTasks : recurringTasks.filter(r=>r.person===(''));
   if(!visibleRecurring.length){ list.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
   // Tách task chưa done và task đã done hôm nay
@@ -3741,7 +3693,7 @@ function openNewRecurringModal(id){
                 <option ${(r?.person==='Hiếu')?'selected':''}>Hiếu</option>
                 <option ${(r?.person==='Khác')?'selected':''}>Khác</option>
               </select>`
-            : `<input type="text" id="rm_person" style="width:100%;background:#f8f9fa" value="${currentMember==='hai'?'Hải':'Hiếu'}" readonly>`
+            : `<input type="text" id="rm_person" style="width:100%;background:#f8f9fa" value="${''}" readonly>`
           }
         </div>
         <div class="form-group"><label>Loại</label>
@@ -4123,7 +4075,7 @@ function renderPendingSummary(){
   const myTasks = currentMember==='admin' ? tasks
     : tasks.filter(t=>{
         const p = (t.person||'').trim();
-        return !p || p===(currentMember==='hai'?'Hải':'Hiếu');
+        return !p || p===('');
       });
   myTasks.forEach(task=>{
     const cols=getProjectCols(task);
@@ -4234,221 +4186,9 @@ function resolvePending(taskId,cardId){
 
 
 
-// ===== QUICK IMPORT =====
-let qi_parsedTasks = [];
-
-function openQuickImport(){
-  document.getElementById('quickImportModal').classList.add('open');
-  qi_goBack();
-  setTimeout(()=>{ document.getElementById('qi_input').focus(); qi_onDangChange(); }, 50);
-  const _qiTeamRow=document.getElementById('qi_team_row'); if(_qiTeamRow) _qiTeamRow.style.display=currentMember==='hai'?'none':'block';
-  // Auto-fill person
-  const _qiPerson=document.getElementById('qi_person');
-  if(_qiPerson && currentMember!=='admin') _qiPerson.value=currentMember==='hai'?'Hải':'Hiếu';
-}
-function qi_resetForm(){
-  document.getElementById('qi_input').value='';
-  document.getElementById('qi_taskname').value='';
-  document.getElementById('qi_steps').value='';
-  document.getElementById('qi_person').selectedIndex=0;
-  document.getElementById('qi_step1').style.display='block';
-  document.getElementById('qi_step2').style.display='none';
-  document.getElementById('qi_loading').style.display='none';
-  document.getElementById('qi_btn_back').style.display='none';
-  document.getElementById('qi_btn_add').style.display='none';
-  document.getElementById('qi_error').style.display='none';
-  document.getElementById('qi_preview').innerHTML='';
-  qi_parsedTasks=[];
-  const qf=document.getElementById('qi_from'); if(qf) qf.value=todayVN();
-  const qd=document.getElementById('qi_deadline'); if(qd) qd.value='';
-  // Restore button state based on current dang mode
-  const dang=(document.getElementById('qi_dang')?.value||'url');
-  const btnParse=document.getElementById('qi_btn_parse');
-  const btnParseUrl=document.getElementById('qi_btn_parse_url');
-  if(btnParse) btnParse.style.display=dang==='url'?'none':'inline-flex';
-  if(btnParseUrl) btnParseUrl.style.display=dang==='url'?'inline-flex':'none';
-}
-
-function closeQuickImport(e){
-  const isBackdropClick = e && e.target===document.getElementById('quickImportModal');
-  const isDirectClose = !e;
-  if(!isBackdropClick && !isDirectClose) return;
-  // Check if there's unsaved content
-  const hasContent = (document.getElementById('qi_input')?.value||'').trim() ||
-                     (document.getElementById('qi_taskname')?.value||'').trim() ||
-                     (document.getElementById('qi_steps')?.value||'').trim();
-  if(hasContent && isBackdropClick){
-    if(!confirm('Có task chưa thêm xong. Bạn có muốn thoát không?\n\nNhấn OK để thoát, Huỷ để quay lại điền tiếp.')) return;
-  }
-  document.getElementById('quickImportModal').classList.remove('open');
-  qi_resetForm();
-}
-function qi_goBack(){
-  document.getElementById('qi_step1').style.display='block';
-  document.getElementById('qi_step2').style.display='none';
-  document.getElementById('qi_loading').style.display='none';
-  document.getElementById('qi_btn_parse').style.display='inline-flex';
-  document.getElementById('qi_btn_back').style.display='none';
-  document.getElementById('qi_btn_add').style.display='none';
-  document.getElementById('qi_error').style.display='none';
-}
-
-function qi_addDefaultSteps(){
-  const el = document.getElementById('qi_steps');
-  if(!el) return;
-  if(!el.value.trim()){
-    el.value = 'Viết trang chủ\nThêm ảnh vào docs\nThêm ảnh vào drive\nThêm ảnh vào bài đăng';
-  }
-  el.focus();
-}
-
-async function qi_parse(){
-  const text=(document.getElementById('qi_input').value||'').trim();
-  if(!text){const e=document.getElementById('qi_error');e.textContent='Vui lòng dán nội dung vào!';e.style.display='block';return;}
-  document.getElementById('qi_step1').style.display='none';
-  document.getElementById('qi_loading').style.display='block';
-  document.getElementById('qi_btn_parse').style.display='none';
-  const person=document.getElementById('qi_person').value;
-  const manualTaskName=(document.getElementById('qi_taskname')?.value||'').trim();
-  const manualSteps=(document.getElementById('qi_steps')?.value||'').trim();
-  await new Promise(r=>setTimeout(r,400));
-
-  const lines=text.split('\n').map(l=>l.trim()).filter(l=>l);
-  const domainPat=/^(https?:\/\/)?[\w.-]+\.[a-zA-Z]{2,10}(\/\S*)?(\s[\s\S]*)?$/i;
-  const isStepLine=l=>/^(b.{0,5}c\s*\d+|step\s*\d+|\d+\s*[:.)]\s*\w)/i.test(l);
-
-  const domainLines=lines.filter(l=>domainPat.test(l));
-  const instrLines=lines.filter(l=>!domainPat.test(l)&&l.length>2);
-  const stepLines=instrLines.filter(l=>isStepLine(l));
-  const descLines=instrLines.filter(l=>!isStepLine(l));
-  const fullDesc=descLines.join(' ');
-
-  const detectLoai=s=>{s=s.toLowerCase();if(/tinh g[oọ]n nhanh/.test(s))return 'Tinh Gọn Nhanh';if(/ch[iỉ]\s*vi[eế]t/.test(s))return 'Chỉ Viết';if(/ch[iỉ]\s*[dđ][aă]ng/.test(s))return 'Chỉ Đăng';if(/tinh g[oọ]n/.test(s))return 'Tinh Gọn';return '';};
-  const detectType=s=>{s=s.toLowerCase();if(/backlink|seo|t[uừ]\s*kh[oó]a|keyword/.test(s))return 'SEO';if(/thi[eế]t k[eế]|design/.test(s))return 'Thiết kế';if(/code|k[yỹ]\s*thu[aậ]t|fix/.test(s))return 'Kỹ thuật';return 'Nội dung';};
-
-  const loai=detectLoai(fullDesc);
-  const type=detectType(fullDesc);
-  const soBai=parseInt((fullDesc.match(/(\d+)\s*bài/i)||[])[1])||0;
-
-  // Build columns: manual steps first, then auto-detected steps, then null (default)
-  const cols = manualSteps ? parseSteps(manualSteps)
-             : stepLines.length>=1 ? parseSteps(stepLines.join('\n'))
-             : null;
-  const firstColId = cols ? cols[0].id : 'col_new';
-
-  // Build cards: one per domain (all lines treated as cards if they look like domains), else all lines
-  const itemLines=domainLines.length>0 ? lines.filter(l=>l.length>2) : lines.filter(l=>l.length>2);
-  const cards=itemLines.map((line,i)=>{
-    return {id:'qc'+(cardNextId+i),colId:firstColId,name:line.replace(/^https?:\/\//,''),desc:''};
-  });
-  cardNextId+=cards.length;
-
-  // Task name = manual > first non-step desc line > domain summary
-  let taskName = manualTaskName;
-  if(!taskName){
-    if(descLines.filter(l=>!isStepLine(l)).length>0){
-      taskName=descLines.filter(l=>!isStepLine(l))[0];
-      if(taskName.length>70) taskName=taskName.slice(0,70)+'…';
-    } else if(domainLines.length>0){
-      taskName=`${domainLines.length} website${soBai?' — '+soBai+' bài/web':''}`;
-    } else {
-      taskName=lines[0]||'Task mới';
-    }
-  }
-
-  qi_parsedTasks=[{
-    id:taskNextId,
-    name:taskName,
-    type,desc:fullDesc,person,
-    from:document.getElementById('qi_from')?.value||todayVN(),
-    deadline:document.getElementById('qi_deadline')?.value||'',
-    priority:document.getElementById('qi_priority')?.value||'Bình thường',
-    team:currentMember==='hai'?'Team 01':(document.getElementById('qi_team')?.value||'Team 01'),
-    cols,cards,
-    _loaiBai:loai,_soBai:soBai,
-  }];
-
-  document.getElementById('qi_loading').style.display='none';
-  document.getElementById('qi_step2').style.display='block';
-  document.getElementById('qi_count').textContent='1';
-  document.getElementById('qi_btn_back').style.display='inline-flex';
-  document.getElementById('qi_btn_add').style.display='inline-flex';
-
-  const t=qi_parsedTasks[0];
-  const colList=cols?cols.map(c=>c.label):['Cần làm','Đang làm','Pending','Hoàn thành'];
-  document.getElementById('qi_preview').innerHTML=`
-    <div style="background:var(--gray-light);border-radius:8px;padding:12px 14px;border:1px solid var(--gray-border)">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-        <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:11px">${t.type}</span>
-        ${t._loaiBai?`<span class="badge badge-red" style="font-size:11px">${t._loaiBai}</span>`:''}
-        ${t._soBai?`<span class="badge badge-blue" style="font-size:11px">${t._soBai} bài/web</span>`:''}
-        ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:11px">${t.person}</span>`:''}
-      </div>
-      <div style="margin-bottom:6px">
-        <label style="font-size:11px;color:var(--text-muted);display:block;margin-bottom:3px">Tên task</label>
-        <input type="text" value="${t.name.replace(/"/g,'&quot;')}" oninput="qi_parsedTasks[0].name=this.value"
-          style="width:100%;font-size:14px;font-weight:600;border:1px solid var(--gray-border);border-radius:6px;padding:6px 8px;box-sizing:border-box">
-      </div>
-      <div style="margin-bottom:10px;font-size:11px;color:var(--text-muted)">
-        Kanban: <b style="color:var(--text)">${colList.join(' → ')}</b>
-      </div>
-      <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:var(--text)">Task con (${t.cards.length} thẻ — vào cột "${colList[0]}")</div>
-      <div data-cards style="display:flex;flex-direction:column;gap:4px">
-        ${t.cards.map((c,i)=>`
-          <div style="display:flex;align-items:center;gap:6px;background:#fff;border-radius:5px;padding:5px 8px;border:1px solid var(--gray-border)">
-            <span style="font-size:11px;color:var(--text-muted);min-width:20px">${i+1}.</span>
-            <input type="text" value="${c.name.replace(/"/g,'&quot;')}" oninput="qi_parsedTasks[0].cards[${i}].name=this.value"
-              style="flex:1;font-size:12px;border:none;outline:none;background:transparent">
-            <button onclick="qi_parsedTasks[0].cards.splice(${i},1);qi_parse_repreview()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px">&#10005;</button>
-          </div>`).join('')}
-      </div>
-    </div>`;
-}
-
-function qi_parse_repreview(){
-  const t=qi_parsedTasks[0];
-  if(!t) return;
-  const cols=t.cols?t.cols.map(c=>c.label):['Cần làm','Đang làm','Pending','Hoàn thành'];
-  const cardsHtml=t.cards.map((c,i)=>`
-    <div style="display:flex;align-items:center;gap:6px;background:#fff;border-radius:5px;padding:5px 8px;border:1px solid var(--gray-border)">
-      <span style="font-size:11px;color:var(--text-muted);min-width:20px">${i+1}.</span>
-      <input type="text" value="${c.name.replace(/"/g,'&quot;')}" oninput="qi_parsedTasks[0].cards[${i}].name=this.value"
-        style="flex:1;font-size:12px;border:none;outline:none;background:transparent">
-      <button onclick="qi_parsedTasks[0].cards.splice(${i},1);qi_parse_repreview()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px">&#10005;</button>
-    </div>`).join('');
-  const cardList=document.getElementById('qi_preview').querySelector('[data-cards]');
-  if(cardList) cardList.innerHTML=cardsHtml;
-}
-
-function qi_addAll(){
-  if(!qi_parsedTasks.length) return;
-  const t=qi_parsedTasks[0];
-  const newTask={
-    id: taskNextId++,
-    name: t.name,
-    person: t.person||'',
-    type: t.type||'SEO',
-    dang: t.dang||'url',
-    from: t.from||todayVN(),
-    deadline: t.deadline||'',
-    desc: t.desc||'',
-    priority: t.priority||'Bình thường',
-    team: t.team||'Team 01',
-    cols: t.cols||null,
-    cards: (t.cards||[]).map(c=>({...c})), // deep copy each card
-  };
-  tasks.push(newTask);
-  document.getElementById('quickImportModal').classList.remove('open');
-  qi_resetForm();
-  renderTasksOverview();
-  saveAppData();
-  toast(`&#10003; Đã thêm task "${newTask.name}" với ${newTask.cards.length} thẻ con!`);
-}
-// ===== MEMBER SWITCHER =====
+// [REMOVED: QUICK IMPORT] // ===== MEMBER SWITCHER =====
 const MEMBER_CONFIG = {
-  admin: {label:'Admin',   avatar:'⚙', pages:['dashboard','hai','hieu','recurring','tasks','add','import','links','index','prompts','wstrack']},
-  hai:   {label:'Hải',     avatar:'H', pages:['dashboard','hai','recurring','tasks','add','import','links','index','prompts','wstrack']},
-  hieu:  {label:'Hiếu',    avatar:'H', pages:['dashboard','hieu','recurring','tasks','add','import','links','index','prompts','wstrack']},
+  admin: {label:'Admin', avatar:'A', pages:['dashboard','recurring','tasks','links','prompts','wstrack','ecosystem']},
 };
 
 function toggleMemberDropdown(){
@@ -4474,7 +4214,7 @@ function setMember(m){
   document.getElementById('memberRoleLabel').textContent = cfg.label;
 
   // Checkmarks
-  ['admin','hai','hieu'].forEach(id=>{
+  ['admin'].forEach(id=>{
     document.getElementById('mdi-'+id).classList.toggle('active', id===m);
     document.getElementById('mdc-'+id).style.display = id===m?'':'none';
   });
@@ -4500,7 +4240,7 @@ function setMember(m){
   const qiPerson=document.getElementById('qi_person');
   if(qiPerson){qiPerson.value=personVal;qiPerson.disabled=(m!=='admin');}
   const iNguoiViet=document.getElementById('iNguoiViet');
-  if(iNguoiViet){iNguoiViet.value=m==='admin'?'hieu':m;iNguoiViet.disabled=(m!=='admin');}
+  if(iNguoiViet){iNguoiViet.value=m==='admin'?'admin':m;iNguoiViet.disabled=(m!=='admin');}
 
   // Determine target page:
   // - member 'hai' → force to 'hai' sheet
@@ -4567,7 +4307,7 @@ const _origRenderTasksOverview = renderTasksOverview;
 renderTasksOverview = function(){
   if(currentMember!=='admin'){
     const el=document.getElementById('tkFilterPerson');
-    if(el) el.value = currentMember==='hai'?'Hải':'Hiếu';
+    if(el) el.value = '';
   }
   _origRenderTasksOverview();
 };
@@ -4591,7 +4331,7 @@ function hideLoginScreen(){
 let _pendingAvatar = undefined;
 function applyAllAvatars(){
   const avs = _settings.avatars || {};
-  ['admin','hai','hieu'].forEach(m=>{
+  ['admin'].forEach(m=>{
     const src = avs[m] || null;
     const icon = MEMBER_CONFIG[m]?.avatar || 'H';
     const loginEl = document.getElementById('loginAv_'+m);
@@ -5206,225 +4946,7 @@ function deleteCategory(type, idx){
   saveAppData();
   toast('Đã xoá danh mục "'+name+'"');
 }
-// ===== SHEET IMPORT =====
-let siSheet = 'hai';
-let siKeywords = [];
-
-function siSetTeam(team){
-  document.getElementById('si_team').value = team;
-  const b1 = document.getElementById('si_team_btn1');
-  const b2 = document.getElementById('si_team_btn2');
-  if(b1) b1.className = 'btn ' + (team==='Team 01' ? 'btn-primary' : 'btn-outline');
-  if(b2) b2.className = 'btn ' + (team==='Team 02' ? 'btn-primary' : 'btn-outline');
-}
-
-function openSheetImport(sheet){
-  siSheet = sheet;
-  siKeywords = [];
-  document.getElementById('sheetImportTitle').innerHTML =
-    `&#8679; Import — Sheet <span class="tag-person ${sheet==='hai'?'tag-hai':'tag-hieu'}" style="font-size:12px;margin-left:4px">${sheet==='hai'?'Hải':'Hiếu'}</span>`;
-  document.getElementById('si_keywords').value='';
-  document.getElementById('siKwCount').textContent='0 keyword';
-  document.getElementById('siKwCount').style.color='var(--text-muted)';
-  document.getElementById('si_date').value=todayVN();
-  document.getElementById('si_website').value='';
-  document.getElementById('si_chuyenMuc').value='';
-  
-  document.getElementById('siFileCount').style.display='none';
-  // Team selector: show for hieu, hide+auto Team 01 for hai
-  const siTeamRow = document.getElementById('si_team_row');
-  if(siTeamRow) siTeamRow.style.display = sheet==='hieu' ? 'block' : 'none';
-  siSetTeam('Team 01'); // default
-  switchSITab('paste');
-  document.getElementById('sheetImportModal').classList.add('open');
-  setTimeout(()=>document.getElementById('si_keywords').focus(),100);
-}
-
-function closeSheetImport(){
-  document.getElementById('sheetImportModal').classList.remove('open');
-}
-
-function switchSITab(tab){
-  document.getElementById('siTabPasteBody').style.display=tab==='paste'?'block':'none';
-  document.getElementById('siTabFileBody').style.display=tab==='file'?'block':'none';
-  document.getElementById('siTabPaste').className='btn btn-sm '+(tab==='paste'?'btn-primary':'btn-outline');
-  document.getElementById('siTabFile').className='btn btn-sm '+(tab==='file'?'btn-primary':'btn-outline');
-}
-
-function countSIKeywords(){
-  const lines=(document.getElementById('si_keywords').value||'').split('\n').map(l=>l.trim()).filter(l=>l);
-  siKeywords=lines;
-  const el=document.getElementById('siKwCount');
-  el.textContent='✓ '+lines.length+' keyword';
-  el.style.color=lines.length>0?'var(--green)':'var(--text-muted)';
-}
-
-// Columns in our clean CSV: ngay,keyword,loai,website,anchor,chuyenMuc,link,spin,index,status
-let siFullRows = []; // for CSV with full data
-
-function parseCSV(text){
-  const rows = [];
-  const lines = text.split(/\r?\n/);
-  for(const line of lines){
-    if(!line.trim()) continue;
-    const cols = [];
-    let cur = '', inQ = false;
-    for(let i=0;i<line.length;i++){
-      const ch = line[i];
-      if(ch==='"' && !inQ){ inQ=true; continue; }
-      if(ch==='"' && inQ && line[i+1]==='"'){ cur+='"'; i++; continue; }
-      if(ch==='"' && inQ){ inQ=false; continue; }
-      if(ch===',' && !inQ){ cols.push(cur); cur=''; continue; }
-      cur+=ch;
-    }
-    cols.push(cur);
-    rows.push(cols.map(c=>c.trim()));
-  }
-  return rows;
-}
-
-function handleSIFile(file){
-  if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    const text = e.target.result.trim();
-    siFullRows = [];
-    siKeywords = [];
-
-    if(file.name.endsWith('.csv') || text.includes(',')){
-      const rows = parseCSV(text);
-      if(!rows.length){ showSIFileError('File trống!'); return; }
-
-      // Check if header row exists (our clean CSV has: ngay,keyword,loai,...)
-      const first = rows[0].map(c=>c.toLowerCase());
-      const hasHeader = first.includes('keyword') || first.includes('ngay');
-      const dataRows = hasHeader ? rows.slice(1) : rows;
-
-      // Detect column positions
-      const hdr = hasHeader ? first : null;
-      const colIdx = {
-        ngay:    hdr ? hdr.indexOf('ngay') : 0,
-        keyword: hdr ? hdr.indexOf('keyword') : 1,
-        loai:    hdr ? hdr.indexOf('loai') : 2,
-        website: hdr ? hdr.indexOf('website') : 3,
-        anchor:  hdr ? hdr.indexOf('anchor') : 4,
-        chuyenMuc: hdr ? hdr.indexOf('chuyenmuc') : 5,
-        link:    hdr ? hdr.indexOf('link') : 6,
-        spin:    hdr ? hdr.indexOf('spin') : 7,
-        index:   hdr ? hdr.indexOf('index') : 8,
-        status:  hdr ? hdr.indexOf('status') : 9,
-      };
-
-      const get = (row, key) => {
-        const i = colIdx[key];
-        return (i>=0 && i<row.length) ? row[i] : '';
-      };
-
-      siFullRows = dataRows.filter(r=>r[colIdx.keyword]||r[1]).map(r=>({
-        ngay:      get(r,'ngay'),
-        keyword:   get(r,'keyword') || r[1] || '',
-        loai:      get(r,'loai'),
-        website:   get(r,'website'),
-        anchor:    get(r,'anchor'),
-        chuyenMuc: get(r,'chuyenMuc'),
-        link:      get(r,'link'),
-        spin:      get(r,'spin'),
-        index:     get(r,'index'),
-        status:    get(r,'status'),
-      })).filter(r=>r.keyword);
-
-      siKeywords = siFullRows.map(r=>r.keyword);
-      const el=document.getElementById('siFileCount');
-      el.style.display='block';
-      el.style.color='var(--green)';
-      el.textContent=`✓ Đọc được ${siKeywords.length} keyword từ CSV`;
-
-      // If CSV has full data, show info
-      const hasFullData = siFullRows.some(r=>r.ngay||r.website||r.link);
-      if(hasFullData){
-        el.textContent+=` — sẽ tự điền ngày, link, spin từ file`;
-        el.style.color='#2980b9';
-      }
-    } else {
-      // Plain text - one keyword per line
-      siFullRows = [];
-      siKeywords = text.split('\n').map(l=>l.trim()).filter(l=>l);
-      const el=document.getElementById('siFileCount');
-      el.style.display='block';
-      el.style.color='var(--green)';
-      el.textContent='✓ Đọc được '+siKeywords.length+' keyword từ file';
-    }
-  };
-  reader.readAsText(file,'UTF-8');
-}
-
-function showSIFileError(msg){
-  const el=document.getElementById('siFileCount');
-  el.style.display='block';
-  el.style.color='var(--red)';
-  el.textContent='⚠ '+msg;
-}
-
-function doSheetImport(){
-  const keywords=siKeywords.filter(k=>k.trim());
-  if(!keywords.length){toast('Chưa có keyword nào!','#e74c3c');return;}
-  const defaultNgay=document.getElementById('si_date').value;
-  if(!defaultNgay){toast('Vui lòng chọn ngày!','#e74c3c');return;}
-
-  const defaultLoai=document.getElementById('si_loai').value;
-  const defaultWebsite=document.getElementById('si_website').value.trim();
-  const defaultChuyenMuc=document.getElementById('si_chuyenMuc').value.trim();
-  const defaultTeam = siSheet==='hai' ? 'Team 01' : (document.getElementById('si_team')?.value || 'Team 01');
-  const defaultStatus='Chưa gửi';
-  const chiDang=0;
-
-  const hasFullData = siFullRows.length === keywords.length;
-
-  let maxId=Math.max(0,...data[siSheet].map(r=>r.id));
-  const toAdd=keywords.map((kw,i)=>{
-    const row = hasFullData ? siFullRows[i] : null;
-    const ngay = (row?.ngay && row.ngay.match(/^\d{4}-\d{2}-\d{2}$/)) ? row.ngay : defaultNgay;
-    const rowLoai = row?.loai || defaultLoai;
-    return {
-      id:maxId+i+1,
-      ngay,
-      keyword: kw.trim(),
-      loai:      rowLoai,
-      donGia:    getLoaiPrice(rowLoai, siSheet),
-      website:   row?.website || defaultWebsite,
-      anchor:    row?.anchor || '',
-      chuyenMuc: row?.chuyenMuc || defaultChuyenMuc,
-      link:      row?.link || '',
-      spin:      row?.spin || '',
-      index:     row?.index || '',
-      status:    row?.status || defaultStatus,
-      team:      row?.team || defaultTeam,
-      chiDang
-    };
-  });
-
-  data[siSheet]=[...data[siSheet],...toAdd];
-
-  // Group by date for reportData update
-  const dateGroups={};
-  toAdd.forEach(r=>{ dateGroups[r.ngay]=(dateGroups[r.ngay]||0)+1; });
-  Object.entries(dateGroups).forEach(([ngay,cnt])=>{
-    const p=ngay.split('-');
-    const dayKey=`${parseInt(p[2])}/${parseInt(p[1])}`;
-    const rep=reportData[siSheet].find(x=>x.ngay===dayKey);
-    if(rep){rep.bai+=cnt;rep.chiDang+=chiDang*cnt;}
-    else reportData[siSheet].push({ngay:dayKey,bai:cnt,chiDang:chiDang*cnt});
-  });
-
-  saveAppData();
-  closeSheetImport();
-  activeDate[siSheet] = defaultNgay;
-  if(siSheet==='hai') renderHai(); else renderHieu();
-  renderDashboard();
-  toast(`&#10003; Đã import ${keywords.length} bài vào Sheet ${siSheet==='hai'?'Hải':'Hiếu'}!`);
-  siKeywords=[]; siFullRows=[];
-}
-// ===== BULK EDIT =====
+// [REMOVED: SHEET IMPORT] // ===== BULK EDIT =====
 let bulkEditSheet = '';
 let bulkEditField = '';
 
@@ -5558,64 +5080,7 @@ document.addEventListener('mouseup', ()=>{
   dragSelecting = false;
   _dragStartTd = null;
 });
-// ===== BULK IMPORT FIELD (link / spin) =====
-let bifSheet = '';
-let bifField = '';
-
-function openBulkImportField(sheet, field){
-  const n = selected[sheet].size;
-  if(!n){toast('Chưa chọn dòng nào!','#e74c3c');return;}
-  bifSheet = sheet;
-  bifField = field;
-  const isLink = field==='link';
-  const label = isLink ? 'Link bài' : 'Spin link';
-  document.getElementById('bifTitle').innerHTML = (isLink?'🔗':'🔄')+' Import '+label+' hàng loạt';
-  document.getElementById('bifCount').textContent = `Áp dụng cho ${n} dòng đã chọn — theo thứ tự từ trên xuống`;
-  document.getElementById('bifHint').innerHTML = `
-    <b>Cách dùng:</b> Dán ${n} link vào bên dưới, mỗi dòng 1 link.<br>
-    Link dòng 1 → gán cho dòng đã chọn thứ 1<br>
-    Link dòng 2 → gán cho dòng đã chọn thứ 2<br>
-    <span style="color:var(--red)">Nếu số link ít hơn số dòng → các dòng thừa sẽ bỏ qua.</span>`;
-  document.getElementById('bifInput').value='';
-  document.getElementById('bifLineCount').textContent='0 link';
-  document.getElementById('bifLineCount').style.color='var(--text-muted)';
-  document.getElementById('bulkImportFieldModal').classList.add('open');
-  setTimeout(()=>document.getElementById('bifInput').focus(),100);
-}
-
-function closeBulkImportField(){
-  document.getElementById('bulkImportFieldModal').classList.remove('open');
-}
-
-function countBifLines(){
-  const lines=(document.getElementById('bifInput').value||'').split('\n').map(l=>l.trim()).filter(l=>l);
-  const el=document.getElementById('bifLineCount');
-  el.textContent='✓ '+lines.length+' link';
-  el.style.color=lines.length>0?'var(--green)':'var(--text-muted)';
-}
-
-function applyBulkImportField(){
-  const lines=(document.getElementById('bifInput').value||'').split('\n').map(l=>l.trim()).filter(l=>l);
-  if(!lines.length){toast('Chưa có link nào!','#e74c3c');return;}
-
-  // Get selected rows in display order (top to bottom)
-  const visibleRows = applyFilters(bifSheet, data[bifSheet]);
-  const selectedRows = visibleRows.filter(r=>selected[bifSheet].has(r.id));
-
-  let count=0;
-  selectedRows.forEach((r,i)=>{
-    if(i<lines.length){
-      r[bifField]=lines[i];
-      count++;
-    }
-  });
-
-  saveAppData();
-  closeBulkImportField();
-  if(bifSheet==='hai') renderHai(); else renderHieu();
-  toast(`&#10003; Đã gán ${count} link vào cột ${bifField==='link'?'Link bài':'Spin'}`);
-}
-// ===== ROW COLOR =====
+// [REMOVED: BULK IMPORT FIELD] // ===== ROW COLOR =====
 
 function closeAllBulkDropdowns(){
   document.querySelectorAll('[id^="bulk-drop-"]').forEach(el=>el.style.display='none');
@@ -6482,241 +5947,7 @@ function wsClearSelect(){
   if(bar) bar.style.display='none';
 }
 
-// ===== WEBSITE IMPORT =====
-function openWsImportModal(){
-  document.getElementById('wsImportModal').style.display='flex';
-  document.getElementById('wsImportText').value='';
-  document.getElementById('wsImportPreview').style.display='none';
-  document.getElementById('wsImportFileName').textContent='';
-}
-function closeWsImportModal(){
-  document.getElementById('wsImportModal').style.display='none';
-}
-
-// Tab switching for import modal
-let _wsImpMode = 'normal';
-function wsImpSwitchTab(mode){
-  _wsImpMode = mode;
-  const tabN = document.getElementById('wsImpTabNormal');
-  const tab3 = document.getElementById('wsImpTab301');
-  const panN = document.getElementById('wsImpPanelNormal');
-  const pan3 = document.getElementById('wsImpPanel301');
-  const btnN = document.getElementById('wsImportRunBtn');
-  const btn3 = document.getElementById('wsImport301RunBtn');
-  if(mode==='301'){
-    tab3.style.borderBottomColor='#6c5ce7'; tab3.style.color='#6c5ce7'; tab3.style.fontWeight='600';
-    tabN.style.borderBottomColor='transparent'; tabN.style.color='var(--text-muted)'; tabN.style.fontWeight='500';
-    panN.style.display='none'; pan3.style.display='block';
-    btnN.style.display='none'; btn3.style.display='inline-flex';
-  } else {
-    tabN.style.borderBottomColor='var(--red)'; tabN.style.color='var(--red)'; tabN.style.fontWeight='600';
-    tab3.style.borderBottomColor='transparent'; tab3.style.color='var(--text-muted)'; tab3.style.fontWeight='500';
-    panN.style.display='block'; pan3.style.display='none';
-    btnN.style.display='inline-flex'; btn3.style.display='none';
-  }
-}
-
-function wsImport301Run(){
-  const rawSource = document.getElementById('wsImport301Source').value.trim();
-  const rawTarget = document.getElementById('wsImport301Target').value.trim();
-  if(!rawSource || !rawTarget){ toast('Vui lòng dán URL vào cả 2 cột!','#e74c3c'); return; }
-  const sourceLines = rawSource.split('\n').map(l=>l.trim()).filter(l=>l);
-  const targetLines = rawTarget.split('\n').map(l=>l.trim()).filter(l=>l);
-  if(sourceLines.length !== targetLines.length){
-    toast('Số dòng 2 cột không khớp! Gốc: '+sourceLines.length+', 301: '+targetLines.length,'#e74c3c');
-    return;
-  }
-  const team = document.getElementById('wsImportTeam').value;
-  const owner = document.getElementById('wsImportOwner').value;
-  const status = document.getElementById('wsImportStatus').value;
-
-  let added = 0, skipped = 0, notFound = [];
-  for(let i = 0; i < sourceLines.length; i++){
-    const sourceUrlRaw = normalizeUrl(sourceLines[i]);
-    const newUrlRaw = normalizeUrl(targetLines[i]);
-    const sourceDomain = sourceUrlRaw.split('/')[0];
-    const newDomain = newUrlRaw.split('/')[0];
-
-    // Check if 301 target already exists
-    const dupCheck = websites.find(x=> x.url && x.url.replace(/\/$/,'')===newDomain.replace(/\/$/,''));
-    if(dupCheck){ skipped++; continue; }
-
-    // Find source website in existing list
-    const source = websites.find(x=> x.url && (
-      x.url.replace(/\/$/,'')===sourceDomain.replace(/\/$/,'') ||
-      x.url.replace(/\/$/,'')===sourceUrlRaw.replace(/\/$/,'')
-    ));
-
-    let newBrand = newDomain.replace(/^www\./, '').split('.')[0];
-    newBrand = newBrand.charAt(0).toUpperCase() + newBrand.slice(1);
-
-    const entry = {
-      id: wsNextId++,
-      brand: source ? source.brand : newBrand,
-      url: newDomain,
-      admin: source ? (source.admin||'') : '',
-      account: source ? (source.account||'') : '',
-      password: source ? (source.password||'') : '',
-      status: status,
-      team: source ? (source.team||team) : team,
-      owner: source ? (source.owner||owner) : owner,
-      group: source ? (source.group||'') : '',
-      note: '301 từ '+sourceDomain,
-      is301: true,
-      sourceUrl: sourceDomain
-    };
-
-    websites.push(entry);
-    added++;
-    if(!source) notFound.push(sourceDomain);
-  }
-
-  saveAppData(); renderWebsites(); autoFillAnchors(); updateWsIcons();
-  closeWsImportModal();
-
-  let msg = '✓ Import 301: ' + added + ' website 301 đã thêm';
-  if(skipped) msg += ', ' + skipped + ' bỏ qua (đã tồn tại)';
-  if(notFound.length) msg += '. ⚠ ' + notFound.length + ' web gốc không có trong kho';
-  toast(msg);
-}
-
-function wsImportReadFile(input){
-  const file = input.files[0];
-  if(!file) return;
-  document.getElementById('wsImportFileName').textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('wsImportText').value = e.target.result;
-    wsImportPreview();
-  };
-  reader.readAsText(file);
-}
-
-function wsImportParseLines(){
-  const raw = document.getElementById('wsImportText').value.trim();
-  if(!raw) return [];
-  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
-  const team = document.getElementById('wsImportTeam').value;
-  const owner = document.getElementById('wsImportOwner').value;
-  const status = document.getElementById('wsImportStatus').value;
-  return lines.map(line=>{
-    // CSV format: brand, url, admin, account, password, status, team, owner, group, note
-    const sep = line.includes('|') ? '|' : ',';
-    const parts = line.split(sep).map(p=>p.trim());
-    if(parts.length>=2){
-      const brandRaw = parts[0]||'';
-      const urlRaw = parts[1]||'';
-      const urlFull = normalizeUrl(urlRaw||brandRaw);
-      const url = urlFull.split('/')[0]; // chỉ giữ domain, bỏ path
-      // brand = phần trước dấu chấm đầu tiên của domain nếu không điền
-      const brand = brandRaw || url.split('.')[0];
-      return {
-        brand,
-        url,
-        admin: normalizeAdmin(parts[2]||''),
-        account: parts[3]||'',
-        password: parts[4]||'',
-        status: parts[5]||status,
-        team: parts[6]||team,
-        owner: parts[7]||owner,
-        group: parts[8]||'',
-        note: parts[9]||''
-      };
-    } else {
-      // Plain URL only - derive brand from domain prefix
-      const urlRaw = parts[0];
-      const url = normalizeUrl(urlRaw);
-      const domain = url.split('/')[0];
-      let brand = domain.replace(/^www\./, '').split('.')[0];
-      brand = brand.charAt(0).toUpperCase()+brand.slice(1);
-      return { brand, url, admin:'', account:'', password:'', status, team, owner, group:'', note:'' };
-    }
-  });
-}
-
-function wsImportPreview(){
-  const items = wsImportParseLines();
-  const el = document.getElementById('wsImportPreview');
-  if(!items.length){ el.style.display='none'; return; }
-  el.style.display='block';
-  el.innerHTML = '<div style="font-weight:600;margin-bottom:6px">'+items.length+' website sẽ được import:</div>'
-    + items.map(w=>`<div style="padding:3px 0;border-bottom:1px solid #f0f0f0;display:flex;gap:8px"><span style="font-weight:600;min-width:100px">${w.brand}</span><span style="color:var(--blue)">${w.url}</span></div>`).join('');
-}
-
-function wsImportRun(){
-  const items = wsImportParseLines();
-  if(!items.length){ toast('Không có dữ liệu để import!','#e74c3c'); return; }
-
-  // Separate new vs duplicate
-  const toAdd = [];
-  const toDup = []; // {item, dup}
-  items.forEach(w=>{
-    if(!w.url && !w.brand) return;
-    const dup = websites.find(x=>
-      w.url && x.url && x.url.replace(/\/$/,'')===w.url.replace(/\/$/,'')
-    );
-    if(dup) toDup.push({item:w, dup});
-    else toAdd.push(w);
-  });
-
-  // If duplicates exist, ask once for all
-  let replaceAll = false;
-  if(toDup.length){
-    const names = toDup.map(d=>'• '+d.dup.brand+' ('+d.dup.url+')').join('\n');
-    const msg = toDup.length+' website đã tồn tại:\n'+names+'\n\nOK = Thay thế tất cả bằng dữ liệu mới\nHuỷ = Bỏ qua, chỉ thêm website mới';
-    replaceAll = confirm(msg);
-  }
-
-  let added=0, replaced=0, skipped=0;
-  toAdd.forEach(w=>{ websites.push({...w, id:wsNextId++}); added++; });
-  toDup.forEach(({item:w, dup})=>{
-    if(replaceAll){
-      const i=websites.findIndex(x=>x.id===dup.id);
-      if(i>=0){ websites[i]={...w, id:dup.id}; replaced++; }
-    } else { skipped++; }
-  });
-
-  saveAppData(); renderWebsites(); autoFillAnchors(); updateWsIcons();
-  closeWsImportModal();
-  let msg = '✓ Import xong: '+added+' thêm mới';
-  if(replaced) msg += ', '+replaced+' cập nhật';
-  if(skipped) msg += ', '+skipped+' bỏ qua';
-  toast(msg);
-}
-
-function updateNavBadges(){
-  updateRecurringBadge();
-  // Badge Công việc khác: số task chưa done (progress < 100%) theo member filter
-  const memberFilter = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
-  const incompleteTasks = (typeof tasks!=='undefined'?tasks:[]).filter(t=>{
-    if(memberFilter && t.person!==memberFilter) return false;
-    if(currentMember==='hai' && t.team==='Team 02') return false;
-    return calcProjectProgress(t) < 100;
-  });
-  const bTask = document.getElementById('navBadgeTasks');
-  if(bTask){
-    if(incompleteTasks.length){ bTask.textContent=incompleteTasks.length; bTask.style.display='inline'; }
-    else bTask.style.display='none';
-  }
-
-  // Badge Index Tasks: task đến hạn hoặc pending nhắc hôm nay, chưa done
-  const today = todayVN();
-  const duePerson = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':'';
-  const _it = typeof indexTasks!=='undefined' ? indexTasks : [];
-  const dueIndex = _it.filter(t=>{
-    if(t.status==='Done') return false;
-    if(duePerson && t.person!==duePerson) return false;
-    if(t.status==='Pending') return t.pendingNewDue===today;
-    return t.dueDate<=today;
-  });
-  const bIndex = document.getElementById('navBadgeIndex');
-  if(bIndex){
-    if(dueIndex.length){ bIndex.textContent=dueIndex.length; bIndex.style.display='inline'; }
-    else bIndex.style.display='none';
-  }
-}
-
-// ===== TASK TRASH =====
+// [REMOVED: WEBSITE IMPORT] // ===== TASK TRASH =====
 function updateTrashBadge(){
   const el=document.getElementById('trashCount');
   if(!el) return;
@@ -10405,3 +9636,29 @@ function applyBulkNT(sheet, val){
   toast(`✓ Đã cập nhật NT ${val}% cho ${ids.size} bài`);
 }
 
+
+// ===== Há»† SINH THÃI WORKSPACE SWITCHER =====
+function switchWorkspace(target, btnEl) {
+  const frame = document.getElementById('ecosystemFrame');
+  const workPanel = document.getElementById('ecosystemWorkPanel');
+  
+  // Update tab active state (nav buttons)
+  document.querySelectorAll('.eco-tab').forEach(b => b.classList.remove('eco-tab-active'));
+  const tabId = 'eco-tab-' + (target === 'work' ? 'work' : target === '/finance' ? 'finance' : 'tools');
+  const activeTab = document.getElementById(tabId);
+  if (activeTab) activeTab.classList.add('eco-tab-active');
+
+  // Show the ecosystem page
+  showPage('ecosystem');
+
+  if (target === 'work') {
+    // Tab 1: show the work panel, hide iframe
+    frame.style.display = 'none';
+    workPanel.style.display = 'block';
+  } else {
+    // Tab 2 & 3: Load URL in iframe
+    frame.style.display = 'block';
+    workPanel.style.display = 'none';
+    if (frame.src !== target) frame.src = target;
+  }
+}
