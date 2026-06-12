@@ -150,427 +150,68 @@ function totalHieu(){
 function totalBaiHai(){ return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).length; }
 function totalBaiHieu(){ return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).length; }
 
-function renderDashboard(){
-  const tHai = totalHai(), tHieu = totalHieu();
-  const bHai = totalBaiHai(), bHieu = totalBaiHieu();
-  const member = typeof currentMember!=='undefined' ? currentMember : 'admin';
-  // Show/hide end month button & period label
-  const dashBtn = document.getElementById('dashEndMonthBtn');
-  if(dashBtn) dashBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
-  const dashEditBtn = document.getElementById('dashEditPeriodBtn');
-  if(dashEditBtn) dashEditBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
-  const dashHistBtn = document.getElementById('dashHistoryBtn');
-  if(dashHistBtn) dashHistBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
-  const dashRollbackBtn = document.getElementById('dashRollbackBtn');
-  if(dashRollbackBtn) dashRollbackBtn.style.display = (member==='admin' && _periodHistory.length>0) ? 'inline-flex' : 'none';
-  const dashSHai = document.getElementById('dashSalaryHaiBtn');
-  if(dashSHai) dashSHai.style.display = member==='admin' ? 'inline-flex' : 'none';
-  const dashSHieu = document.getElementById('dashSalaryHieuBtn');
-  if(dashSHieu) dashSHieu.style.display = member==='admin' ? 'inline-flex' : 'none';
-  const dashRatesBtn = document.getElementById('dashRatesBtn');
-  if(dashRatesBtn) dashRatesBtn.style.display = member==='admin' ? 'inline-flex' : 'none';
-  const ps = getPeriodStart();
-  const [py,pm,pd] = ps.split('-');
-  const periodEl = document.getElementById('periodLabel');
-  if(periodEl) periodEl.textContent = `Kỳ hiện tại: từ ${pd}/${pm}/${py} đến nay`;
+function renderDashboard() {
+  const container = document.getElementById('panel-workspace-job');
+  if (!container) return;
 
-  // Build flat records for report: group by (ngay, loai, nt)
-  function buildReportData(sheet){
-    const ps = getPeriodStart();
-    const dayMap = {};
-    data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
-      const d = fmtDate(r.ngay)||'?';
-      if(!dayMap[d]) dayMap[d]={ngay:d, slots:{}, chiDang:0, totalBai:0};
-      const loai = r.loai||'Tinh Gọn';
-      const nt = r.nghiemThu===undefined ? 100 : r.nghiemThu;
-      const key = loai+'__'+nt;
-      if(!dayMap[d].slots[key]) dayMap[d].slots[key]={loai, nt, count:0, tien:0};
-      dayMap[d].slots[key].count++;
-      dayMap[d].slots[key].tien += getLoaiPrice(loai, sheet, r) * (nt/100);
-      dayMap[d].chiDang += (r.chiDang||0);
-      dayMap[d].totalBai++;
-    });
-    return dayMap;
-  }
+  const activeTasks = (tasks || []).slice(0, 5);
 
-  function buildDayRows(sheet){
-    const dayMap = buildReportData(sheet);
-    const rows = [];
-    Object.values(dayMap).sort((a,b)=>a.ngay.localeCompare(b.ngay)).forEach(day=>{
-      const slots = Object.values(day.slots).sort((a,b)=>a.loai.localeCompare(b.loai)||b.nt-a.nt);
-      const dayTotal = slots.reduce((a,s)=>a+s.tien,0) + day.chiDang*4000;
-      const rowspan = slots.length + (day.chiDang>0?1:0);
-
-      slots.forEach((slot, i)=>{
-        const isFirst = i===0;
-        const cfg = LOAI_CONFIG[slot.loai]||{color:'gray'};
-        const color = cfg.color==='red'?'var(--red)':cfg.color==='blue'?'var(--blue)':cfg.color==='green'?'var(--green)':'var(--text-muted)';
-        const ntc = NT_CONFIG[slot.nt]||NT_CONFIG[100];
-        const ntBadge = slot.nt!==100
-          ? `<span style="font-size:10px;color:${ntc.color};background:${ntc.bg};border:1px solid ${ntc.border};border-radius:10px;padding:1px 6px;margin-left:5px;font-weight:700">${slot.nt}%</span>`
-          : '';
-        rows.push(`<tr>
-          ${isFirst?`<td rowspan="${rowspan}" style="vertical-align:top;padding-top:8px;font-weight:500;white-space:nowrap;border-right:1px solid var(--gray-border)">
-            ${day.ngay}<br><span style="font-size:10px;color:var(--text-muted);font-weight:400">${day.totalBai} bài</span>
-          </td>`:''}
-          <td style="font-size:12px;padding-left:12px">
-            <span style="color:${color}">${slot.count}× ${slot.loai}</span>${ntBadge}
-          </td>
-          <td class="num money" style="font-size:12px">${fmt(slot.tien)}</td>
-          ${isFirst?`<td class="num money" rowspan="${rowspan}" style="vertical-align:middle;font-weight:600;border-left:1px solid var(--gray-border)">${fmt(dayTotal)}</td>`:''}
-        </tr>`);
-      });
-      if(day.chiDang>0){
-        rows.push(`<tr>
-          <td style="color:#e67e22;font-size:12px;padding-left:12px">${day.chiDang}× Chỉ Đăng (tự)</td>
-          <td class="num money" style="font-size:12px">${fmt(day.chiDang*4000)}</td>
-        </tr>`);
-      }
-    });
-    return rows.join('');
-  }
-
-  function buildTotalRows(sheet){
-    // Aggregate across all days: group by (loai, nt)
-    const dayMap = buildReportData(sheet);
-    const totals = {}; // key = loai__nt
-    let totalChiDang = 0;
-    Object.values(dayMap).forEach(day=>{
-      Object.entries(day.slots).forEach(([key, slot])=>{
-        if(!totals[key]) totals[key]={loai:slot.loai, nt:slot.nt, count:0, tien:0};
-        totals[key].count += slot.count;
-        totals[key].tien += slot.tien;
-      });
-      totalChiDang += day.chiDang;
-    });
-    const sorted = Object.values(totals).sort((a,b)=>a.loai.localeCompare(b.loai)||b.nt-a.nt);
-    const grandTotal = sorted.reduce((a,s)=>a+s.tien,0) + totalChiDang*4000;
-    const grandBai = sorted.reduce((a,s)=>a+s.count,0);
-
-    const rows = sorted.map((slot,i)=>{
-      const cfg = LOAI_CONFIG[slot.loai]||{color:'gray'};
-      const color = cfg.color==='red'?'var(--red)':cfg.color==='blue'?'var(--blue)':cfg.color==='green'?'var(--green)':'var(--text-muted)';
-      const ntc = NT_CONFIG[slot.nt]||NT_CONFIG[100];
-      const ntBadge = `<span style="font-size:11px;color:${ntc.color};background:${ntc.bg};border:1px solid ${ntc.border};border-radius:10px;padding:1px 7px;margin-left:5px;font-weight:700">${slot.nt}%</span>`;
-      return `<tr>
-        ${i===0?`<td rowspan="${sorted.length+(totalChiDang>0?1:0)+(sorted.length>0?1:0)}" style="font-weight:600;vertical-align:top;padding-top:8px;border-right:1px solid var(--gray-border)">Tổng kỳ<br><span style="font-size:10px;color:var(--text-muted);font-weight:400">${grandBai} bài</span></td>`:''}
-        <td style="font-size:13px;padding-left:12px"><span style="color:${color};font-weight:600">${slot.count}× ${slot.loai}</span>${ntBadge}</td>
-        <td class="num money">${fmt(slot.tien)}</td>
-        ${i===0?`<td class="num money" rowspan="${sorted.length+(totalChiDang>0?1:0)+1}" style="vertical-align:middle;font-weight:700;font-size:14px;border-left:1px solid var(--gray-border)">${fmt(grandTotal)}</td>`:''}
-      </tr>`;
-    });
-    if(totalChiDang>0) rows.push(`<tr><td style="color:#e67e22;font-size:13px;padding-left:12px">${totalChiDang}× Chỉ Đăng (tự)</td><td class="num money">${fmt(totalChiDang*4000)}</td></tr>`);
-
-    return rows.join('');
-  }
-
-  const avgLabel = (avg) => {
-    const label = avg<200000?'Lôi ra ngoài, trảm!':avg<300000?'Trẫm khen!':'Người đâu, ban thưởng!';
-    return `<div style="display:flex;align-items:center;gap:6px"><span style="font-size:12px;color:#f1c40f;font-weight:600">${label}</span><span style="font-size:12px;opacity:.9">~${avg.toLocaleString('vi-VN')} đ/ngày</span></div>`;
-  };
-  const calcAvg = (t) => {
-    const ps=getPeriodStart(), today=todayVN();
-    const d0=new Date(ps+'T12:00:00'), d1=new Date(today+'T12:00:00');
-    const days=Math.max(1,Math.round((d1-d0)/(1000*60*60*24))+1);
-    return Math.round(t/days);
-  };
-  const buildChart = (sheet, luong) => {
-    const ps = getPeriodStart(), today = todayVN();
-    const allDates = [];
-    let d = new Date(ps+'T12:00:00');
-    const dEnd = new Date(today+'T12:00:00');
-    while(d <= dEnd){ allDates.push(d.toISOString().split('T')[0]); d.setDate(d.getDate()+1); }
-    const earMap = {};
-    data[sheet].filter(r=>(r.ngay||'')>=ps).forEach(r=>{
-      const nt = r.nghiemThu===undefined?100:r.nghiemThu;
-      earMap[r.ngay] = (earMap[r.ngay]||0) + getLoaiPrice(r.loai,sheet,r)*(nt/100);
-    });
-    const maxEar = Math.max(1, ...allDates.map(d=>earMap[d]||0));
-    const barW = Math.max(20, Math.min(40, Math.floor(700/allDates.length)));
-    const name = sheet==='hai'?'Hải':'Hiếu';
-    const bars = allDates.map(d=>{
-      const val = earMap[d]||0;
-      const pct = Math.round((val/maxEar)*80);
-      const color = val===0?'#ddd':sheet==='hai'?'var(--red)':'var(--blue)';
-      return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;width:${barW}px">
-        <div style="font-size:9px;color:var(--text-muted);height:16px;display:flex;align-items:flex-end">${val>0?Math.round(val/1000)+'k':''}</div>
-        <div style="width:${barW-4}px;height:${pct||3}px;background:${color};border-radius:2px 2px 0 0;min-height:3px"></div>
-        <div style="font-size:9px;color:var(--text-muted);writing-mode:vertical-lr;transform:rotate(180deg);height:26px;overflow:hidden">${fmtDate(d)}</div>
-      </div>`;
-    }).join('');
-    return `<div class="rh">
-        <span>📈 THU NHẬP THEO NGÀY — ${name.toUpperCase()}</span>
-      </div>
-      <div style="padding:12px 16px">
-        <div style="display:flex;align-items:flex-end;gap:1px;overflow-x:auto;padding-bottom:4px;min-height:110px">${bars}</div>
-      </div>`;
-  };
-  const buildFlexPanel = (sheet) => {
-    const flexItems = getFlexSalary(sheet);
-    const flexRows = flexItems.length ? flexItems.map((item,i)=>{
-      const isThuong = item.loai==='thuong';
-      return `<tr>
-        <td style="font-size:11px">${item.ngay?fmtDate(item.ngay):''}</td>
-        <td style="font-size:11px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${item.lydo||''}">${item.lydo||'—'}</td>
-        <td class="num" style="font-size:11px;color:${isThuong?'var(--green)':'var(--red)'};font-weight:600">${isThuong?'+':'-'}${fmt(item.amount)}</td>
-        <td style="padding:2px 4px;white-space:nowrap">
-          <button onclick="event.stopPropagation();_editFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:11px;padding:1px 4px">✎</button>
-          <button onclick="event.stopPropagation();_deleteFlexInline('${sheet}',${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:12px;padding:1px 3px">✕</button>
-        </td>
-      </tr>`;
-    }).join('') : `<tr><td colspan="4" style="text-align:center;padding:12px;color:var(--text-muted);font-size:12px">Chưa có khoản nào</td></tr>`;
-    return `<div class="report-card ${sheet}" style="align-self:start">
-      <div class="rh" style="justify-content:space-between">
-        <span>🎁 THƯỞNG / PHẠT — ${sheet==='hai'?'HẢI':'HIẾU'}</span>
-        <div style="display:flex;gap:4px">
-          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','thuong')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Thưởng</button>
-          <button onclick="event.stopPropagation();_addFlexInline('${sheet}','phat')" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 7px;font-size:11px;cursor:pointer;color:#fff">+Phạt</button>
-        </div>
-      </div>
-      <table class="report-table">
-        <thead><tr><th>Ngày</th><th>Lý do</th><th>Giá trị</th><th></th></tr></thead>
-        <tbody>${flexRows}</tbody>
-      </table>
-    </div>`;
-  };
-  const buildSalaryExtra2 = (name, sc, net, sheet) => `
-    <div class="report-card ${sheet}" style="align-self:start">
-      <div class="rh"><span>💰 THỰC NHẬN — ${name.toUpperCase()}</span></div>
-      <table class="report-table">
-        <tbody>
-          <tr><td>Lương bài</td><td></td><td class="num money">${fmt(net+(sc.chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0)-(sc.phuCap||[]).reduce((a,x)=>a+(x.amount||0),0)+getTotalPhat(sheet)-getTotalThuong(sheet))}</td></tr>
-          ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
-          ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
-          <tr><td style="color:var(--green)">🟢 Tổng thưởng</td><td></td><td class="num money">+${fmt(getTotalThuong(sheet))}</td></tr>
-          <tr><td style="color:var(--red)">🔴 Tổng phạt</td><td></td><td class="num money-red">−${fmt(getTotalPhat(sheet))}</td></tr>
-        </tbody>
-        <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(net)}</b></td></tr></tfoot>
-      </table>
-    </div>`;
-
-  // Inline flex helpers - needed by both member and admin views
-  window._addFlexInline = (sheet, loai) => { _flexModalSheet=sheet; addFlexItem(loai); renderDashboard(); };
-  window._editFlexInline = (sheet, idx) => { _flexModalSheet=sheet; editFlexItem(idx); };
-  window._deleteFlexInline = (sheet, idx) => { _flexModalSheet=sheet; deleteFlexItem(idx); };
-
-  // ---- MEMBER VIEW: Hải hoặc Hiếu ----
-  if(member==='hai'||member==='hieu'){
-    const sheet = member;
-    const name  = member==='hai'?'Hải':'Hiếu';
-    const total = member==='hai'?tHai:tHieu;
-    const bai   = member==='hai'?bHai:bHieu;
-    const chiDang = data[sheet].reduce((a,r)=>a+(r.chiDang||0),0);
-
-    // Breakdown by loai
-    const loaiMap = {};
-    data[sheet].forEach(r=>{ loaiMap[r.loai]=(loaiMap[r.loai]||0)+1; });
-    const loaiRows = Object.entries(loaiMap).map(([l,n])=>`
-      <div class="stat-card" style="padding:12px">
-        <div class="label">${l}</div>
-        <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
-          <div class="value" style="font-size:20px">${n}</div>
-          <div style="font-size:12px;color:var(--text-muted)">= ${fmt(n*getLoaiPrice(l,sheet))}</div>
-        </div>
-      </div>`).join('');
-
-    document.getElementById('statsGrid').innerHTML = `
-      <div class="stat-card" style="background:var(--red);color:#fff;border-color:var(--red)">
-        <div class="label" style="color:rgba(255,255,255,.8)">Lương tháng này</div>
-        <div class="value" style="font-size:28px;color:#fff">${fmt(total)}</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Tổng bài đã làm</div>
-        <div class="value red">${bai}</div>
-      </div>
+  let tasksHtml = '';
+  if (activeTasks.length === 0) {
+    tasksHtml = `<div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">Không có công việc nào đang hoạt động.</div>`;
+  } else {
+    tasksHtml = activeTasks.map(t => {
+      const totalCards = (t.cards || []).length;
+      const doneCards = (t.cards || []).filter(c => c.colId === 'done' || c.colId === 'pending').length;
+      const pct = totalCards ? Math.round((doneCards / totalCards) * 100) : 0;
       
-      ${loaiRows}
-    `;
-
-    const sc = getSalaryConfig(sheet);
-    const netTotal = total - getTotalChiPhi(sheet) + getTotalPhuCap(sheet) - getTotalPhat(sheet) + getTotalThuong(sheet);
-    document.getElementById('reportGrid').innerHTML = `
-      <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
-        <div class="report-card ${sheet}">
-          <div class="rh">
-            <span>&#128100; BÁO CÁO CV ${name.toUpperCase()}</span>
-            ${avgLabel(calcAvg(total))}
-          </div>
-          <table class="report-table">
-            <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
-          </table>
-          <div style="height:320px;overflow-y:auto">
-            <table class="report-table" style="border-top:none">
-              <tbody>${buildDayRows(sheet)}</tbody>
-            </table>
-          </div>
-          <table class="report-table" style="border-top:2px solid var(--gray-border)">
-            <tfoot>${buildTotalRows(sheet)}</tfoot>
-          </table>
-        </div>
-        ${buildSalaryExtra2(name, sc, netTotal, sheet)}
-      </div>
-      <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
-        ${buildFlexPanel(sheet)}
-        <div class="report-card ${sheet}">${buildChart(sheet, total)}</div>
-      </div>
-    `;
-    return;
-  }
-
-  // ---- ADMIN VIEW: tổng cả hai ----
-  const scHai = getSalaryConfig('hai'), scHieu = getSalaryConfig('hieu');
-  const netHai = tHai - getTotalChiPhi('hai') + getTotalPhuCap('hai') - getTotalPhat('hai') + getTotalThuong('hai');
-  const netHieu = tHieu - getTotalChiPhi('hieu') + getTotalPhuCap('hieu') - getTotalPhat('hieu') + getTotalThuong('hieu');
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card"><div class="label">Tổng bài Hải</div><div class="value red">${bHai}</div></div>
-    <div class="stat-card"><div class="label">Thực nhận Hải</div><div class="value green">${fmt(netHai)}</div></div>
-    <div class="stat-card"><div class="label">Tổng bài Hiếu</div><div class="value blue">${bHieu}</div></div>
-    <div class="stat-card"><div class="label">Thực nhận Hiếu</div><div class="value green">${fmt(netHieu)}</div></div>
-    <div class="stat-card"><div class="label">Tổng chi trả</div><div class="value">${fmt(netHai+netHieu)}</div></div>
-    <div class="stat-card"><div class="label">Đơn giá</div><div class="value" style="font-size:13px;line-height:1.6">
-      <span style="color:var(--red)">■</span> TG 14k &nbsp;
-      <span style="color:var(--blue)">■</span> CV/CĐ 4k &nbsp;
-      <span style="color:var(--green)">■</span> TGN 7k
-    </div></div>
-  `;
-
-  // Build bar chart + flex salary panel
-  function buildChartAndFlex(sheet, luongBai){
-    const ps = getPeriodStart(), today = todayVN();
-    const d0 = new Date(ps+'T12:00:00'), d1 = new Date(today+'T12:00:00');
-    const allDays = [];
-    for(let d=new Date(d0); d<=d1; d.setDate(d.getDate()+1))
-      allDays.push(d.toISOString().split('T')[0]);
-    const dayTotals = {};
-    data[sheet].filter(r=>r.ngay>=ps).forEach(r=>{
-      const nt = r.nghiemThu===undefined?100:r.nghiemThu;
-      dayTotals[r.ngay] = (dayTotals[r.ngay]||0) + getLoaiPrice(r.loai,sheet,r)*(nt/100) + (r.chiDang||0)*4000;
-    });
-    const maxVal = Math.max(1,...allDays.map(d=>dayTotals[d]||0));
-    const barH = 80;
-    const bars = allDays.map(iso=>{
-      const v = dayTotals[iso]||0;
-      const h = v>0 ? Math.max(3,Math.round(v/maxVal*barH)) : 0;
-      const d = fmtDate(iso);
-      return `<div title="${d}: ${v>0?fmt(v):'0đ'}" style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:12px">
-        <div style="width:100%;max-width:28px;height:${barH}px;display:flex;align-items:flex-end;margin:0 auto">
-          <div style="width:100%;height:${h}px;background:${v>0?'var(--green)':'#e0e0e0'};border-radius:2px 2px 0 0"></div>
-        </div>
-        <div style="font-size:8px;color:var(--text-muted);margin-top:3px;white-space:nowrap">${d}</div>
-      </div>`;
-    }).join('');
-    const flexItems = getFlexSalary(sheet);
-    const flexRows = flexItems.length
-      ? flexItems.map((x,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--gray-border)">
+      return `
+        <div style="background:#fff;border:1px solid var(--gray-border);border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.03);display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:12px">
           <div style="flex:1;min-width:0">
-            <span style="font-size:11px;font-weight:700;color:${x.loai==='thuong'?'var(--green)':'var(--red)'}">${x.loai==='thuong'?'🟢':'🔴'}</span>
-            <span style="font-size:12px;margin-left:3px">${x.lydo||'—'}</span>
-            <span style="font-size:11px;color:var(--text-muted);margin-left:4px">${x.ngay?fmtDate(x.ngay):''}</span>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+              <span class="badge badge-blue" style="font-size:10px">${t.type || 'Công việc'}</span>
+              <span style="font-size:11px;color:var(--text-muted)">Tạo từ: ${t.from || ''}</span>
+            </div>
+            <div style="font-size:14px;font-weight:700;color:var(--text-main);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" onclick="showPage('tasks'); openTask(${t.id})">${t.name}</div>
           </div>
-          <span style="font-size:12px;font-weight:600;color:${x.loai==='thuong'?'var(--green)':'var(--red)'}">
-            ${x.loai==='thuong'?'+':'-'}${fmt(x.amount)}
-          </span>
-          <button onclick="event.stopPropagation();_flexModalSheet='${sheet}';editFlexItem(${i})" style="background:none;border:1px solid var(--gray-border);border-radius:4px;padding:1px 6px;font-size:11px;cursor:pointer;color:var(--text-muted)">✎</button>
-          <button onclick="event.stopPropagation();_flexModalSheet='${sheet}';deleteFlexItem(${i})" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:14px;padding:0 2px">✕</button>
-        </div>`).join('')
-      : '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Chưa có khoản nào.</div>';
-    return `<div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      <div class="report-card" style="padding:14px 16px">
-        <div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">📊 Thu nhập theo ngày</div>
-        <div style="display:flex;align-items:flex-end;gap:3px;overflow-x:auto;padding-bottom:4px">
-          ${bars}
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-top:6px;border-top:1px solid var(--gray-border);padding-top:4px">
-          <span>Cao nhất: ${fmt(maxVal)}</span>
-          <span>Tổng lương bài: ${fmt(luongBai)}</span>
-        </div>
-      </div>
-      <div class="report-card" style="padding:14px 16px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px">🎁 Thưởng / Phạt</div>
-          <div style="display:flex;gap:6px">
-            <button onclick="_flexModalSheet='${sheet}';addFlexItem('thuong');renderDashboard()" style="background:#f0faf4;border:1px solid var(--green);color:var(--green);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:600">+ Thưởng</button>
-            <button onclick="_flexModalSheet='${sheet}';addFlexItem('phat');renderDashboard()" style="background:#fdf2f2;border:1px solid var(--red);color:var(--red);border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;font-weight:600">+ Phạt</button>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:700;color:#c0392b">${pct}% Hoàn thành</div>
+            <div style="font-size:11px;color:var(--text-muted)">${doneCards}/${totalCards} task con</div>
           </div>
         </div>
-        <div>${flexRows}</div>
-      </div>
-    </div>`;
+      `;
+    }).join('');
   }
 
-  function buildSalaryExtraFull(name, sc, net, sheet){
-    const totalThuong = getTotalThuong(sheet);
-    const totalPhat   = getTotalPhat(sheet);
-    const luongBai = net + (sc.chiPhi||[]).reduce((a,x)=>a+(x.amount||0),0) - (sc.phuCap||[]).reduce((a,x)=>a+(x.amount||0),0) + totalPhat - totalThuong;
-    return `<div class="report-card ${sheet}" style="align-self:start">
-      <div class="rh"><span>💰 THỰC NHẬN — ${name.toUpperCase()}</span></div>
-      <table class="report-table">
-        <tbody>
-          <tr><td>Lương bài</td><td></td><td class="num money">${fmt(luongBai)}</td></tr>
-          ${(sc.chiPhi||[]).map(x=>'<tr><td style="color:var(--red)">− '+(x.name||'Chi phí')+'</td><td></td><td class="num money-red">−'+fmt(x.amount)+'</td></tr>').join('')}
-          ${(sc.phuCap||[]).map(x=>'<tr><td style="color:var(--green)">+ '+(x.name||'Phụ cấp')+'</td><td></td><td class="num money">+'+fmt(x.amount)+'</td></tr>').join('')}
-          <tr><td style="color:var(--green)">+ Tổng thưởng</td><td></td><td class="num money">+${fmt(totalThuong)}</td></tr>
-          <tr><td style="color:var(--red)">− Tổng phạt</td><td></td><td class="num money-red">−${fmt(totalPhat)}</td></tr>
-        </tbody>
-        <tfoot><tr class="total-row"><td><b>Thực nhận</b></td><td></td><td class="num money"><b>${fmt(net)}</b></td></tr></tfoot>
-      </table>
-    </div>`;
-  }
-
-  // Build avg label helper
-  document.getElementById('reportGrid').innerHTML = `
-    <!-- HAI SECTION -->
-    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
-      <div class="report-card hai">
-        <div class="rh">
-          <span>&#128100; BÁO CÁO CV HẢI</span>
-          ${avgLabel(calcAvg(tHai))}
-        </div>
-        <table class="report-table">
-          <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
-        </table>
-        <div style="height:320px;overflow-y:auto">
-          <table class="report-table" style="border-top:none">
-            <tbody>${buildDayRows('hai')}</tbody>
-          </table>
-        </div>
-        <table class="report-table" style="border-top:2px solid var(--gray-border)">
-          <tfoot>${buildTotalRows('hai')}</tfoot>
-        </table>
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-border);padding-bottom:12px;margin-bottom:16px">
+      <div>
+        <h2 style="font-size:18px;font-weight:800;margin:0">Trung tâm Điều hành</h2>
+        <p style="font-size:12px;color:var(--text-muted);margin:4px 0 0 0">Chào mừng bạn quay lại, Admin</p>
       </div>
-      ${buildSalaryExtra2('Hải', scHai, netHai, 'hai')}
+      <button onclick="showPage('tasks')" class="btn btn-primary btn-sm">Xem tất cả công việc</button>
     </div>
-    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
-      ${buildFlexPanel('hai')}
-      <div class="report-card hai">${buildChart('hai', tHai)}</div>
-    </div>
-    <!-- HIẾU SECTION -->
-    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
-      <div class="report-card hieu">
-        <div class="rh">
-          <span>&#128100; BÁO CÁO CV HIẾU</span>
-          ${avgLabel(calcAvg(tHieu))}
-        </div>
-        <table class="report-table">
-          <thead><tr><th>Ngày</th><th>Loại bài</th><th>Thành tiền</th><th>Tổng ngày</th></tr></thead>
-        </table>
-        <div style="height:320px;overflow-y:auto">
-          <table class="report-table" style="border-top:none">
-            <tbody>${buildDayRows('hieu')}</tbody>
-          </table>
-        </div>
-        <table class="report-table" style="border-top:2px solid var(--gray-border)">
-          <tfoot>${buildTotalRows('hieu')}</tfoot>
-        </table>
+    
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px">
+      <div style="background:linear-gradient(135deg,#c0392b,#8e1212);border-radius:14px;padding:20px;color:#fff;box-shadow:0 8px 24px rgba(192,57,43,0.25)">
+        <div style="font-size:12px;opacity:0.8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Tổng dự án</div>
+        <div style="font-size:32px;font-weight:800;margin:8px 0">${(tasks || []).length}</div>
+        <div style="font-size:12px;opacity:0.9">Đang được quản lý trên hệ thống</div>
       </div>
-      ${buildSalaryExtra2('Hiếu', scHieu, netHieu, 'hieu')}
+      <div style="background:#fff;border:1px solid var(--gray-border);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.02)">
+        <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Tài khoản Web</div>
+        <div style="font-size:32px;font-weight:800;margin:8px 0;color:var(--text-main)">${(websites || []).length}</div>
+        <div style="font-size:12px;color:var(--text-muted)">Tổng tài khoản quản trị website</div>
+      </div>
     </div>
-    <div style="grid-column:1/-1;display:grid;grid-template-columns:7fr 3fr;gap:16px;align-items:start">
-      ${buildFlexPanel('hieu')}
-      <div class="report-card hieu">${buildChart('hieu', tHieu)}</div>
+    
+    <div style="margin-top:16px">
+      <h3 style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--text-main)">Dự án hoạt động gần đây</h3>
+      <div>
+        ${tasksHtml}
+      </div>
     </div>
   `;
-
 }
 
 function statusBadge(s){
@@ -816,7 +457,7 @@ function applyDrop(){
 
   updateFilterHeaders(sheet);
   closeDrop();
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 function updateFilterHeaders(sheet){
@@ -1039,12 +680,12 @@ function navDate(sheet, dir){
   // If no active date, start from today before navigating
   const cur = activeDate[sheet] && activeDate[sheet].length===10 ? activeDate[sheet] : today;
   activeDate[sheet] = addDays(cur, dir);
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 function setActiveDate(sheet, date){
   activeDate[sheet] = (date && date.length===10) ? date : null;
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 // Delegated handler for website copy buttons
@@ -1256,7 +897,7 @@ function getVisibleRows(sheet){
 function toggleAll(sheet, checked){
   const rows = getVisibleRows(sheet);
   rows.forEach(r=>{ if(checked) selected[sheet].add(r.id); else selected[sheet].delete(r.id); });
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 function updateBulkBar(sheet){
@@ -1334,7 +975,7 @@ function bulkStatus(sheet, status){
     const r=data[sheet].find(x=>x.id===id);
     if(r) r.status=status;
   });
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   saveAppData();
   toast(`&#10003; Đã cập nhật ${selected[sheet].size} dòng → ${status}`);
 }
@@ -1345,7 +986,7 @@ function bulkDelete(sheet){
   data[sheet] = data[sheet].filter(r=>!ids.has(r.id));
   selected[sheet] = new Set(); // reset hẳn, không dùng .clear() để tránh stale ref
   saveAppData();
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   renderDashboard();
   toast('Đã xoá ' + ids.size + ' dòng.');
 }
@@ -1354,14 +995,14 @@ function clearSelection(sheet){
   selected[sheet] = new Set();
   const allChk=document.getElementById('chkAll'+sheet.charAt(0).toUpperCase()+sheet.slice(1));
   if(allChk) allChk.checked=false;
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 function clearFilter(sheet){
   const f=sheetFilters[sheet];
   Object.keys(f).forEach(k=>{ f[k]=k==='ngay_from'||k==='ngay_to'?'':null; });
   updateFilterHeaders(sheet);
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 function getF(id){return (document.getElementById(id)||{}).value||'';}
@@ -1640,7 +1281,7 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
     // recurDoneToday saved via setRecurDoneToday()
       if(r._ts) localStorage.setItem('wt_ts',    String(r._ts));
 
-      renderDashboard(); renderHai(); renderHieu();
+      renderDashboard();
       renderTasksOverview();
       // Fix: also re-render sub-board if currently open
       if(currentProjectId){
@@ -4121,8 +3762,8 @@ function setMember(m){
   } else {
     // Same page — re-render with new filter
     if(activeId==='dashboard') renderDashboard();
-    else if(activeId==='hai') renderHai();
-    else if(activeId==='hieu') renderHieu();
+    /* activeId hai */
+    /* activeId hieu */
     else if(activeId==='tasks') renderTasksOverview();
     else if(activeId==='links'){ renderLinks(); renderWebsites(); }
     else if(activeId==='index') renderIndexTasks();
@@ -4847,7 +4488,7 @@ function applyBulkEdit(){
   closeBulkEdit();
   // If date changed, jump to that date
   if(field==='ngay' && val) activeDate[sheet] = val;
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   toast(`&#10003; Đã cập nhật "${val}" cho ${count} dòng`);
 }
 
@@ -4953,7 +4594,7 @@ function bulkSetColor(sheet, color){
   });
   document.getElementById('colorPicker-'+sheet).style.display='none';
   saveAppData();
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   toast(color ? '&#127912; Đã tô màu '+selected[sheet].size+' dòng' : 'Đã xoá màu');
 }function copyText(text, btn){
   // support data-kw attribute
@@ -8009,7 +7650,7 @@ function applyAssignIndexId(){
   });
   saveAppData();
   closeAssignIndexIdModal();
-  if(_assignSheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   toast(`✓ Đã gán ID "${val}" cho ${_assignIds.length} dòng`);
 }
 
@@ -8020,7 +7661,7 @@ function clearAssignIndexId(){
   });
   saveAppData();
   closeAssignIndexIdModal();
-  if(_assignSheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   toast('Đã xoá ID Index khỏi các dòng đã chọn');
 }
 
@@ -8032,7 +7673,7 @@ function closeAssignIndexIdModal(){
 function clearIndexIdFilter(sheet){
   const el = document.getElementById('indexIdFilter'+sheet.charAt(0).toUpperCase()+sheet.slice(1));
   if(el){ el.value=''; }
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
 }
 
 // ===== PROMPTS =====
@@ -8836,7 +8477,7 @@ function restoreFromBackup(dateKey){
     if(Array.isArray(s.links))        links        = s.links;
     if(Array.isArray(s.prompts))      prompts      = s.prompts;
     saveAppData();
-    renderDashboard(); renderHai(); renderHieu(); renderTasksOverview();
+    renderDashboard(); renderTasksOverview();
     const el=document.getElementById('backupOverlay'); if(el) el.remove();
     toast('✅ Đã khôi phục backup '+dateKey, '#27ae60', 5000);
   });
@@ -8913,8 +8554,6 @@ function migrateIndexTasksToKho(){
 loadAppData();
 applyAllAvatars();
 renderDashboard();
-renderHai();
-renderHieu();
 loadKhoId();
 window._appLoaded = true;
 initDragSelectGlobal();
@@ -9044,7 +8683,7 @@ function saveNT(){
   r.nghiemThu = _ntVal;
   saveAppData();
   closeNghiemThu();
-  if(_ntSheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   renderDashboard();
   toast('✅ Đã cập nhật nghiệm thu');
 }
@@ -9457,7 +9096,7 @@ function applyBulkNT(sheet, val){
   });
   saveAppData();
   const el=document.getElementById('bulkNtOverlay'); if(el) el.remove();
-  if(sheet==='hai') renderHai(); else renderHieu();
+  renderDashboard();
   renderDashboard();
   toast(`✓ Đã cập nhật NT ${val}% cho ${ids.size} bài`);
 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
@@ -232,25 +232,10 @@
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
-  <!-- Admin toolbar -->
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:#fff;border-bottom:1px solid var(--gray-border);margin-bottom:0">
-    <span id="periodLabel" style="font-size:12px;color:var(--text-muted);margin-right:4px"></span>
-    <button id="dashEndMonthBtn" onclick="openEndMonthModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">📅 Tháng mới</button>
-    <button id="dashEditPeriodBtn" onclick="openEditPeriodModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">✎ Sửa ngày</button>
-    <button id="dashHistoryBtn" onclick="openPeriodHistoryModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">📋 Lịch sử</button>
-    <button id="dashRollbackBtn" onclick="openRollbackModal()" class="btn btn-sm btn-outline" style="font-size:11px;color:#e67e22;border-color:#e67e22;display:none">↩ Quay về</button>
-    <div style="flex:1"></div>
-    <button id="dashSalaryHaiBtn" onclick="openSalaryConfigModal('hai')" class="btn btn-sm btn-outline" style="font-size:11px;display:none">💰 Chi phí Hải</button>
-    <button id="dashSalaryHieuBtn" onclick="openSalaryConfigModal('hieu')" class="btn btn-sm btn-outline" style="font-size:11px;display:none">💰 Chi phí Hiếu</button>
-    <button id="dashRatesBtn" onclick="openSalaryRatesModal()" class="btn btn-sm btn-outline" style="font-size:11px;display:none">💵 Mức lương</button>
+  <div id="panel-workspace-job" style="padding:24px; display:flex; flex-direction:column; gap:20px;">
+    <!-- Clean workspace job list will be rendered here -->
   </div>
-  <div class="stats-grid" id="statsGrid"></div>
-  <div class="report-grid" id="reportGrid"></div>
 </div>
-
-<!-- SHEET HẢI --></div>
-
-<!-- SHEET HIẾU --></div>
 
 <!-- CÔNG VIỆC KHÁC -->
 <div id="page-recurring" class="page">
