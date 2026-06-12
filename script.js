@@ -1301,23 +1301,27 @@ if(!_settings.avatars) _settings.avatars = {}; // local fills gaps, fb overrides
     // recurDoneToday saved via setRecurDoneToday()
       if(r._ts) localStorage.setItem('wt_ts',    String(r._ts));
 
-      renderDashboard();
-      renderTasksOverview();
-      // Fix: also re-render sub-board if currently open
-      if(currentProjectId){
-        const openTask = tasks.find(t=>t.id===currentProjectId);
-        if(openTask){
-          // Normalize cards array (Firebase may return object instead of array)
-          normalizeTaskCards(openTask);
-          renderSubBoard(openTask);
+      if (isAdminLoggedIn()) {
+        renderDashboard();
+        renderTasksOverview();
+        // Fix: also re-render sub-board if currently open
+        if(currentProjectId){
+          const openTask = tasks.find(t=>t.id===currentProjectId);
+          if(openTask){
+            // Normalize cards array (Firebase may return object instead of array)
+            normalizeTaskCards(openTask);
+            renderSubBoard(openTask);
+          }
         }
+        // Normalize all tasks' cards arrays defensively
+        tasks.forEach(normalizeTaskCards);
+        const active=document.querySelector('.page.active')?.id?.replace('page-','');
+        if(active==='links'){renderLinks();renderWebsites();}
+        if(active==='index') renderIndexTasks();
+        updateNavBadges();
+      } else {
+        tasks.forEach(normalizeTaskCards);
       }
-      // Normalize all tasks' cards arrays defensively
-      tasks.forEach(normalizeTaskCards);
-      const active=document.querySelector('.page.active')?.id?.replace('page-','');
-      if(active==='links'){renderLinks();renderWebsites();}
-      if(active==='index') renderIndexTasks();
-      updateNavBadges();
 
       // Auto-clean trash only AFTER Firebase data is fully loaded
       if(!window._trashCleaned){ window._trashCleaned=true; autoCleanTrash(); autoBackupDaily(); migrateIndexTasksToKho(); }
@@ -3832,6 +3836,14 @@ renderTasksOverview = function(){
   _origRenderTasksOverview();
 };
 
+function isAdminLoggedIn() {
+  try {
+    return sessionStorage.getItem('wt_session_admin') === 'true';
+  } catch(e) {
+    return false;
+  }
+}
+
 // ===== LOGIN / LOGOUT =====
 function showLoginScreen(){
   const ls = document.getElementById('loginScreen');
@@ -4006,6 +4018,8 @@ const AdminAuth = {
     
     setMember('admin');
     showPage('dashboard');
+    renderDashboard();
+    renderTasksOverview();
   },
 
   logout() {
@@ -4020,6 +4034,9 @@ const AdminAuth = {
         const ls = document.getElementById('loginScreen');
         if (ls) ls.style.display = 'none';
         setMember('admin');
+        restorePosition();
+        renderDashboard();
+        renderTasksOverview();
       }
     } catch(e) {}
   }
@@ -8546,6 +8563,7 @@ function restorePosition(){
     setTimeout(restorePosition, 50);
     return;
   }
+  if (!isAdminLoggedIn()) return;
   let restoredPage = 'dashboard';
   try{
     const saved = localStorage.getItem('wt_activePage');
