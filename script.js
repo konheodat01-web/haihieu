@@ -3918,6 +3918,10 @@ const AdminAuth = {
     if (ls) ls.style.display = 'none';
     
     currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
+    
+    // Switch to job workspace first to ensure parent container is display block & active tab highlighted
+    switchWorkspace('job', document.querySelector('.sidebar-tab'));
+    
     showPage('dashboard');
     renderDashboard();
     renderTasksOverview();
@@ -3935,6 +3939,10 @@ const AdminAuth = {
         const ls = document.getElementById('loginScreen');
         if (ls) ls.style.display = 'none';
         currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
+        
+        // Switch to job workspace first to ensure parent container is display block & active tab highlighted
+        switchWorkspace('job', document.querySelector('.sidebar-tab'));
+        
         restorePosition();
         renderDashboard();
         renderTasksOverview();
