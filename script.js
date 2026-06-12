@@ -1019,6 +1019,18 @@ function addEntry(){ /* DEAD CODE ELIMINATED */ }
 function deleteEntry(){ /* DEAD CODE ELIMINATED */ }
 function clearForm(){ /* DEAD CODE ELIMINATED */ }
 function showPage(name){
+  const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
+  if (workPages.includes(name)) {
+    const pWork = document.getElementById('panel-workspace-job');
+    const pEco = document.getElementById('page-ecosystem');
+    if (pWork) pWork.style.display = 'block';
+    if (pEco) { pEco.style.display = 'none'; pEco.classList.remove('active'); }
+    
+    document.querySelectorAll('[id^="eco-btn-"]').forEach(b => b.classList.remove('active'));
+    const btnWork = document.getElementById('eco-btn-work');
+    if (btnWork) btnWork.classList.add('active');
+  }
+
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('nav button').forEach(btn=>{
@@ -1074,7 +1086,7 @@ function saveAppData(){
 
 function fbPayload(ts){
   return {
-        tasks, taskOrder: tasks.map(t=>t.id),
+    tasks, taskOrder: tasks.map(t=>t.id),
     deletedTasks, links, linkCategories,
     websites, wsGroups,
     giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
@@ -1083,12 +1095,6 @@ function fbPayload(ts){
     passwords: getProfilePasswords(),
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
-    _period_start: _periodStart,
-    _period_history: _periodHistory,
-    _salary_config: _salaryConfig,
-    _salary_rates: _salaryRates,
-    _flex_salary: _flexSalary,
-    _loai_config: LOAI_CONFIG,
     wtApiKey: wtApiKey,
     wtSerperCredits: wtSerperCredits,
     teleTokenRank: localStorage.getItem('tele_token_rank') || '',
@@ -1107,7 +1113,6 @@ function saveToLocalStorage(){
     localStorage.setItem('wt_link_categories', JSON.stringify(linkCategories));
     localStorage.setItem('wt_websites',        JSON.stringify(websites));
     localStorage.setItem('wt_ws_groups',       JSON.stringify(wsGroups));
-    localStorage.setItem('wt_index_tasks',     JSON.stringify(indexTasks));
     localStorage.setItem('wt_giaoviec',        JSON.stringify(giaoViecList));
     localStorage.setItem('wt_assignees',       JSON.stringify(assignees));
     localStorage.setItem('wt_prompts',         JSON.stringify(prompts));
@@ -1236,9 +1241,6 @@ function initFirebaseListener(){
       if(Array.isArray(r.websites) && r.websites.length){ websites=r.websites; wsNextId=Math.max(2,...websites.map(w=>w.id+1)); deduplicateWebsiteIds(); }
       else if(r.websites===null) websites=[];
       wsGroups      = Array.isArray(r.wsGroups)      ? r.wsGroups      : wsGroups;
-      if(Array.isArray(r.indexTasks)){   indexTasks=r.indexTasks;    itNextId=Math.max(1,...indexTasks.map(t=>t._id||0))+1;
-        // Clean undefined values that Firebase rejects
-        indexTasks.forEach(t=>{ if(t.parentIds===undefined) t.parentIds=[]; }); }
       if(Array.isArray(r.siteTracking) && r.siteTracking.length > 0){ 
         siteTracking=r.siteTracking; 
         localStorage.setItem('wt_site_tracking',JSON.stringify(siteTracking)); 
@@ -9140,6 +9142,8 @@ function switchWorkspace(target, btnEl) {
   document.querySelectorAll('[id^="eco-btn-"]').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
 
+  const pWork = document.getElementById('panel-workspace-job');
+  const pEco = document.getElementById('page-ecosystem');
   const ifrFin   = document.getElementById('frame-finance');
   const ifrTools = document.getElementById('frame-tools');
 
@@ -9148,23 +9152,39 @@ function switchWorkspace(target, btnEl) {
   if (ifrTools) ifrTools.style.display = 'none';
 
   if (target === 'work') {
-    // Tab 1: Show existing main work dashboard
-    showPage('dashboard');
-  } else if (target === '/finance') {
-    // Tab 2: Finance iframe
-    showPage('ecosystem');
-    if (ifrFin) {
-      ifrFin.style.display = 'flex';
-      const frame = document.getElementById('iframe-finance');
-      if (frame && !frame.src) frame.src = '/finance';
+    if (pEco) { pEco.style.display = 'none'; pEco.classList.remove('active'); }
+    if (pWork) pWork.style.display = 'block';
+    
+    // Default to show dashboard or last active page if it is a work page
+    const lastPage = localStorage.getItem('wt_activePage') || 'dashboard';
+    const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
+    if (workPages.includes(lastPage)) {
+      showPage(lastPage);
+    } else {
+      showPage('dashboard');
     }
-  } else if (target === '/my-tools') {
-    // Tab 3: My Tools iframe
+  } else {
+    if (pWork) pWork.style.display = 'none';
+    
+    // Show ecosystem wrapper page
     showPage('ecosystem');
-    if (ifrTools) {
-      ifrTools.style.display = 'flex';
-      const frame = document.getElementById('iframe-tools');
-      if (frame && !frame.src) frame.src = '/my-tools';
+    if (pEco) {
+      pEco.style.display = 'flex';
+      pEco.classList.add('active');
+    }
+
+    if (target === '/finance') {
+      if (ifrFin) {
+        ifrFin.style.display = 'flex';
+        const frame = document.getElementById('iframe-finance');
+        if (frame && !frame.src) frame.src = '/finance';
+      }
+    } else if (target === '/my-tools') {
+      if (ifrTools) {
+        ifrTools.style.display = 'flex';
+        const frame = document.getElementById('iframe-tools');
+        if (frame && !frame.src) frame.src = '/my-tools';
+      }
     }
   }
 }

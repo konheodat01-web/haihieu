@@ -10,8 +10,8 @@
 <body>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0d1117 0%,#161b22 50%,#0d1117 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:inherit">
-  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;padding:0 24px">
+<div id="loginScreen" style="position:fixed;inset:0;z-index:9999;background:#0f111a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:inherit">
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:380px;padding:32px 24px;background:rgba(255,255,255,0.03);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,0.08);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.37)">
 
     <!-- Logo / Brand -->
     <div style="text-align:center;margin-bottom:40px">
@@ -229,6 +229,8 @@
 </nav>
 
 <main>
+  <!-- Main Work Workspace Container -->
+  <div id="panel-workspace-job" style="width:100%; height:100%; display:block;">
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
@@ -988,7 +990,19 @@
     </div>
   </div>
 
-</div>
+  </div> <!-- end panel-workspace-job -->
+
+  <!-- ECOSYSTEM PANELS -->
+  <div id="page-ecosystem" class="page" style="display:none;padding:0;overflow:hidden;width:100%;height:100%">
+    <div id="frame-finance" style="display:none;flex:1;height:100%;width:100%">
+      <iframe id="iframe-finance" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
+    </div>
+    <div id="frame-tools" style="display:none;flex:1;height:100%;width:100%">
+      <iframe id="iframe-tools" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
+    </div>
+  </div>
+</main>
+
 <!-- TASK TRASH MODAL -->
 <div class="modal-overlay" id="taskTrashModal" onclick="if(event.target===this)closeTaskTrash()">
   <div class="modal" style="max-width:600px" onclick="event.stopPropagation()">
