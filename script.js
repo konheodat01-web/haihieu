@@ -151,7 +151,7 @@ function totalBaiHai(){ return data.hai.filter(r=>_inCurrentPeriod(r.ngay)).leng
 function totalBaiHieu(){ return data.hieu.filter(r=>_inCurrentPeriod(r.ngay)).length; }
 
 function renderDashboard() {
-  const container = document.getElementById('panel-workspace-job');
+  const container = document.getElementById('page-dashboard-content');
   if (!container) return;
 
   const activeTasks = (tasks || []).slice(0, 5);
@@ -8703,7 +8703,7 @@ function viewPeriod(idx){ const h=_periodHistory[idx]; _viewingPeriod=h; closePe
 function backToCurrentPeriod(){ _viewingPeriod=null; renderDashboard(); }
 function renderDashboardForPeriod(start,end){
   const [sy,sm,sd]=start.split('-'); const [ey,em,ed]=end.split('-');
-  const container = document.getElementById('panel-workspace-job');
+  const container = document.getElementById('page-dashboard-content');
   if(!container) return;
 
   container.innerHTML = `
