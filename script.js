@@ -1374,60 +1374,9 @@ function inDateRange(ngay,from,to){
   return true;
 }
 
-function addEntry(){
-  const person = document.getElementById('fPerson').value;
-  const date = document.getElementById('fDate').value;
-  const keyword = document.getElementById('fKeyword').value.trim();
-  if(!person||!date||!keyword){toast('Vui lòng điền đủ thông tin bắt buộc (*)','#e74c3c');return;}
-  
-  const _entryLoai = document.getElementById('fType').value;
-  const _entrySheet = person==='Hải'?'hai':'hieu';
-  const entry = {
-    id: nextId[_entrySheet]++,
-    ngay: date, keyword,
-    loai: _entryLoai,
-    donGia: getLoaiPrice(_entryLoai, _entrySheet),
-    website: document.getElementById('fWebsite').value,
-    anchor: document.getElementById('fAnchor').value,
-    chuyenMuc: document.getElementById('fCategory').value,
-    link: document.getElementById('fLink').value,
-    spin: document.getElementById('fSpin').value,
-    index: document.getElementById('fIndex').value,
-    status: document.getElementById('fStatus').value,
-    chiDang: 0
-  };
-  
-  const key = person==='Hải'?'hai':'hieu';
-  data[key].unshift(entry);
-  
-  saveAppData(); // reportData recomputed by renderDashboard from data[]
-  toast('&#10003; Đã thêm bài thành công!');
-  clearForm();
-  activeDate[key] = date; // jump to the entry's date
-  renderDashboard();
-  if(key==='hai') renderHai(); else renderHieu();
-}
-
-function deleteEntry(sheet, id){
-  if(!confirm('Xoá bài này?')) return;
-  data[sheet] = data[sheet].filter(r=>r.id!==id);
-  saveAppData();
-  if(sheet==='hai') renderHai(); else renderHieu();
-  renderDashboard();
-  toast('Đã xoá.');
-}
-
-function clearForm(){
-  ['fPerson','fDate','fKeyword','fType','fCategory','fWebsite','fAnchor','fLink','fSpin','fIndex','fStatus'].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el.tagName==='SELECT') el.selectedIndex=0;
-    else el.value='';
-  });
-  
-  document.getElementById('fDate').value = todayVN();
-}
-
-
+function addEntry(){ /* DEAD CODE ELIMINATED */ }
+function deleteEntry(){ /* DEAD CODE ELIMINATED */ }
+function clearForm(){ /* DEAD CODE ELIMINATED */ }
 function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
@@ -1439,6 +1388,7 @@ function showPage(name){
   if(name==='tasks') renderTasksOverview();
   if(name==='recurring') renderRecurringTasks();
   if(name==='wstrack') renderWsTrack();
+  if(name==='ecosystem') { /* handled by switchWorkspace */ }
   if(name!=='tasks') clearTaskSelection();
   if(name==='links'){ renderLinks(); renderWebsites(); }
   if(name==='prompts') renderPrompts();
@@ -1460,7 +1410,7 @@ function toast(msg, bg='#27ae60', duration=2500){
 }
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
-document.getElementById('fDate').value = todayVN();
+document.getElementById('fDate')?.value = todayVN();
 
 // ===== LOCAL STORAGE PERSISTENCE =====
 // Set sticky top values dynamically based on actual rendered heights
@@ -1598,8 +1548,8 @@ function initFirebaseListener(){
       // Helper: Firebase stores empty arrays as null
       const arr = (v, fallback=[]) => Array.isArray(v) ? v : (v != null ? Object.values(v) : fallback);
 
-      data.hai  = arr(r.hai,  data.hai);
-      data.hieu = arr(r.hieu, data.hieu);
+      
+      
       tasks = arr(r.tasks, tasks);
       deduplicateTasks();
       if(tasks.length) taskNextId = Math.max(taskNextId, ...tasks.map(x=>x.id||0)) + 1;
@@ -1817,12 +1767,12 @@ function getImportWebsite(){
 function doImport(){
   const keywords = pastedKeywords.filter(k=>k.trim());
   if(!keywords.length){toast('Chưa có keyword nào!','#e74c3c');return;}
-  const sheet = document.getElementById('iNguoiViet').value;
-  const ngay = document.getElementById('iNgay').value;
+  const sheet = document.getElementById('iNguoiViet')?.value;
+  const ngay = document.getElementById('iNgay')?.value;
   if(!ngay){toast('Vui lòng chọn ngày!','#e74c3c');return;}
 
   const website = getImportWebsite();
-  const loai = document.getElementById('iLoai').value;
+  const loai = document.getElementById('iLoai')?.value;
   const chuyenMuc = document.getElementById('iChuyenMuc').value.trim();
   const status = document.getElementById('iStatus').value;
   const chiDang = 0;
@@ -4187,9 +4137,7 @@ function resolvePending(taskId,cardId){
 
 
 // [REMOVED: QUICK IMPORT] // ===== MEMBER SWITCHER =====
-const MEMBER_CONFIG = {
-  admin: {label:'Admin', avatar:'A', pages:['dashboard','recurring','tasks','links','prompts','wstrack','ecosystem']},
-};
+const MEMBER_CONFIG = { admin: {label:'Admin', avatar:'A', pages:['dashboard','recurring','tasks','links','prompts','wstrack','ecosystem']} };
 
 function toggleMemberDropdown(){
   document.getElementById('memberDropdown').classList.toggle('open');
@@ -4228,7 +4176,7 @@ function setMember(m){
   });
 
   // Auto-set filters
-  const personVal = m==='admin'?'':m==='hai'?'Hải':'Hiếu';
+  const personVal = '';
   const el=document.getElementById('tkFilterPerson');
   if(el){el.value=personVal;el.disabled=(m!=='admin');}
 
@@ -4501,35 +4449,16 @@ function setProfilePassword(member, pw){
   localStorage.setItem('wt_passwords', JSON.stringify(pws));
 }
 
-const PROFILE_INFO = {
-  admin: { name:'Admin', avatarStyle:'background:#2c3e50;color:#fff', icon:'⚙', fontSize:'22px' },
-  hieu:  { name:'Hiếu',  avatarStyle:'background:#eaf4fd;color:#2980b9', icon:'H', fontSize:'18px' },
-  hai:   { name:'Hải',   avatarStyle:'background:#fdf2f2;color:#c0392b', icon:'H', fontSize:'18px' },
-};
+const PROFILE_INFO = { admin: { name:'Admin', avatarStyle:'background:#2c3e50;color:#fff', icon:'⚙', fontSize:'22px' } };
 
 function selectProfile(member){
-  _pendingMember = member;
-  const p = PROFILE_INFO[member];
-  const avEl = document.getElementById('loginPwAvatar');
-  const avSrc = (_settings.avatars?.[member]) || null;
-  if(avEl){
-    avEl.setAttribute('style', 'width:48px;height:48px;border-radius:50%;overflow:hidden;flex-shrink:0');
-    avEl.innerHTML = avSrc
-      ? `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;display:block">`
-      : `<div style="${p.avatarStyle};width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${p.fontSize};font-weight:700">${p.icon}</div>`;
-  }
-  document.getElementById('loginPwName').textContent = p.name;
+  _pendingMember = 'admin';
   document.getElementById('loginPwInput').value='';
   document.getElementById('loginPwErr').style.display='none';
-  document.getElementById('loginStep1').style.display='none';
-  document.getElementById('loginStep2').style.display='flex';
   setTimeout(()=>document.getElementById('loginPwInput').focus(), 100);
 }
-
 function backToProfiles(){
-  _pendingMember=null;
-  document.getElementById('loginStep2').style.display='none';
-  document.getElementById('loginStep1').style.display='flex';
+  _pendingMember = null;
 }
 
 function submitPassword(){
@@ -4540,7 +4469,7 @@ function submitPassword(){
     document.getElementById('loginPwErr').style.display='block';
     inp.value=''; inp.focus(); return;
   }
-  loginAs(_pendingMember);
+  loginAs('admin');
 }
 
 function togglePwVis(){
@@ -9660,5 +9589,40 @@ function switchWorkspace(target, btnEl) {
     frame.style.display = 'block';
     workPanel.style.display = 'none';
     if (frame.src !== target) frame.src = target;
+  }
+}
+
+// ===== HE SINH THAI WORKSPACE SWITCHER =====
+function switchWorkspace(target, btnEl) {
+  // Update tab active state (nav buttons)
+  document.querySelectorAll('[id^="eco-btn-"]').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+
+  const ifrFin   = document.getElementById('frame-finance');
+  const ifrTools = document.getElementById('frame-tools');
+
+  // Hide all panels first
+  if (ifrFin)   ifrFin.style.display   = 'none';
+  if (ifrTools) ifrTools.style.display = 'none';
+
+  if (target === 'work') {
+    // Tab 1: Show existing main work dashboard
+    showPage('dashboard');
+  } else if (target === '/finance') {
+    // Tab 2: Finance iframe
+    showPage('ecosystem');
+    if (ifrFin) {
+      ifrFin.style.display = 'flex';
+      const frame = document.getElementById('iframe-finance');
+      if (frame && !frame.src) frame.src = '/finance';
+    }
+  } else if (target === '/my-tools') {
+    // Tab 3: My Tools iframe
+    showPage('ecosystem');
+    if (ifrTools) {
+      ifrTools.style.display = 'flex';
+      const frame = document.getElementById('iframe-tools');
+      if (frame && !frame.src) frame.src = '/my-tools';
+    }
   }
 }

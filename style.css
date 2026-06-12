@@ -1,4 +1,4 @@
-  *{box-sizing:border-box;margin:0;padding:0}
+﻿  *{box-sizing:border-box;margin:0;padding:0}
   :root{
     --red:#c0392b;--red-light:#fdf2f2;--red-mid:#e74c3c;
     --green:#27ae60;--green-light:#f0faf4;
@@ -154,7 +154,7 @@
   tr.row-selected td{background:#fff3f3 !important}
   .task-group-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);padding:4px 2px;margin-bottom:6px;border-bottom:1px solid var(--gray-border)}
   .task-row{background:#fff;border-radius:8px;border:1px solid var(--gray-border);padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:box-shadow .15s,border-color .15s,opacity .15s;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .priority-cao{border-left:3px solid #e74c3c !important}
+  
   .priority-binh{border-left:3px solid #e67e22 !important}
   .priority-thap{border-left:3px solid #27ae60 !important}
   .task-row.drag-over{border:2px dashed var(--red);background:#fdf2f2}
@@ -269,3 +269,18 @@
 .eco-tab.eco-tab-active { color:var(--blue,#3498db); border-bottom-color:var(--blue,#3498db); background:rgba(52,152,219,0.08); }
 #page-ecosystem { display:none; flex-direction:column; height:calc(100vh - 76px); }
 #page-ecosystem.active { display:flex !important; }
+/* ===== ECOSYSTEM APP SHELL ===== */
+#page-ecosystem { padding: 0 !important; overflow: hidden; }
+#page-ecosystem.active { display: flex !important; flex-direction: column; height: calc(100vh - 76px); }
+#frame-finance, #frame-tools { flex: 1; display: none; flex-direction: column; height: 100%; }
+#frame-finance.active, #frame-tools.active { display: flex; }
+#frame-finance iframe, #frame-tools iframe { flex: 1; width: 100%; height: 100%; border: none; display: block; }
+
+/* Eco nav buttons in sidebar */
+nav button[id^="eco-btn-"] { transition: all 0.2s ease; }
+nav button[id^="eco-btn-"].active {
+  background: rgba(192,57,43,0.15);
+  border-left: 3px solid var(--red, #c0392b);
+  color: var(--red, #c0392b);
+  font-weight: 700;
+}
