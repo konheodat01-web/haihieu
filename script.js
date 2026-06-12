@@ -3725,106 +3725,7 @@ function closeMemberDropdownOutside(e){
     document.getElementById('memberDropdown').classList.remove('open');
 }
 
-function setMember(m){
-  currentMember = m;
-  try{ localStorage.setItem('wt_activeMember', m); }catch(e){}
-  const cfg = MEMBER_CONFIG[m];
-  document.getElementById('memberDropdown').classList.remove('open');
-  // Close any open popups to avoid stale state
-  closeWebsiteInfo();
-  if(activeDrop) closeDrop();
 
-  // Update label only — avatar will be set by applyAllAvatars() below
-  document.getElementById('memberRoleLabel').textContent = cfg.label;
-
-  // Checkmarks
-  ['admin'].forEach(id=>{
-    document.getElementById('mdi-'+id).classList.toggle('active', id===m);
-    document.getElementById('mdc-'+id).style.display = id===m?'':'none';
-  });
-
-  // Show/hide nav tabs
-  document.querySelectorAll('nav button').forEach(btn=>{
-    const oc = btn.getAttribute('onclick')||'';
-    const match = oc.match(/'(\w+)'/);
-    const pg = match?match[1]:'';
-    btn.style.display = (!pg || cfg.pages.includes(pg)) ? '' : 'none';
-  });
-
-  // Auto-set filters
-  const personVal = '';
-  const el=document.getElementById('tkFilterPerson');
-  if(el){el.value=personVal;el.disabled=(m!=='admin');}
-
-  // Auto-fill forms
-  const fPerson=document.getElementById('fPerson');
-  if(fPerson){fPerson.value=personVal;fPerson.disabled=(m!=='admin');}
-  const npmPerson=document.getElementById('npm_person');
-  if(npmPerson){npmPerson.value=personVal;npmPerson.disabled=(m!=='admin');}
-  const qiPerson=document.getElementById('qi_person');
-  if(qiPerson){qiPerson.value=personVal;qiPerson.disabled=(m!=='admin');}
-  const iNguoiViet=document.getElementById('iNguoiViet');
-  if(iNguoiViet){iNguoiViet.value=m==='admin'?'admin':m;iNguoiViet.disabled=(m!=='admin');}
-
-  // Determine target page:
-  // - member 'hai' → force to 'hai' sheet
-  // - member 'hieu' → force to 'hieu' sheet
-  // - admin → stay on current page
-  const activePage = document.querySelector('.page.active');
-  const activeId = activePage?.id?.replace('page-','');
-
-  let targetPage = activeId;
-  if(m==='hai'){
-    // If on hieu sheet → jump to hai; if on hidden page → jump to hai
-    if(activeId==='hieu' || !cfg.pages.includes(activeId)) targetPage='hai';
-  } else if(m==='hieu'){
-    if(activeId==='hai' || !cfg.pages.includes(activeId)) targetPage='hieu';
-  } else {
-    // admin: stay, but if page is hidden for some reason go to dashboard
-    if(!cfg.pages.includes(activeId)) targetPage='dashboard';
-  }
-
-  if(targetPage !== activeId){
-    showPage(targetPage);
-  } else {
-    // Same page — re-render with new filter
-    if(activeId==='dashboard') renderDashboard();
-    /* activeId hai */
-    /* activeId hieu */
-    else if(activeId==='tasks') renderTasksOverview();
-    else if(activeId==='links'){ renderLinks(); renderWebsites(); }
-    else if(activeId==='index') renderIndexTasks();
-    else if(activeId==='prompts') renderPrompts();
-    // Always re-render dashboard stats
-    renderDashboard();
-  }
-
-  // Always update website Team 02 filter visibility
-  const teamOpt=document.querySelector('#websiteFilterTeam option[value="Team 02"]');
-  if(teamOpt) teamOpt.style.display = m==='hai' ? 'none' : '';
-  const teamSel=document.getElementById('websiteFilterTeam');
-  if(teamSel && m==='hai' && teamSel.value==='Team 02'){
-    teamSel.value=''; renderWebsites();
-  }
-  // Hide Team field in website form for Hải
-  const teamRow=document.getElementById('wf_team_row');
-  if(teamRow) teamRow.style.display = m==='hai' ? 'none' : 'grid';
-  // Update owner filter dropdowns
-  updateOwnerFilters(m);
-  // Ensure ws icons reflect current websites data after all re-renders
-  setTimeout(updateWsIcons, 50);
-  const resetBtn=document.getElementById('navResetPwBtn');
-  if(resetBtn) resetBtn.style.display=m==='admin'?'flex':'none';
-  const settingsBtn=document.getElementById('navSettingsBtn');
-  if(settingsBtn) settingsBtn.style.display=m==='admin'?'flex':'none';
-  const backupBtn=document.getElementById('navBackupBtn');
-  if(backupBtn) backupBtn.style.display=m==='admin'?'inline-block':'none';
-  const syncBtn=document.getElementById('navSyncBtn');
-  if(syncBtn) syncBtn.style.display=m==='admin'?'inline-block':'none';
-  applyAllAvatars();
-  updateNavBadges();
-  if(window._memberSwitching && window._appLoaded){ showPage('dashboard'); window._memberSwitching=false; }
-}
 
 // Patch renders to respect member filter
 const _origRenderTasksOverview = renderTasksOverview;
@@ -4016,7 +3917,7 @@ const AdminAuth = {
     const ls = document.getElementById('loginScreen');
     if (ls) ls.style.display = 'none';
     
-    setMember('admin');
+    currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
     showPage('dashboard');
     renderDashboard();
     renderTasksOverview();
@@ -4033,7 +3934,7 @@ const AdminAuth = {
       if (sessionStorage.getItem('wt_session_admin') === 'true') {
         const ls = document.getElementById('loginScreen');
         if (ls) ls.style.display = 'none';
-        setMember('admin');
+        currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
         restorePosition();
         renderDashboard();
         renderTasksOverview();
@@ -4134,7 +4035,7 @@ let promptNextId = 1;
     const session = sessionStorage.getItem('wt_session_member');
     if(!session) return; // No session — login screen will handle, don't set member
     const valid = ['admin','hai','hieu'];
-    setMember(valid.includes(session) ? session : 'admin');
+    currentMember = 'admin';
   }catch(e){}
 })();
 // ===== LINK QUAN TRỌNG =====
@@ -8632,7 +8533,7 @@ function submitSwitchPw(){
   closeSwitchPwModal();
   try{ sessionStorage.setItem('wt_session_member', target); }catch(e){}
   try{ localStorage.setItem('wt_activeMember', target); }catch(e){}
-  setMember(target);
+  currentMember = target; updateNavBadges();
 }
 
 // ===== NGHIỆM THU =====
@@ -9161,5 +9062,39 @@ function switchWorkspace(target, btnEl) {
         if (frame && !frame.src) frame.src = '/my-tools';
       }
     }
+  }
+}
+
+// ===== SAFE NAVIGATION BADGES =====
+function updateNavBadges() {
+  const sidebar = document.querySelector('nav');
+  if (!sidebar) return;
+
+  // 1. Recurring tasks badge
+  const badgeRecur = document.getElementById('navBadgeRecurring');
+  if (badgeRecur) {
+    let doneIds = new Set();
+    try {
+      doneIds = new Set(getRecurDoneToday().map(d => d.taskId));
+    } catch(e) {}
+    const activeRecurs = (recurringTasks || []).filter(t => !doneIds.has(t.id)).length;
+    badgeRecur.textContent = activeRecurs || '';
+    badgeRecur.style.display = activeRecurs ? 'inline-block' : 'none';
+  }
+
+  // 2. Work tasks badge
+  const badgeTasks = document.getElementById('navBadgeTasks');
+  if (badgeTasks) {
+    const activeTasksCount = (tasks || []).length;
+    badgeTasks.textContent = activeTasksCount || '';
+    badgeTasks.style.display = activeTasksCount ? 'inline-block' : 'none';
+  }
+
+  // 3. Giao việc pending badge
+  const badgeGv = document.getElementById('gvBadge');
+  if (badgeGv) {
+    const activeGv = (giaoViecList || []).filter(g => g.status !== 'Done' && g.status !== 'Đã Duyệt').length;
+    badgeGv.textContent = activeGv || '';
+    badgeGv.style.display = activeGv ? 'inline-block' : 'none';
   }
 }
