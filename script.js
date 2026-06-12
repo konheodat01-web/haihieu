@@ -1022,10 +1022,10 @@ let _showPageRedirectCount = 0;
 function showPage(name){
   const target = document.getElementById('page-' + name);
   if (!target) {
-    console.warn(`Page 'page-${name}' does not exist. Redirecting to dashboard.`);
+    console.warn(`Page 'page-${name}' does not exist. Falling back to work workspace.`);
     if (_showPageRedirectCount < 3) {
       _showPageRedirectCount++;
-      showPage('dashboard');
+      switchWorkspace('work');
       _showPageRedirectCount = 0;
     } else {
       console.error('Infinite redirect detected in showPage');
@@ -3608,6 +3608,7 @@ function renderPendingSummary(){
   const panel=document.getElementById('pendingSummaryPanel');
   const body=document.getElementById('pendingSummaryBody');
   const cnt=document.getElementById('pendingCount');
+  if(!panel || !body || !cnt) return;
   const total = allPendingCards.length + allPendingTasks.length;
   if(!total){panel.style.display='none';return;}
   panel.style.display='block';
@@ -8534,23 +8535,24 @@ window._websites = websites;
 setTimeout(syncLoaiBaiDropdowns, 150);
 
 // Restore last active page & sub-board
-(function restorePosition(){
-  // Step 1: restore page — isolated try/catch so errors don't reset to dashboard
+function restorePosition(){
+  const pWork = document.getElementById('panel-workspace-job');
+  const pDash = document.getElementById('page-dashboard');
+  if (!pWork || !pDash) {
+    setTimeout(restorePosition, 50);
+    return;
+  }
   let restoredPage = 'dashboard';
   try{
     const saved = localStorage.getItem('wt_activePage');
-    const validPages = ['dashboard','hai','hieu','add','import','tasks','links','index','prompts','recurring','wstrack'];
+    const validPages = ['dashboard','tasks','links','prompts','recurring','wstrack'];
     const cfg = MEMBER_CONFIG[currentMember] || MEMBER_CONFIG['admin'];
     if(saved && validPages.includes(saved) && cfg.pages.includes(saved)){
       restoredPage = saved;
-    } else if(saved && validPages.includes(saved)){
-      // Page not allowed for this member — fall to their default
-      restoredPage = currentMember==='hai' ? 'hai' : currentMember==='hieu' ? 'hieu' : 'dashboard';
     }
   }catch(e){}
   showPage(restoredPage);
 
-  // Step 2: restore sub-board if on tasks — separate try/catch
   if(restoredPage === 'tasks'){
     try{
       const savedId = localStorage.getItem('wt_activeProject');
@@ -8561,7 +8563,8 @@ setTimeout(syncLoaiBaiDropdowns, 150);
       }
     }catch(e){ localStorage.removeItem('wt_activeProject'); }
   }
-})();
+}
+restorePosition();
 
 
 // ===== SWITCH MEMBER WITH PASSWORD =====
@@ -9077,36 +9080,15 @@ function applyBulkNT(sheet, val){
 }
 
 
-// ===== Há»† SINH THÃI WORKSPACE SWITCHER =====
-function switchWorkspace(target, btnEl) {
-  const frame = document.getElementById('ecosystemFrame');
-  const workPanel = document.getElementById('ecosystemWorkPanel');
-  
-  // Update tab active state (nav buttons)
-  document.querySelectorAll('.eco-tab').forEach(b => b.classList.remove('eco-tab-active'));
-  const tabId = 'eco-tab-' + (target === 'work' ? 'work' : target === '/finance' ? 'finance' : 'tools');
-  const activeTab = document.getElementById(tabId);
-  if (activeTab) activeTab.classList.add('eco-tab-active');
-
-  // Show the ecosystem page
-  showPage('ecosystem');
-
-  if (target === 'work') {
-    // Tab 1: show the work panel, hide iframe
-    frame.style.display = 'none';
-    workPanel.style.display = 'block';
-  } else {
-    // Tab 2 & 3: Load URL in iframe
-    frame.style.display = 'block';
-    workPanel.style.display = 'none';
-    if (frame.src !== target) frame.src = target;
-  }
-}
-
 // ===== HE SINH THAI WORKSPACE SWITCHER =====
 function switchWorkspace(target, btnEl) {
   // Update tab active state (nav buttons)
   document.querySelectorAll('[id^="eco-btn-"]').forEach(b => b.classList.remove('active'));
+  
+  if (!btnEl) {
+    const btnId = target === 'work' ? 'eco-btn-work' : target === '/finance' ? 'eco-btn-finance' : 'eco-btn-tools';
+    btnEl = document.getElementById(btnId);
+  }
   if (btnEl) btnEl.classList.add('active');
 
   const pWork = document.getElementById('panel-workspace-job');
@@ -9125,7 +9107,7 @@ function switchWorkspace(target, btnEl) {
     // Default to show dashboard or last active page if it is a work page
     const lastPage = localStorage.getItem('wt_activePage') || 'dashboard';
     const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
-    if (workPages.includes(lastPage)) {
+    if (workPages.includes(lastPage) && document.getElementById('page-' + lastPage)) {
       showPage(lastPage);
     } else {
       showPage('dashboard');
