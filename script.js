@@ -1022,14 +1022,16 @@ let _showPageRedirectCount = 0;
 function showPage(name){
   const target = document.getElementById('page-' + name);
   if (!target) {
-    console.warn(`Page 'page-${name}' does not exist. Falling back to work workspace.`);
-    if (_showPageRedirectCount < 3) {
-      _showPageRedirectCount++;
-      switchWorkspace('work');
-      _showPageRedirectCount = 0;
-    } else {
-      console.error('Infinite redirect detected in showPage');
-      _showPageRedirectCount = 0;
+    console.warn(`Page 'page-${name}' does not exist.`);
+    if (name !== 'dashboard') {
+      if (_showPageRedirectCount < 3) {
+        _showPageRedirectCount++;
+        switchWorkspace('work');
+        _showPageRedirectCount = 0;
+      } else {
+        console.error('Infinite redirect detected in showPage');
+        _showPageRedirectCount = 0;
+      }
     }
     return;
   }
@@ -3586,6 +3588,9 @@ function confirmPending(){
 function closePendingModal(){document.getElementById('pendingModal').classList.remove('open');pendingDragCard=null;}
 
 function renderPendingSummary(){
+  const panel = document.getElementById('pendingSummaryPanel');
+  if(!panel) return;
+
   // Collect pending cards
   const allPendingCards=[];
   // Filter tasks by current member
@@ -3605,10 +3610,9 @@ function renderPendingSummary(){
   // Collect pending parent tasks
   const allPendingTasks = myTasks.filter(t=>t.pendingReason);
 
-  const panel=document.getElementById('pendingSummaryPanel');
   const body=document.getElementById('pendingSummaryBody');
   const cnt=document.getElementById('pendingCount');
-  if(!panel || !body || !cnt) return;
+  if(!body || !cnt) return;
   const total = allPendingCards.length + allPendingTasks.length;
   if(!total){panel.style.display='none';return;}
   panel.style.display='block';
@@ -8564,7 +8568,11 @@ function restorePosition(){
     }catch(e){ localStorage.removeItem('wt_activeProject'); }
   }
 }
-restorePosition();
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  restorePosition();
+} else {
+  window.addEventListener('DOMContentLoaded', restorePosition);
+}
 
 
 // ===== SWITCH MEMBER WITH PASSWORD =====
