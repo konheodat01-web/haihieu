@@ -1410,7 +1410,8 @@ function toast(msg, bg='#27ae60', duration=2500){
 }
 
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
-document.getElementById('fDate')?.value = todayVN();
+const fDateEl = document.getElementById('fDate');
+if (fDateEl) fDateEl.value = todayVN();
 
 // ===== LOCAL STORAGE PERSISTENCE =====
 // Set sticky top values dynamically based on actual rendered heights
@@ -4432,162 +4433,120 @@ function hideKbTooltip(){
   if(tip) tip.style.display='none';
 }
 
-// ===== PASSWORD AUTH =====
-const DEFAULT_PW = '123456';
-let _pendingMember = null;
+// ===== ADMIN AUTHENTICATION FLOW =====
+const AdminAuth = {
+  DEFAULT_PW: '123456',
+  
+  getPassword() {
+    try {
+      const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
+      return pws['admin'] || this.DEFAULT_PW;
+    } catch(e) {
+      return this.DEFAULT_PW;
+    }
+  },
 
-function getProfilePasswords(){
-  try{ return JSON.parse(localStorage.getItem('wt_passwords')||'{}'); }catch(e){ return {}; }
-}
-function getProfilePassword(member){
-  const pws = getProfilePasswords();
-  return pws[member] || DEFAULT_PW;
-}
-function setProfilePassword(member, pw){
-  const pws = getProfilePasswords();
-  pws[member] = pw;
-  localStorage.setItem('wt_passwords', JSON.stringify(pws));
-}
+  setPassword(pw) {
+    try {
+      const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
+      pws['admin'] = pw;
+      localStorage.setItem('wt_passwords', JSON.stringify(pws));
+    } catch(e) {}
+  },
 
-const PROFILE_INFO = { admin: { name:'Admin', avatarStyle:'background:#2c3e50;color:#fff', icon:'⚙', fontSize:'22px' } };
+  submitPassword() {
+    const inp = document.getElementById('loginPwInput');
+    const err = document.getElementById('loginPwErr');
+    const pw = inp?.value || '';
+    
+    if (pw !== this.getPassword()) {
+      if (err) err.style.display = 'block';
+      if (inp) { inp.value = ''; inp.focus(); }
+      return;
+    }
+    
+    this.login();
+  },
 
-function selectProfile(member){
-  _pendingMember = 'admin';
-  document.getElementById('loginPwInput').value='';
-  document.getElementById('loginPwErr').style.display='none';
-  setTimeout(()=>document.getElementById('loginPwInput').focus(), 100);
-}
-function backToProfiles(){
-  _pendingMember = null;
-}
+  togglePwVis() {
+    const inp = document.getElementById('loginPwInput');
+    if (inp) inp.type = (inp.type === 'password') ? 'text' : 'password';
+  },
 
-function submitPassword(){
-  const inp = document.getElementById('loginPwInput');
-  const pw = inp?.value||'';
-  const correct = getProfilePassword(_pendingMember);
-  if(pw !== correct){
-    document.getElementById('loginPwErr').style.display='block';
-    inp.value=''; inp.focus(); return;
+  login() {
+    try {
+      sessionStorage.setItem('wt_session_admin', 'true');
+      localStorage.setItem('wt_activeMember', 'admin');
+    } catch(e) {}
+    
+    const ls = document.getElementById('loginScreen');
+    if (ls) ls.style.display = 'none';
+    
+    setMember('admin');
+    showPage('dashboard');
+  },
+
+  logout() {
+    try { sessionStorage.removeItem('wt_session_admin'); } catch(e) {}
+    const ls = document.getElementById('loginScreen');
+    if (ls) ls.style.display = 'flex';
+  },
+
+  checkSession() {
+    try {
+      if (sessionStorage.getItem('wt_session_admin') === 'true') {
+        const ls = document.getElementById('loginScreen');
+        if (ls) ls.style.display = 'none';
+        setMember('admin');
+      }
+    } catch(e) {}
   }
-  loginAs('admin');
-}
+};
 
-function togglePwVis(){
-  const inp = document.getElementById('loginPwInput');
-  if(!inp) return;
-  inp.type = inp.type==='password' ? 'text' : 'password';
-}
+// Aliases for HTML onClick bindings
+function submitPassword() { AdminAuth.submitPassword(); }
+function togglePwVis() { AdminAuth.togglePwVis(); }
+function logout() { AdminAuth.logout(); }
 
-function loginAs(member){
-  try{ sessionStorage.setItem('wt_session_member', member); }catch(e){}
-  try{ localStorage.setItem('wt_activeMember', member); }catch(e){}
-  hideLoginScreen();
-  setMember(member);
-  showPage('dashboard');
-}
-
-function logout(){
-  try{ sessionStorage.removeItem('wt_session_member'); }catch(e){}
-  _pendingMember=null;
-  document.getElementById('loginStep2').style.display='none';
-  document.getElementById('loginStep1').style.display='flex';
-  showLoginScreen();
-}
+// Initialize session
+AdminAuth.checkSession();
 
 // ===== CHANGE PASSWORD =====
 function openChangePassword(){
-  const m = currentMember;
-  const p = PROFILE_INFO[m];
-  document.getElementById('cpwTitle').textContent = `🔑 Đổi mật khẩu — ${p.name}`;
-  document.getElementById('cpwOld').value='';
-  document.getElementById('cpwNew').value='';
-  document.getElementById('cpwConfirm').value='';
-  document.getElementById('cpwErr').style.display='none';
-  document.getElementById('changePwModal').classList.add('open');
-  setTimeout(()=>document.getElementById('cpwOld').focus(),100);
+  const title = document.getElementById('cpwTitle');
+  if (title) title.textContent = `🔑 Đổi mật khẩu - Admin`;
+  const cpwOld = document.getElementById('cpwOld');
+  if (cpwOld) cpwOld.value='';
+  const cpwNew = document.getElementById('cpwNew');
+  if (cpwNew) cpwNew.value='';
+  const cpwConfirm = document.getElementById('cpwConfirm');
+  if (cpwConfirm) cpwConfirm.value='';
+  const cpwErr = document.getElementById('cpwErr');
+  if (cpwErr) cpwErr.style.display='none';
+  const modal = document.getElementById('changePwModal');
+  if (modal) modal.classList.add('open');
+  if (cpwOld) setTimeout(()=>cpwOld.focus(),100);
 }
-function closeChangePassword(){ document.getElementById('changePwModal').classList.remove('open'); }
+function closeChangePassword(){ const modal = document.getElementById('changePwModal'); if (modal) modal.classList.remove('open'); }
 function saveChangePassword(){
-  const old = document.getElementById('cpwOld').value;
-  const nw = document.getElementById('cpwNew').value;
-  const cf = document.getElementById('cpwConfirm').value;
+  const old = document.getElementById('cpwOld')?.value || '';
+  const nw = document.getElementById('cpwNew')?.value || '';
+  const cf = document.getElementById('cpwConfirm')?.value || '';
   const err = document.getElementById('cpwErr');
-  const correct = getProfilePassword(currentMember);
-  if(old !== correct){ err.textContent='Mật khẩu hiện tại không đúng.'; err.style.display='block'; return; }
-  if(!nw){ err.textContent='Vui lòng nhập mật khẩu mới.'; err.style.display='block'; return; }
-  if(nw !== cf){ err.textContent='Mật khẩu xác nhận không khớp.'; err.style.display='block'; return; }
-  setProfilePassword(currentMember, nw);
+  const correct = AdminAuth.getPassword();
+  if(old !== correct){ if(err) { err.textContent='Mật khẩu hiện tại không đúng.'; err.style.display='block'; } return; }
+  if(!nw){ if(err) { err.textContent='Vui lòng nhập mật khẩu mới.'; err.style.display='block'; } return; }
+  if(nw !== cf){ if(err) { err.textContent='Mật khẩu xác nhận không khớp.'; err.style.display='block'; } return; }
+  AdminAuth.setPassword(nw);
   closeChangePassword();
-  toast('✓ Đã đổi mật khẩu thành công!');
+  if (typeof toast === 'function') toast('✅ Đã đổi mật khẩu thành công!');
 }
 
-// Admin reset password — separate modal
-const ADMIN_PIN = '2366';
-let _resetTarget = null;
-
-function openResetPwModal(){
-  _resetTarget=null;
-  document.getElementById('cpwPin').value='';
-  document.getElementById('cpwPinErr').style.display='none';
-  document.getElementById('resetPinWrap').style.display='none';
-  document.getElementById('resetConfirmBtn').style.display='none';
-  // Reset button borders
-  ['hai','hieu'].forEach(m=>{
-    const btn=document.getElementById('resetBtn'+m.charAt(0).toUpperCase()+m.slice(1));
-    if(btn) btn.style.borderColor='var(--gray-border)';
-  });
-  document.getElementById('resetPwModal').classList.add('open');
-}
-function closeResetPwModal(){ document.getElementById('resetPwModal').classList.remove('open'); cancelResetProfile(); }
-
-function selectResetTarget(member){
-  _resetTarget=member;
-  const name=PROFILE_INFO[member]?.name||member;
-  // Highlight selected
-  document.getElementById('resetBtnHai').style.borderColor = member==='hai'?'var(--red)':'var(--gray-border)';
-  document.getElementById('resetBtnHieu').style.borderColor = member==='hieu'?'#2980b9':'var(--gray-border)';
-  document.getElementById('resetPinLabel').textContent=`Xác nhận đặt lại MK của "${name}" → 123456`;
-  document.getElementById('cpwPin').value='';
-  document.getElementById('cpwPinErr').style.display='none';
-  document.getElementById('resetPinWrap').style.display='block';
-  document.getElementById('resetConfirmBtn').style.display='inline-flex';
-  setTimeout(()=>document.getElementById('cpwPin').focus(),100);
-}
-
-function cancelResetProfile(){
-  _resetTarget=null;
-  const wrap=document.getElementById('resetPinWrap');
-  if(wrap) wrap.style.display='none';
-  const btn=document.getElementById('resetConfirmBtn');
-  if(btn) btn.style.display='none';
-}
-
-function confirmResetProfile(){
-  const pin=document.getElementById('cpwPin').value;
-  const pinErr=document.getElementById('cpwPinErr');
-  if(pin!==ADMIN_PIN){ pinErr.style.display='block'; document.getElementById('cpwPin').value=''; document.getElementById('cpwPin').focus(); return; }
-  pinErr.style.display='none';
-  const pws=getProfilePasswords();
-  delete pws[_resetTarget];
-  localStorage.setItem('wt_passwords',JSON.stringify(pws));
-  const name=PROFILE_INFO[_resetTarget]?.name||_resetTarget;
-  closeResetPwModal();
-  toast(`✓ Đã đặt lại mật khẩu "${name}" về 123456`);
-}
-
-// Check session on load
-// Check session — loginScreen is visible by default, hide if valid session
-(function checkSession(){
-  try{
-    const session = sessionStorage.getItem('wt_session_member');
-    if(session){
-      // Valid session — hide login immediately
-      const ls = document.getElementById('loginScreen');
-      if(ls) ls.style.display='none';
-    }
-    // No session → loginScreen stays visible (it's display:flex by default)
-  }catch(e){}
-})();
+function openResetPwModal(){}
+function closeResetPwModal(){}
+function selectResetTarget(){}
+function cancelResetProfile(){}
+function confirmResetProfile(){}
 
 // Restore member first (before restorePosition so page filter is correct)
 // ===== EARLY DECLARATIONS (needed before setMember/updateNavBadges) =====
