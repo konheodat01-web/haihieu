@@ -1,4 +1,4 @@
-﻿let currentMember = 'admin'; // declared first to avoid TDZ
+let currentMember = 'admin'; // declared first to avoid TDZ
 let websites = [
   {id:1, brand:'Debet', url:'https://debets.sbs', admin:'wp-admin', account:'dybala5858585858@gmail.com', password:'Mktb2022@', status:'Tốt', note:''},
 ];
@@ -1717,99 +1717,6 @@ function loadAppData(){
   }catch(e){ console.warn('localStorage load failed', e); }
 }
 
-let pastedKeywords = [];
-
-function switchImportTab(tab){
-  document.getElementById('importTabPaste').style.display = tab==='paste'?'block':'none';
-  document.getElementById('importTabFile').style.display = tab==='file'?'block':'none';
-  document.getElementById('tabPaste').className = 'btn btn-sm '+(tab==='paste'?'btn-primary':'btn-outline');
-  document.getElementById('tabFile').className = 'btn btn-sm '+(tab==='file'?'btn-primary':'btn-outline');
-}
-
-function countKeywords(){
-  const lines = (document.getElementById('iKeywords').value||'').split('\n').map(l=>l.trim()).filter(l=>l);
-  pastedKeywords = lines;
-  const el = document.getElementById('kwCount');
-  el.textContent = '✓ '+lines.length+' keyword';
-  el.style.color = lines.length>0?'var(--green)':'var(--text-muted)';
-}
-
-document.getElementById('iWebsite').addEventListener('change',function(){
-  document.getElementById('iWebsiteCustomGroup').style.display = this.value==='custom'?'flex':'none';
-});
-
-function handleDrop2(e){
-  e.preventDefault();
-  document.getElementById('dropZone2').style.borderColor='var(--gray-border)';
-  handleCSVFile(e.dataTransfer.files[0]);
-}
-
-function handleCSVFile(file){
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const lines = e.target.result.trim().split('\n').map(l=>l.trim()).filter(l=>l);
-    pastedKeywords = lines;
-    const el = document.getElementById('csvKeywordCount');
-    el.style.display='block';
-    el.textContent = '✓ Đọc được '+lines.length+' keyword từ file';
-    toast('&#10003; Đọc được '+lines.length+' keyword');
-  };
-  reader.readAsText(file,'UTF-8');
-}
-
-function getImportWebsite(){
-  const sel = document.getElementById('iWebsite').value;
-  if(!sel) return '';
-  if(sel==='custom') return document.getElementById('iWebsiteCustom').value.trim();
-  return 'https://'+sel;
-}
-
-function doImport(){
-  const keywords = pastedKeywords.filter(k=>k.trim());
-  if(!keywords.length){toast('Chưa có keyword nào!','#e74c3c');return;}
-  const sheet = document.getElementById('iNguoiViet')?.value;
-  const ngay = document.getElementById('iNgay')?.value;
-  if(!ngay){toast('Vui lòng chọn ngày!','#e74c3c');return;}
-
-  const website = getImportWebsite();
-  const loai = document.getElementById('iLoai')?.value;
-  const chuyenMuc = document.getElementById('iChuyenMuc').value.trim();
-  const status = document.getElementById('iStatus').value;
-  const chiDang = 0;
-
-  let maxId = Math.max(0,...data[sheet].map(r=>r.id));
-  const _donGiaImport = getLoaiPrice(loai, sheet);
-  const toAdd = keywords.map((kw,i)=>({
-    id:maxId+i+1, ngay, keyword:kw.trim(), loai, donGia:_donGiaImport,
-    website, anchor:'', chuyenMuc, link:'', spin:'', index:'', status, chiDang
-  }));
-
-  data[sheet] = [...data[sheet], ...toAdd];
-
-  const p = ngay.split('-');
-  const dayKey = `${parseInt(p[2])}/${parseInt(p[1])}`;
-  const rep = reportData[sheet].find(x=>x.ngay===dayKey);
-  if(rep){rep.bai+=keywords.length;rep.chiDang+=chiDang*keywords.length;}
-  else reportData[sheet].push({ngay:dayKey,bai:keywords.length,chiDang:chiDang*keywords.length});
-
-  saveAppData();
-  toast(`&#10003; Đã import ${keywords.length} bài vào sheet ${sheet==='hai'?'Hải':'Hiếu'}!`);
-  clearImportForm();
-  renderDashboard();
-  activeDate[sheet] = ngay; // jump to imported date
-  showPage(sheet);
-}
-
-function clearImportForm(){
-  document.getElementById('iKeywords').value='';
-  pastedKeywords=[];
-  document.getElementById('kwCount').textContent='0 keyword';
-  const el = document.getElementById('csvKeywordCount');
-  if(el) el.style.display='none';
-  document.getElementById('iChuyenMuc').value='';
-  
-}
 
 // ===== CÔNG VIỆC KHÁC — PROJECT BOARDS =====
 const DEFAULT_COLS = [
@@ -4508,8 +4415,39 @@ function submitPassword() { AdminAuth.submitPassword(); }
 function togglePwVis() { AdminAuth.togglePwVis(); }
 function logout() { AdminAuth.logout(); }
 
-// Initialize session
-AdminAuth.checkSession();
+// Initialize login elements and session defensively once DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const pwInput = document.getElementById('loginPwInput');
+  if (pwInput) {
+    pwInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        AdminAuth.submitPassword();
+      }
+    });
+    pwInput.addEventListener('input', () => {
+      const err = document.getElementById('loginPwErr');
+      if (err) err.style.display = 'none';
+    });
+  }
+
+  const submitBtn = document.querySelector('button[onclick="submitPassword()"]');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      AdminAuth.submitPassword();
+    });
+  }
+
+  const toggleBtn = document.querySelector('button[onclick="togglePwVis()"]');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      AdminAuth.togglePwVis();
+    });
+  }
+
+  AdminAuth.checkSession();
+});
 
 // ===== CHANGE PASSWORD =====
 function openChangePassword(){
