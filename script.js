@@ -8796,15 +8796,21 @@ function viewPeriod(idx){ const h=_periodHistory[idx]; _viewingPeriod=h; closePe
 function backToCurrentPeriod(){ _viewingPeriod=null; renderDashboard(); }
 function renderDashboardForPeriod(start,end){
   const [sy,sm,sd]=start.split('-'); const [ey,em,ed]=end.split('-');
-  const periodEl=document.getElementById('periodLabel');
-  if(periodEl) periodEl.innerHTML=`<span style="color:var(--red);font-weight:600">📋 Đang xem: ${sd}/${sm}/${sy} → ${ed}/${em}/${ey}</span><button onclick="backToCurrentPeriod()" style="margin-left:8px;background:none;border:1px solid var(--gray-border);border-radius:5px;padding:1px 8px;font-size:11px;cursor:pointer;color:var(--text-muted)">← Về tháng hiện tại</button>`;
-  const filterFn=r=>r.ngay>=start&&r.ngay<=end;
-  const hBai=data.hai.filter(filterFn).length, hieuBai=data.hieu.filter(filterFn).length;
-  const hTien=data.hai.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hai',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
-  const hieuTien=data.hieu.filter(filterFn).reduce((a,r)=>a+getLoaiPrice(r.loai,'hieu',r)*(r.nghiemThu===undefined?1:r.nghiemThu/100),0);
-  document.getElementById('statsGrid').innerHTML=`<div class="stat-card"><div class="label">Tổng bài Hải</div><div class="value red">${hBai}</div></div><div class="stat-card"><div class="label">Lương Hải</div><div class="value green">${fmt(hTien)}</div></div><div class="stat-card"><div class="label">Tổng bài Hiếu</div><div class="value blue">${hieuBai}</div></div><div class="stat-card"><div class="label">Lương Hiếu</div><div class="value green">${fmt(hieuTien)}</div></div><div class="stat-card"><div class="label">Tổng chi trả</div><div class="value">${fmt(hTien+hieuTien)}</div></div>`;
-  function buildRows(sheet){ const dm={}; data[sheet].filter(filterFn).forEach(r=>{const d=fmtDate(r.ngay)||'?';if(!dm[d])dm[d]={ngay:d,bai:0,tien:0};dm[d].bai++;dm[d].tien+=getLoaiPrice(r.loai,sheet,r)*(r.nghiemThu===undefined?1:r.nghiemThu/100);}); return Object.values(dm).sort((a,b)=>a.ngay.localeCompare(b.ngay)).map(r=>`<tr><td>${r.ngay}</td><td class="num">${r.bai}</td><td class="num money">${fmt(r.tien)}</td><td></td></tr>`).join(''); }
-  document.getElementById('reportGrid').innerHTML=`<div class="report-card hai"><div class="rh">👤 BÁO CÁO CV HẢI</div><table class="report-table"><thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th><th></th></tr></thead><tbody>${buildRows('hai')}</tbody><tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${hBai}</b></td><td class="num money"><b>${fmt(hTien)}</b></td><td></td></tr></tfoot></table></div><div class="report-card hieu"><div class="rh">👤 BÁO CÁO CV HIẾU</div><table class="report-table"><thead><tr><th>Ngày</th><th>Số bài</th><th>Thành tiền</th><th></th></tr></thead><tbody>${buildRows('hieu')}</tbody><tfoot><tr class="total-row"><td><b>Tổng</b></td><td class="num"><b>${hieuBai}</b></td><td class="num money"><b>${fmt(hieuTien)}</b></td><td></td></tr></tfoot></table></div>`;
+  const container = document.getElementById('panel-workspace-job');
+  if(!container) return;
+
+  container.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--gray-border);padding-bottom:12px;margin-bottom:16px">
+      <div>
+        <h2 style="font-size:18px;font-weight:800;margin:0;color:var(--red)">📋 Đang xem lịch sử: ${sd}/${sm}/${sy} → ${ed}/${em}/${ey}</h2>
+        <p style="font-size:12px;color:var(--text-muted);margin:4px 0 0 0">Chế độ xem lịch sử</p>
+      </div>
+      <button onclick="backToCurrentPeriod()" class="btn btn-outline btn-sm">← Về hiện tại</button>
+    </div>
+    <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px">
+      Lịch sử các kỳ lương viết bài cũ đã được lưu trữ và đóng lại.
+    </div>
+  `;
 }
 
 function openRollbackModal(){
