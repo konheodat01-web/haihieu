@@ -1110,7 +1110,7 @@ nav.sidebar i.fa {
     border-color: rgba(248, 81, 73, 0.4) !important;
 }
 
-/* V19: Dark Mode & Precision Typography for page-tasks */
+/* V20: Dark Mode & Precision Typography for page-tasks */
 #page-tasks #panel-mytasks,
 #page-tasks #tasksOverview,
 #page-tasks #taskSubBoard {
@@ -1151,6 +1151,16 @@ nav.sidebar i.fa {
     color: #f0f6fc !important;
 }
 
+#page-tasks .task-row .badge,
+#page-tasks .task-row .tag-person,
+#page-tasks .task-row span[style*="background"],
+#page-tasks .task-row span[style*="border-radius"] {
+    background-color: #21262d !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #30363d !important;
+    text-shadow: none !important;
+}
+
 #page-tasks .task-row-meta span:not(.badge):not(.tag-person):not([class*="status"]):not([class*="priority"]) {
     color: #c9d1d9 !important;
 }
@@ -1167,6 +1177,7 @@ nav.sidebar i.fa {
     background-color: #30363d !important;
     color: #f0f6fc !important;
 }
+
 
 
 
