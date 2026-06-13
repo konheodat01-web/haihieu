@@ -941,7 +941,13 @@ nav.sidebar i.fa {
 }
 
 /* 1. Sửa lỗi màu chữ trạng thái "100% Hoàn thành" */
-[class*="complete"], .task-status-done, .project-status-done, .task-row-done span {
+.task-row-done span,
+.task-row-done div,
+.task-row-done .task-row-meta span,
+.task-status-done,
+.project-status-done,
+[class*="status-complete"],
+[class*="status-done"] {
     color: #3fb950 !important; /* Màu xanh lục bảo chuẩn GitHub */
     font-weight: 600;
 }
