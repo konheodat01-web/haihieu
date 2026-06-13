@@ -8529,14 +8529,15 @@ function restorePosition(){
   let savedSubPage = sessionStorage.getItem('wt_activeSubPage');
 
   if (!savedSubPage) {
-    // KỊCH BẢN TẮT MÁY / TẮT TAB VÀO LẠI: Chỉ xóa sạch các khóa định tuyến con, giữ lại session Admin
+    // KỊCH BẢN TẮT MÁY / TẮT TAB VÀO LẠI (Phiên mới):
+    // Xóa sạch vết định tuyến con để tự động quay về giao diện chính tổng quan
     try {
       sessionStorage.removeItem('wt_activeSubPage');
       sessionStorage.removeItem('wt_activeProject');
     } catch(e){}
     
     if (savedPage) {
-      showPage(savedPage); // Nạp tab mẹ, giao diện con tự động quay về trang chủ chính tổng quan
+      showPage(savedPage); 
     } else {
       showPage('dashboard'); // Mặc định về Tab Báo cáo nếu nạp phiên hoàn toàn mới
     }
