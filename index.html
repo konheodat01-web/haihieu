@@ -32,7 +32,7 @@
         <button onclick="togglePwVis()" class="login-pw-toggle">👁</button>
       </div>
       <div id="loginPwErr" class="login-pw-err">Mật khẩu không đúng. Thử lại.</div>
-      <button onclick="submitPassword()" class="login-submit-btn">Đăng nhập →</button>
+      <button class="login-submit-btn">Đăng nhập →</button>
       <div id="loginStatusText" style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:center"></div>
     </div>
 
@@ -1114,8 +1114,7 @@
   <!-- Firebase SDK (v8 compat bundle) -->
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-database.js"></script>
-  <!-- CO LAP LUONG XAC THUC V51 -->
-  <!-- CO LAP LUONG XAC THUC V53 -->
+  <!-- CO LAP LUONG XAC THUC V54 -->
   <script>
     const AdminAuth = {
       setPassword(pw) {
@@ -1143,11 +1142,11 @@
             if (btn) btn.textContent = "Đăng nhập thành công!";
             executeLoginSuccess();
           } else {
-            if (btn) btn.textContent = "Đăng nhập →";
             alert('Sai mật khẩu! Vui lòng kiểm tra lại.');
+            if (btn) btn.textContent = "Đăng nhập";
           }
         }).catch(err => {
-          console.error("[V53 Error] Lỗi kết nối Firebase:", err);
+          console.error("[V54 Error] Lỗi kết nối Firebase:", err);
           // Fallback phòng thủ nếu mất mạng hoặc lỗi kết nối Firebase: Quét qua Local Storage cũ
           const localData = localStorage.getItem('wt_passwords');
           if (localData) {
@@ -1157,8 +1156,8 @@
               return;
             }
           }
-          if (btn) btn.textContent = "Đăng nhập →";
           alert('Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.');
+          if (btn) btn.textContent = "Đăng nhập";
         });
       },
       togglePwVis() {
@@ -1198,6 +1197,14 @@
         });
       }
       
+      const submitBtn = document.querySelector('.login-submit-btn');
+      if (submitBtn) {
+        submitBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          submitPassword();
+        });
+      }
+      
       const statusDiv = document.getElementById('loginStatusText');
       if (statusDiv) {
         try {
@@ -1220,7 +1227,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v53"></script>
+  <script src="script.js?v=premium_ui_perfect_v54"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
