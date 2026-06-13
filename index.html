@@ -1131,16 +1131,6 @@
           alert('Vui lòng nhập mật khẩu!');
           return;
         }
-
-        // === MẠCH CỨU HỘ TỐI CAO V55 CHỐNG KHÓA ACC ===
-        // Nếu Chủ sở hữu nhập mật khẩu hệ thống '123456', cho phép VÀO THẲNG hệ thống lập tức, bỏ qua check mạng
-        if (input === '123456') {
-          console.log("[V55 Emergency] Kích hoạt cổng cứu hộ thành công.");
-          executeLoginSuccess();
-          return;
-        }
-        // =============================================
-
         const btn = document.querySelector('.login-submit-btn');
         if (btn) btn.textContent = "Đang xác thực...";
 
@@ -1245,7 +1235,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v57"></script>
+  <script src="script.js?v=premium_ui_perfect_v58"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
