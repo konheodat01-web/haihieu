@@ -1453,9 +1453,9 @@ nav.sidebar i.fa {
     border: 1px solid rgba(56, 139, 253, 0.3) !important;
 }
 
-#page-links form .form-group button,
-#page-links form button[onclick*="Group"],
-#page-links form button[onclick*="group"] {
+#page-links .form-group button,
+#page-links button[onclick*="openWsGroupManager"],
+#page-links button[onclick*="openCategoryManager"] {
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
@@ -1465,8 +1465,11 @@ nav.sidebar i.fa {
     transition: all 0.15s ease !important;
 }
 
-#page-links form .form-group button:hover {
+#page-links .form-group button:hover,
+#page-links button[onclick*="openWsGroupManager"]:hover,
+#page-links button[onclick*="openCategoryManager"]:hover {
     color: #f0f6fc !important;
     background: rgba(255, 255, 255, 0.08) !important;
     border-radius: 4px !important;
+    border: none !important;
 }
