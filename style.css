@@ -990,6 +990,65 @@ nav.sidebar i.fa {
     background-color: #21262d !important;
 }
 
+/* V13: Precision Typography Refit & Buttons styling */
+/* --- Safely target Task Titles (White highlight) --- */
+.task-row-main span[style*="font-weight:600"],
+.task-row-main span[style*="font-weight: 600"] {
+    color: #f0f6fc !important;
+    font-size: 13px !important;
+}
+
+/* --- Target metadata spans specifically, protecting tags & badges --- */
+.task-row-meta span:not(.badge):not(.tag-person):not([class*="status"]):not([class*="priority"]) {
+    color: #c9d1d9 !important;
+}
+
+/* --- Target warning & overdue badges directly --- */
+.task-row .text-danger,
+.task-row [style*="color:var(--red)"],
+.task-row [style*="color: var(--red)"],
+.task-row [class*="overdue"],
+.task-row [class*="tre-han"] {
+    color: #f85149 !important;
+    font-weight: 600 !important;
+}
+
+/* --- Action buttons layout and styling inside task rows --- */
+.task-row button {
+    background: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    border-radius: 4px !important;
+    padding: 4px 10px !important;
+    transition: background 0.15s, color 0.15s, border-color 0.15s !important;
+}
+.task-row button:hover {
+    background: #30363d !important;
+    color: #f0f6fc !important;
+    border-color: #8b949e !important;
+}
+
+/* --- Specific targeted color for delete button icon (red alert indicator) --- */
+.task-row button[title*="Xoá"], .task-row button[title*="Xóa"] {
+    color: rgba(248, 81, 73, 0.7) !important;
+    border-color: transparent !important;
+    background: transparent !important;
+}
+.task-row button[title*="Xoá"]:hover, .task-row button[title*="Xóa"]:hover {
+    color: #f85149 !important;
+    background: rgba(248, 81, 73, 0.1) !important;
+    border-color: rgba(248, 81, 73, 0.4) !important;
+}
+
+/* Active pending state button color override */
+.task-row button.btn-pending-active {
+    color: #e67e22 !important;
+    border-color: rgba(230, 126, 34, 0.4) !important;
+}
+.task-row button.btn-pending-active:hover {
+    border-color: #e67e22 !important;
+}
+
 
 
 

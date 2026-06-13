@@ -1643,14 +1643,12 @@ function renderTasksOverview(){
       </div>
 
       <button onclick="event.stopPropagation();openTaskPendingModal(${t.id})" title="${isPendingTask?'Sửa / xoá pending':'Pending task này'}"
-        style="background:none;border:1px solid ${isPendingTask?'#e67e22':'var(--gray-border)'};border-radius:4px;cursor:pointer;padding:4px 7px;color:${isPendingTask?'#e67e22':'var(--text-muted)'};font-size:11px;flex-shrink:0;transition:all .15s"
-        onmouseover="this.style.borderColor='#e67e22';this.style.color='#e67e22'" onmouseout="this.style.borderColor='${isPendingTask?'#e67e22':'var(--gray-border)'}';this.style.color='${isPendingTask?'#e67e22':'var(--text-muted)'}'">⏸</button>
+        class="${isPendingTask?'btn-pending-active':''}"
+        style="cursor:pointer;font-size:11px;flex-shrink:0">⏸</button>
       ${(currentMember==='admin'||currentMember==='hieu')?`<button onclick="event.stopPropagation();openGiaoViecFromTask(${t.id})" title="Giao việc này"
-        style="background:none;border:1px solid #b8d4ea;border-radius:4px;cursor:pointer;padding:4px 8px;color:#2980b9;font-size:11px;font-weight:600;flex-shrink:0;transition:all .15s"
-        onmouseover="this.style.background='#f0f7fd'" onmouseout="this.style.background=''">📤 Giao</button>`:''}
+        style="cursor:pointer;font-size:11px;font-weight:600;flex-shrink:0">📤 Giao</button>`:''}
       <button onclick="event.stopPropagation();confirmDeleteTask(${t.id})" title="Xoá task"
-        style="background:none;border:none;cursor:pointer;padding:8px 8px;color:var(--text-muted);font-size:15px;opacity:.4;transition:opacity .15s;flex-shrink:0"
-        onmouseover="this.style.opacity=1;this.style.color='#e74c3c'" onmouseout="this.style.opacity=.4;this.style.color='var(--text-muted)'">🗑</button>
+        style="cursor:pointer;font-size:15px;flex-shrink:0">🗑</button>
     </div>`;
   };
 
