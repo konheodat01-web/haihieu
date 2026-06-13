@@ -1207,10 +1207,12 @@
       
       const submitBtn = document.querySelector('.login-submit-btn');
       if (submitBtn) {
-        submitBtn.addEventListener('click', (e) => {
+        submitBtn.onclick = null;
+        submitBtn.onclick = function(e) {
           e.preventDefault();
+          e.stopPropagation();
           submitPassword();
-        });
+        };
       }
       
       const statusDiv = document.getElementById('loginStatusText');
@@ -1235,7 +1237,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v58"></script>
+  <script src="script.js?v=premium_ui_perfect_v59"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
