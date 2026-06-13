@@ -1116,7 +1116,7 @@ function fbPayload(ts){
     giaoViecList, assignees, prompts, recurringTasks, khoId: khoIdList,
     recurDoneToday: getRecurDoneToday(),
     siteTracking,
-    passwords: getProfilePasswords(),
+    passwords: (typeof getProfilePasswords === 'function') ? getProfilePasswords() : {},
     settings: _settings,
     _trash_ts: parseInt(localStorage.getItem('wt_trash_ts')||'0'),
     wtApiKey: wtApiKey,
@@ -1143,7 +1143,7 @@ function saveToLocalStorage(){
     localStorage.setItem('wt_recurring',       JSON.stringify(recurringTasks));
     localStorage.setItem('wt_kho_id',          JSON.stringify(khoIdList));
     // recurDoneToday saved via setRecurDoneToday()
-    localStorage.setItem('wt_passwords',       JSON.stringify(getProfilePasswords()));
+    localStorage.setItem('wt_passwords',       JSON.stringify((typeof getProfilePasswords === 'function') ? getProfilePasswords() : {}));
     localStorage.setItem('wt_settings', JSON.stringify(_settings));
     localStorage.setItem('wt_ts',              String(ts));
   }catch(e){}
