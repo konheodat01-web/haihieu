@@ -1608,7 +1608,7 @@ function renderTasksOverview(){
       : t.priority==='Thấp'
       ? '<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:#f0faf4;color:#27ae60;border:1px solid #a8deba;font-weight:600">🟢 Thấp</span>'
       : '<span style="font-size:10px;padding:1px 7px;border-radius:10px;background:#fff4e5;color:#e67e22;border:1px solid #fce0b0;font-weight:600">🟠 Bình thường</span>';
-    return `<div class="task-row ${isDone?'task-row-done':''} ${priClass}${isPendingTask?' task-row-pending':''}" style="display:flex;align-items:center;gap:0;${isPendingTask?'border-left:3px solid #e67e22 !important;background:#fff8ee':''}" data-tid="${t.id}" onclick="event.stopPropagation()">
+    return `<div class="task-row ${isDone?'task-row-done':''} ${priClass}${isPendingTask?' task-row-pending':''}" style="display:flex;align-items:center;gap:0;${isPendingTask?'border-left:3px solid #e67e22 !important;':''}" data-tid="${t.id}" onclick="event.stopPropagation()">
 
       <div style="padding:0 6px;flex-shrink:0" onclick="event.stopPropagation()">
         <input type="checkbox" class="task-chk" data-tid="${t.id}" onchange="onTaskCheck(${t.id},this)"
