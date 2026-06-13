@@ -1023,46 +1023,47 @@ function showPage(name){
   const target = document.getElementById('page-' + name);
   if (!target) {
     console.warn(`Page 'page-${name}' does not exist.`);
+    // Overwrite dead session in localStorage
+    localStorage.setItem('wt_activePage', 'dashboard');
     if (name !== 'dashboard') {
       if (_showPageRedirectCount < 3) {
         _showPageRedirectCount++;
-        switchWorkspace('work');
-        _showPageRedirectCount = 0;
+        showPage('dashboard');
       } else {
         console.error('Infinite redirect detected in showPage');
-        _showPageRedirectCount = 0;
       }
     }
+    _showPageRedirectCount = 0;
     return;
   }
 
-  const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
-  if (workPages.includes(name)) {
-    const pWork = document.getElementById('panel-workspace-job');
-    const pEco = document.getElementById('page-ecosystem');
-    if (pWork) pWork.style.display = 'block';
-    if (pEco) { pEco.style.display = 'none'; pEco.classList.remove('active'); }
-    
-    document.querySelectorAll('[id^="eco-btn-"]').forEach(b => b.classList.remove('active'));
-    const btnWork = document.getElementById('eco-btn-work');
-    if (btnWork) btnWork.classList.add('active');
-  }
+  // Khóa an toàn: Luôn đưa luồng Workspace Mẹ về 'job' để hiển thị các trang con
+  switchWorkspace('job', null);
 
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  // 1. Tắt active toàn bộ các sub-page con
+  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
   target.classList.add('active');
-  document.querySelectorAll('nav button, .sub-tab-btn').forEach(btn=>{
-    const match = btn.getAttribute('onclick')?.includes("'"+name+"'");
-    btn.classList.toggle('active', !!match);
-  });
-  if(name==='dashboard') renderDashboard();
-  if(name==='tasks') renderTasksOverview();
-  if(name==='recurring') renderRecurringTasks();
-  if(name==='wstrack') renderWsTrack();
-  if(name==='ecosystem') { /* handled by switchWorkspace */ }
-  if(name!=='tasks') clearTaskSelection();
-  if(name==='links'){ renderLinks(); renderWebsites(); }
-  if(name==='prompts') renderPrompts();
-  try{ localStorage.setItem('wt_activePage', name); } catch(e){}
+
+  // 2. Đồng bộ Highlighting cho nút con trong cây Sub-menu
+  document.querySelectorAll('.sidebar-sub-item').forEach(item => item.classList.remove('active'));
+  const currentSubItem = Array.from(document.querySelectorAll('.sidebar-sub-item'))
+    .find(item => {
+      const attr = item.getAttribute('onclick');
+      return attr && attr.includes("'" + name + "'");
+    });
+  if (currentSubItem) currentSubItem.classList.add('active');
+
+  // 3. BẢO TOÀN 100% LOGIC RENDER DATA FIREBASE PHÍA SAU (Giữ nguyên dòng 1022-1066)
+  if (name === 'dashboard') renderDashboard();
+  if (name === 'tasks') renderTasksOverview();
+  if (name === 'recurring') renderRecurringTasks();
+  if (name === 'wstrack') renderWsTrack();
+  if (name === 'links') { renderLinks(); renderWebsites(); }
+  if (name === 'prompts') renderPrompts();
+  if (name !== 'tasks') clearTaskSelection();
+
+  // 4. BẢO TOÀN KHÓA PHIÊN LÀM VIỆC CŨ CỦA HỆ THỐNG
+  try { localStorage.setItem('wt_activePage', name); } catch(e) {}
 }
 
 function closeModal(e){
@@ -3920,7 +3921,7 @@ const AdminAuth = {
     currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
     
     // Switch to job workspace first to ensure parent container is display block & active tab highlighted
-    switchWorkspace('job', document.querySelector('.sidebar-tab'));
+    switchWorkspace('job', document.querySelector('.sidebar-nav-item'));
     
     showPage('dashboard');
     renderDashboard();
@@ -3941,7 +3942,7 @@ const AdminAuth = {
         currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
         
         // Switch to job workspace first to ensure parent container is display block & active tab highlighted
-        switchWorkspace('job', document.querySelector('.sidebar-tab'));
+        switchWorkspace('job', document.querySelector('.sidebar-nav-item'));
         
         restorePosition();
         renderDashboard();
@@ -9017,44 +9018,34 @@ function applyBulkNT(sheet, val){
 
 // ===== HE SINH THAI WORKSPACE SWITCHER =====
 function switchWorkspace(workspaceId, element) {
-  // Update class active for the 3 ecosystem tabs
-  document.querySelectorAll('.sidebar-tab').forEach(el => el.classList.remove('active'));
+  // 1. Quản lý trạng thái Active của các nút Tab Mẹ
+  document.querySelectorAll('.sidebar-nav-item').forEach(btn => btn.classList.remove('active'));
   if (element) {
     element.classList.add('active');
   } else {
-    // Resolve sidebar element based on workspaceId
-    const resolved = document.querySelector(`[onclick*="switchWorkspace('${workspaceId}'"]`);
-    if (resolved) resolved.classList.add('active');
+    const fallbackBtn = document.getElementById(`btn-tab-${workspaceId}`);
+    if (fallbackBtn) fallbackBtn.classList.add('active');
   }
 
-  const subMenu = document.getElementById('workspace-submenu');
-  
-  // Hide all workspace panels
-  document.querySelectorAll('.workspace-panel').forEach(p => p.style.display = 'none');
+  // 2. Kích hoạt Layer Panel tương ứng bằng class
+  document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.remove('active'));
+  const targetPanel = document.getElementById(`panel-workspace-${workspaceId}`);
+  if (targetPanel) {
+    targetPanel.classList.add('active');
+    
+    // VÁ LỖ HỔNG: Kiểm tra Iframe an toàn chống lỗi chuỗi URL tuyệt đối của trình duyệt
+    if (workspaceId === 'finance' || workspaceId === 'tools') {
+      const iframe = targetPanel.querySelector('iframe');
+      if (iframe && (!iframe.src || iframe.src.includes('about:blank') || iframe.src === '')) {
+        iframe.src = iframe.getAttribute('data-src');
+      }
+    }
+  }
 
-  if (workspaceId === 'job') {
-    if (subMenu) subMenu.style.display = 'block';
-    const pJob = document.getElementById('panel-workspace-job');
-    if (pJob) pJob.style.display = 'block';
-    
-    // Default to show dashboard or last active page
-    const lastPage = localStorage.getItem('wt_activePage') || 'dashboard';
-    const workPages = ['dashboard', 'recurring', 'tasks', 'prompts', 'wstrack', 'links'];
-    if (workPages.includes(lastPage) && document.getElementById('page-' + lastPage)) {
-      showPage(lastPage);
-    } else {
-      showPage('dashboard');
-    }
-  } else {
-    if (subMenu) subMenu.style.display = 'none';
-    const iframePanel = document.getElementById('panel-workspace-' + workspaceId);
-    if (iframePanel) iframePanel.style.display = 'block';
-    
-    // Lazy Loading Iframe
-    const iframe = document.getElementById('iframe-' + workspaceId);
-    if (iframe && !iframe.src) {
-      iframe.src = workspaceId === 'finance' ? '/finance' : '/my-tools';
-    }
+  // 3. Ẩn/Hiện cây Sub-menu con tự động theo nghiệp vụ công việc
+  const submenu = document.getElementById('workspace-submenu');
+  if (submenu) {
+    submenu.style.display = (workspaceId === 'job') ? 'flex' : 'none';
   }
 }
 

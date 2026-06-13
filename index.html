@@ -15,38 +15,34 @@
   <div class="login-card-glass">
 
     <!-- Logo / Brand -->
-    <div style="text-align:center;margin-bottom:40px">
-      <div style="width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,#c0392b,#8e1212);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px;box-shadow:0 8px 32px rgba(192,57,43,.45)">⚙</div>
-      <h1 style="color:#fff;font-size:24px;font-weight:700;margin:0 0 8px 0;letter-spacing:.3px">Admin Portal</h1>
-      <p style="color:rgba(255,255,255,.35);font-size:13px;margin:0">Nhập mật khẩu để tiếp tục</p>
+    <div class="login-brand">
+      <div class="login-logo-icon">⚙</div>
+      <h1 class="login-title">Admin Portal</h1>
+      <p class="login-subtitle">Nhập mật khẩu để tiếp tục</p>
     </div>
 
     <!-- Password Form -->
-    <div id="loginStep2" style="display:flex;flex-direction:column;align-items:stretch;gap:0;width:100%">
-      <div style="position:relative;width:100%;margin-bottom:10px">
+    <div id="loginStep2" class="login-form-wrap">
+      <div class="login-input-container">
         <input id="loginPwInput" type="password" placeholder="Mật khẩu Admin..."
           autocomplete="current-password"
-          style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:14px 48px 14px 18px;font-size:15px;color:#fff;outline:none;transition:border-color .2s"
-          onfocus="this.style.borderColor='rgba(192,57,43,.7)'"
-          onblur="this.style.borderColor='rgba(255,255,255,.15)'"
+          class="login-pw-input"
           onkeydown="if(event.key==='Enter')submitPassword()"
           oninput="document.getElementById('loginPwErr').style.display='none'">
-        <button onclick="togglePwVis()" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:rgba(255,255,255,.4);padding:2px">👁</button>
+        <button onclick="togglePwVis()" class="login-pw-toggle">👁</button>
       </div>
-      <div id="loginPwErr" style="display:none;color:#e74c3c;font-size:12px;margin-bottom:10px;padding-left:4px">Mật khẩu không đúng. Thử lại.</div>
-      <button onclick="submitPassword()"
-        style="width:100%;background:linear-gradient(135deg,#c0392b,#8e1212);border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;color:#fff;cursor:pointer;letter-spacing:.5px;transition:opacity .15s;box-shadow:0 4px 16px rgba(192,57,43,.4)"
-        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Đăng nhập →</button>
+      <div id="loginPwErr" class="login-pw-err">Mật khẩu không đúng. Thử lại.</div>
+      <button onclick="submitPassword()" class="login-submit-btn">Đăng nhập →</button>
     </div>
 
-    <p style="color:rgba(255,255,255,.15);font-size:11px;margin-top:40px;text-align:center">Phiên làm việc được ghi nhớ trong tab này</p>
+    <p class="login-footer-text">Phiên làm việc được ghi nhớ trong tab này</p>
   </div>
 </div>
 
 <!-- GLOBAL KB TOOLTIP -->
 <div id="kbTooltip" style="display:none;position:fixed;background:#2c3e50;color:#fff;border-radius:8px;padding:10px 14px;font-size:12px;max-width:260px;box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:99999;pointer-events:none;line-height:1.5;word-break:break-word"></div>
 
-<header>
+<header class="main-header">
   <div style="display:flex;align-items:center;gap:12px">
     <div class="member-picker" id="memberPicker">
       <div class="member-avatar" id="memberAvatar" onclick="toggleMemberDropdown()" style="overflow:hidden;padding:0"></div>
@@ -198,54 +194,46 @@
   </div>
 </header>
 
-<nav>
-  <div class="sidebar-section">
-    <span class="section-title">HỆ SINH THÁI</span>
+<div class="app-shell-wrapper">
+<nav class="sidebar">
+  <div class="sidebar-brand">🏛️ WORKSPACE</div>
+  
+  <div class="sidebar-menu">
+    <!-- Tab Mẹ 1 -->
+    <button type="button" class="sidebar-nav-item active" id="btn-tab-job" onclick="switchWorkspace('job', this)">
+      <i class="fa fa-briefcase"></i> <span>Quản lý Công việc</span>
+    </button>
     
-    <!-- TAB MẸ 1 -->
-    <a href="#" class="sidebar-tab active" onclick="switchWorkspace('job', this)">
-      <i class="fa fa-briefcase"></i> Quản lý Công việc
-    </a>
-    
-    <!-- CONTAINER SUB-MENU (Thụt lề con sang trọng) -->
+    <!-- Guideline Cây Sub-menu con -->
     <div id="workspace-submenu" class="sidebar-sub-container" style="display: block;">
-      <a href="#" class="sub-tab-btn active" onclick="showPage('dashboard')"><i class="fa fa-bar-chart"></i> Báo cáo</a>
-      <a href="#" class="sub-tab-btn" onclick="showPage('recurring')"><i class="fa fa-clock-o"></i> Task định kỳ <span id="navBadgeRecurring" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></a>
-      <a href="#" class="sub-tab-btn" onclick="showPage('tasks')"><i class="fa fa-list-ul"></i> Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></a>
-      <a href="#" class="sub-tab-btn" onclick="showPage('prompts')"><i class="fa fa-code"></i> Prompt</a>
-      <a href="#" class="sub-tab-btn" onclick="showPage('links')"><i class="fa fa-link"></i> Link quan trọng</a>
-      <a href="#" class="sub-tab-btn" onclick="showPage('wstrack')"><i class="fa fa-desktop"></i> Theo dõi web</a>
+      <button type="button" class="sidebar-sub-item active" onclick="showPage('dashboard')"><i class="fa fa-pie-chart"></i> Báo cáo</button>
+      <button type="button" class="sidebar-sub-item" onclick="showPage('recurring')"><i class="fa fa-clock-o"></i> Task định kỳ <span id="navBadgeRecurring" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
+      <button type="button" class="sidebar-sub-item" onclick="showPage('tasks')"><i class="fa fa-list-ul"></i> Công việc khác <span id="navBadgeTasks" style="display:none;background:#e74c3c;color:#fff;border-radius:20px;font-size:10px;font-weight:700;padding:1px 6px;margin-left:4px;line-height:1.4"></span></button>
+      <button type="button" class="sidebar-sub-item" onclick="showPage('prompts')"><i class="fa fa-code"></i> Prompt</button>
+      <button type="button" class="sidebar-sub-item" onclick="showPage('links')"><i class="fa fa-link"></i> Link quan trọng</button>
+      <button type="button" class="sidebar-sub-item" onclick="showPage('wstrack')"><i class="fa fa-desktop"></i> Theo dõi web</button>
     </div>
 
-    <!-- TAB MẸ 2 -->
-    <a href="#" class="sidebar-tab" onclick="switchWorkspace('finance', this)">
-      <i class="fa fa-wallet"></i> Quản lý Tài chính
-    </a>
+    <!-- Tab Mẹ 2 -->
+    <button type="button" class="sidebar-nav-item" id="btn-tab-finance" onclick="switchWorkspace('finance', this)">
+      <i class="fa fa-wallet"></i> <span>Quản lý Tài chính</span>
+    </button>
     
-    <!-- TAB MẸ 3 -->
-    <a href="#" class="sidebar-tab" onclick="switchWorkspace('tools', this)">
-      <i class="fa fa-cubes"></i> Kho Tool Nhỏ
-    </a>
+    <!-- Tab Mẹ 3 -->
+    <button type="button" class="sidebar-nav-item" id="btn-tab-tools" onclick="switchWorkspace('tools', this)">
+      <i class="fa fa-cubes"></i> <span>Kho Tool Nhỏ</span>
+    </button>
   </div>
   
-  <div style="flex:1"></div>
-  <!-- Bottom actions: hover to expand -->
-  <div id="navBottomMenu" style="position:relative;border-top:1px solid rgba(255,255,255,.08)"
-    onmouseleave="document.getElementById('navBottomPopup').style.display='none'">
-    <div id="navBottomPopup" style="display:none;position:absolute;bottom:100%;left:0;right:0;background:rgba(192,57,43,.1);backdrop-filter:blur(12px);border-radius:8px 8px 0 0;overflow:hidden;border:1px solid rgba(192,57,43,.2);border-bottom:none">
-      <button id="navSettingsBtn"  onclick="openSettings()"       class="nb-btn" style="display:none"><span style="width:18px;text-align:center">⚙</span> Cài đặt giao diện</button>
-      <button id="navResetPwBtn"   onclick="openResetPwModal()"   class="nb-btn" style="display:none"><span style="width:18px;text-align:center">🔒</span> Cấp lại mật khẩu</button>
-      <button                      onclick="openChangePassword()"  class="nb-btn"><span style="width:18px;text-align:center">🔑</span> Đổi mật khẩu</button>
-    </div>
-    <button onclick="logout()" style="width:100%;padding:12px 16px;text-align:left;background:none;border:none;cursor:pointer;font-size:12px;color:#e74c3c;display:flex;align-items:center;gap:8px;font-weight:600;opacity:.8;transition:opacity .15s"
-      onmouseover="document.getElementById('navBottomPopup').style.display='block';this.style.opacity='1';this.style.background='rgba(231,76,60,.08)'"
-      onmouseout="this.style.opacity='.8';this.style.background=''">
-      <span style="width:18px;text-align:center">⏻</span> Đăng xuất
-    </button>
+  <!-- Bottom actions: footer aligned -->
+  <div class="sidebar-footer" id="navBottomMenu">
+    <button type="button" onclick="openChangePassword()"><i class="fa fa-key"></i> Đổi mật khẩu</button>
+    <button type="button" onclick="openSettings()"><i class="fa fa-cog"></i> Cài đặt</button>
+    <button type="button" onclick="logout()" class="text-danger"><i class="fa fa-sign-out"></i> Đăng xuất</button>
   </div>
 </nav>
 
-<main>
+<main class="main-workspace-container">
   <!-- Main Work Workspace Container -->
   <div id="panel-workspace-job" class="workspace-panel" style="width:100%; height:100%; display:block;">
 
@@ -1010,13 +998,14 @@
   </div> <!-- end panel-workspace-job -->
 
   <!-- ECOSYSTEM PANELS -->
-  <div id="panel-workspace-finance" class="workspace-panel" style="display:none;width:100%;height:100%">
-    <iframe id="iframe-finance" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
+  <div id="panel-workspace-finance" class="workspace-panel iframe-panel-wrap">
+    <iframe id="iframe-finance" data-src="/finance" src="about:blank"></iframe>
   </div>
-  <div id="panel-workspace-tools" class="workspace-panel" style="display:none;width:100%;height:100%">
-    <iframe id="iframe-tools" src="" style="width:100%;height:calc(100vh - 76px);border:none" loading="lazy"></iframe>
+  <div id="panel-workspace-tools" class="workspace-panel iframe-panel-wrap">
+    <iframe id="iframe-tools" data-src="/my-tools" src="about:blank"></iframe>
   </div>
 </main>
+</div>
 
 <!-- TASK TRASH MODAL -->
 <div class="modal-overlay" id="taskTrashModal" onclick="if(event.target===this)closeTaskTrash()">
