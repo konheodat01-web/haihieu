@@ -1473,3 +1473,38 @@ nav.sidebar i.fa {
     border-radius: 4px !important;
     border: none !important;
 }
+
+#page-wstrack,
+#page-wstrack .panel,
+#wstTable,
+#wstTable tr,
+#wstTable td {
+    background-color: #0d1117 !important;
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+}
+
+#page-wstrack #wstThead,
+#page-wstrack #wstThead th {
+    background-color: #21262d !important;
+    color: #f0f6fc !important;
+    border-color: #30363d !important;
+}
+
+#page-wstrack select, 
+#page-wstrack input, 
+#page-wstrack button {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+#page-wstrack button:hover {
+    background-color: #30363d !important;
+    color: #f0f6fc !important;
+}
+
+#page-wstrack #wstApiBadge {
+    background-color: rgba(56, 139, 253, 0.15) !important;
+    color: #58a6ff !important;
+    border: 1px solid rgba(56, 139, 253, 0.3) !important;
+}
