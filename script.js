@@ -5625,8 +5625,7 @@ function qlSearch(){
   if(!drop) return;
   if(!res.length){drop.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);font-size:12px">Không tìm thấy — nhấn + để thêm</div>';drop.style.display='block';return;}
   drop.innerHTML=res.map((item,idx)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-border);transition:background .1s"
-      onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''"
+    <div class="search-item" style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--gray-border);transition:background .1s"
       onclick="window.open('${item.url.replace(/'/g,"\\'")}','_blank');document.getElementById('uniInput').value='';qlClose()">
       <span style="font-size:16px;flex-shrink:0">${item.icon}</span>
       <div style="flex:1;min-width:0">
@@ -7449,9 +7448,8 @@ function gvAssigneeSearch(){
   if(!drop) return;
   const filtered = assignees.filter(a=>a.toLowerCase().includes(q));
   if(!filtered.length||!q){ drop.style.display='none'; return; }
-  drop.innerHTML = filtered.map(a=>`<div onclick="gvSelectAssignee('${a.replace(/'/g,"\\'")}')"
-    style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--gray-border)"
-    onmouseover="this.style.background='#fdf2f2'" onmouseout="this.style.background=''">👤 ${a}</div>`).join('');
+  drop.innerHTML = filtered.map(a=>`<div class="search-item" onclick="gvSelectAssignee('${a.replace(/'/g,"\\'")}')"
+    style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--gray-border)">👤 ${a}</div>`).join('');
   drop.style.display='block';
 }
 

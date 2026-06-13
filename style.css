@@ -1655,3 +1655,98 @@ nav.sidebar i.fa {
 #page-prompts h1, #page-prompts h2, #page-prompts h3, #page-prompts strong {
     color: #f0f6fc !important;
 }
+
+/* ==========================================================================
+   V37: UNIFIED DROPDOWNS & POPOVERS DARK REFIT (qlDropdown, pqDropdown, etc)
+   ========================================================================== */
+
+/* Trục xuất nền trắng của các hộp dropdown và popover nổi toàn hệ thống */
+#qlDropdown, 
+#pqDropdown,
+#gvAssigneeDropdown,
+.member-dropdown,
+.dropdown-menu, 
+.custom-popover {
+    background-color: #161b22 !important; /* Tone xám đậm chuẩn layer 2 */
+    border: 1px solid #30363d !important; /* Viền tối phân cấp */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important; /* Bóng đổ tối */
+    color: #c9d1d9 !important;
+    z-index: 9999 !important;
+}
+
+/* Định dạng các hàng danh sách tìm kiếm (.search-item) */
+#qlDropdown .search-item,
+#gvAssigneeDropdown .search-item,
+.dropdown-menu .search-item {
+    background-color: transparent !important;
+    border-bottom: 1px solid #21262d !important;
+    color: #c9d1d9 !important;
+    transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+/* Hover chuột sạch thay thế inline style */
+#qlDropdown .search-item:hover,
+#gvAssigneeDropdown .search-item:hover,
+.dropdown-menu .search-item:hover {
+    background-color: #21262d !important;
+    color: #f0f6fc !important;
+}
+
+/* Refit riêng text cụ thể trong dropdown link */
+#qlDropdown .search-item div[style*="font-weight:600"] {
+    color: #f0f6fc !important;
+}
+
+#qlDropdown .search-item div[style*="color:var(--blue)"] {
+    color: #58a6ff !important;
+}
+
+/* Đồng bộ các nút thao tác nhỏ trong dropdown */
+#qlDropdown button,
+#pqDropdown button {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+#qlDropdown button:hover,
+#pqDropdown button:hover {
+    background-color: #30363d !important;
+    border-color: #8b949e !important;
+    color: #f0f6fc !important;
+}
+
+/* ==========================================
+   Refit Dropdown Prompt Nổi (pqDropdown)
+   ========================================== */
+
+#pqDropdown div[style*="display:flex;border-bottom"] {
+    background-color: #161b22 !important;
+    border-bottom: 1px solid #30363d !important;
+}
+
+#pqDropdown button[id*="pqTab"] {
+    background-color: #161b22 !important;
+    border-color: transparent !important;
+    color: #8b949e !important;
+}
+
+#pqDropdown button[id*="pqTab"][style*="color:var(--red)"] {
+    border-bottom: 2px solid #f85149 !important;
+    color: #f85149 !important;
+    background-color: #21262d !important;
+}
+
+#pqDropdown #pqResults {
+    background-color: #0d1117 !important;
+}
+
+/* Footer gợi ý của dropdown prompt */
+#pqDropdown div[style*="background:#f8f9fa"] {
+    background-color: #161b22 !important;
+    border-top: 1px solid #30363d !important;
+}
+
