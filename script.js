@@ -1990,22 +1990,28 @@ function openEditProjectModal(){
 
 function closeNewProjectModal(){document.getElementById('newProjectModal').classList.remove('open');}
 
-function parseSteps(stepsText){
-  const lines = stepsText.trim().split('\n').map(l=>l.trim()).filter(l=>l);
-  const midCols = lines.map((l,i)=>{
-    const label = l.replace(/^(b.{0,4}c\s*\d+|step\s*\d+|\d+)\s*[:.)]\s*/i,'').trim() || l;
+function parseSteps(stepsText) {
+  if (!stepsText) stepsText = '';
+  const systemLabels = ['chưa làm', 'đang làm', 'hoàn thành', 'pending', 'bước đang làm'];
+  const lines = stepsText.trim().split('\n')
+    .map(l => l.trim())
+    .filter(l => l && !systemLabels.includes(l.toLowerCase()));
+
+  const midCols = lines.map((l, i) => {
+    const label = l.replace(/^(b.{0,4}c\s*\d+|step\s*\d+|\d+)\s*[:.)]\s*/i, '').trim() || l;
     return {
       id: 'col_s' + i,
-      label: label || ('Bước ' + (i+1)),
-      color: ['#8e44ad','#16a085','#d35400','#c0392b','#2c3e50','#2980b9'][i%6]
+      label: label || ('Bước ' + (i + 1)),
+      color: ['#8e44ad', '#16a085', '#d35400', '#c0392b', '#2c3e50', '#2980b9'][i % 6]
     };
   });
+
   return [
-    {id: 'col_new', label: 'Chưa làm', color: '#95a5a6'},
-    {id: 'doing',   label: 'Đang làm',  color: '#2980b9'},
+    { id: 'col_new', label: 'Chưa làm', color: '#95a5a6' },
+    { id: 'doing',   label: 'Đang làm',  color: '#2980b9' },
     ...midCols,
-    {id: 'done',    label: 'Hoàn thành', color: '#27ae60'},
-    {id: 'col_pending', label: 'Pending', color: '#e67e22'}
+    { id: 'done',    label: 'Hoàn thành', color: '#27ae60' },
+    { id: 'col_pending', label: 'Pending', color: '#e67e22' }
   ];
 }
 
@@ -3481,7 +3487,7 @@ function saveProject(){
         if (!t.cards) t.cards = [];
         const lines = t.desc.split('\n').map(l => l.trim()).filter(Boolean);
         const urls = [...new Set(lines.map(extractUrlFromLine).filter(Boolean))];
-        const firstColId = (t.cols && t.cols.length > 0) ? t.cols[0].id : 'todo';
+        const firstColId = (t.cols && t.cols.length > 0) ? t.cols[0].id : 'col_new';
 
         urls.forEach(url => {
           const hasCard = t.cards.some(c => (c.name || '').toLowerCase().trim() === url.toLowerCase().trim());
@@ -3506,11 +3512,34 @@ function saveProject(){
     const recurOn=document.getElementById('npm_recurring')?.checked;
     const _personVal = currentMember==='hai'?'Hải':currentMember==='hieu'?'Hiếu':(document.getElementById('npm_person').value||'');
     const _taskCols = cols || DEFAULT_COLS;
-    const _autoCard = [{id:'card_'+Date.now(),title:name,colId:_taskCols[0].id,note:'',deadline:'',link:''}];
+    const _dang = document.getElementById('npm_dang')?.value || 'url';
+    const _desc = document.getElementById('npm_desc').value.trim();
+    
+    let _cards = [];
+    if (_dang === 'url') {
+      const lines = _desc.split('\n').map(l => l.trim()).filter(Boolean);
+      const urls = [...new Set(lines.map(extractUrlFromLine).filter(Boolean))];
+      if (urls.length > 0) {
+        urls.forEach(url => {
+          _cards.push({
+            id: 'c' + cardNextId++,
+            colId: _taskCols[0].id,
+            name: url,
+            title: url,
+            desc: ''
+          });
+        });
+      } else {
+        _cards = [{ id: 'card_' + Date.now(), title: name, name: name, colId: _taskCols[0].id, note: '', deadline: '', link: '' }];
+      }
+    } else {
+      _cards = [{ id: 'card_' + Date.now(), title: name, name: name, colId: _taskCols[0].id, note: '', deadline: '', link: '' }];
+    }
+
     const t={id:taskNextId++,name,person:_personVal,
       type:document.getElementById('npm_type').value,from:document.getElementById('npm_from').value,
-      deadline:document.getElementById('npm_deadline').value,desc:document.getElementById('npm_desc').value.trim(),
-      cols,cards:_autoCard,priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:document.getElementById('npm_dang')?.value||'url',team:document.getElementById('npm_team')?.value||'Team 01',
+      deadline:document.getElementById('npm_deadline').value,desc:_desc,
+      cols,cards:_cards,priority:document.getElementById('npm_priority')?.value||'Bình thường',dang:_dang,team:document.getElementById('npm_team')?.value||'Team 01',
       recurring:recurOn?{type:document.getElementById('npm_recur_type')?.value||'weekly',days:parseInt(document.getElementById('npm_recur_days')?.value||7)}:null};
     tasks.push(t);
   }
