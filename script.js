@@ -1073,15 +1073,38 @@ function updateStickyTops(sheet){} // no-op: sticky handled by CSS
 function saveAppData(){
   delete _settings.loginBg;
   const ts = saveToLocalStorage();
+  const ind = document.getElementById('syncIndicator');
+  if(ind){
+    ind.textContent = '☁ Đang đồng bộ...';
+    ind.style.opacity = '1';
+    ind.style.color = '#ffaa00';
+  }
   if(window._fbReady && window._fbDb){
     console.log('Pushing to Firebase, ts=', ts);
-    window._fbDb.ref('appData').set(fbPayload(ts)).then(()=>{
+    return window._fbDb.ref('appData').set(fbPayload(ts)).then(()=>{
       console.log('Firebase push OK');
-      const ind=document.getElementById('syncIndicator');
-      if(ind){ind.textContent='☁ Đã đồng bộ';ind.style.opacity='1';ind.style.color='#fff';setTimeout(()=>ind.style.opacity='0',1500);}
-    }).catch(e=>{ console.error('Firebase push FAILED:', e); });
+      if(ind){
+        ind.textContent = '☁ Đã đồng bộ';
+        ind.style.color = '#f0f6fc';
+        setTimeout(()=>ind.style.opacity='0', 1500);
+      }
+    }).catch(e=>{
+      console.error('Firebase push FAILED:', e);
+      if(ind){
+        ind.textContent = '❌ Lỗi đồng bộ';
+        ind.style.color = '#f85149';
+        setTimeout(()=>ind.style.opacity='0', 3000);
+      }
+      throw e;
+    });
   } else {
     console.warn('Firebase not ready, _fbReady=', window._fbReady);
+    if(ind){
+      ind.textContent = '☁ Đã lưu (Local)';
+      ind.style.color = '#8b949e';
+      setTimeout(()=>ind.style.opacity='0', 1500);
+    }
+    return Promise.resolve();
   }
 }
 
