@@ -1750,3 +1750,213 @@ nav.sidebar i.fa {
     border-top: 1px solid #30363d !important;
 }
 
+/* ==========================================================================
+   V38: QUICK ADD MODAL DARK REFIT (#qlAddModal)
+   ========================================================================== */
+
+/* Lớp vỏ bọc Form Thêm Nhanh */
+#qlAddModal {
+    background-color: #161b22 !important; /* Đổi về xám đậm layer 2 */
+    border: 1px solid #30363d !important; /* Viền tối phân cấp */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important; /* Bóng đổ sâu */
+    color: #f0f6fc !important; /* Chữ tiêu đề trắng sáng */
+}
+
+/* Header modal */
+#qlAddModal div[style*="display:flex;align-items:center;justify-content:space-between"] {
+    border-bottom: 1px solid #30363d !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+}
+
+#qlAddModal div[style*="font-weight:600"] {
+    color: #f0f6fc !important;
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"] {
+    color: #8b949e !important;
+}
+
+/* Các nhãn label trong form */
+#qlAddModal label {
+    color: #c9d1d9 !important;
+    font-weight: 500 !important;
+}
+
+/* Các ô Input, Select, Textarea bên trong Form */
+#qlAddModal input, 
+#qlAddModal select, 
+#qlAddModal textarea {
+    background-color: #0d1117 !important; /* Nền tối phẳng */
+    border: 1px solid #30363d !important; /* Viền tối */
+    color: #c9d1d9 !important; /* Chữ nhập màu trắng xám */
+    border-radius: 6px !important;
+    padding: 6px 10px !important;
+}
+
+/* Khi người dùng click chọn vào ô nhập liệu */
+#qlAddModal input:focus, 
+#qlAddModal select:focus, 
+#qlAddModal textarea:focus {
+    border-color: #58a6ff !important; /* Nẩy viền xanh dương GitHub */
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.3) !important;
+}
+
+/* Đè màu cho nút cộng thêm nhóm con inline */
+#qlAddModal button#ql_group_add_btn {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+
+#qlAddModal button#ql_group_add_btn:hover {
+    background-color: #30363d !important;
+    border-color: #8b949e !important;
+    color: #f0f6fc !important;
+}
+
+/* Định dạng các nút Lưu và Huỷ ở chân Modal */
+#qlAddModal button[onclick*="qlSave"] {
+    background-color: #238636 !important;
+    border: 1px solid rgba(240, 246, 252, 0.1) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
+#qlAddModal button[onclick*="qlSave"]:hover {
+    background-color: #2ea043 !important;
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"].btn-outline {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"].btn-outline:hover {
+    background-color: #30363d !important;
+    border-color: #8b949e !important;
+    color: #f0f6fc !important;
+}
+
+/* ==========================================================================
+   V39: UNIFIED QUICK ADD MODAL DARK REFIT & FORM OVERLAY
+   ========================================================================== */
+
+/* Nền mờ phía sau Modal */
+#qlOverlay {
+    background-color: rgba(1, 4, 9, 0.8) !important; /* Màu đen trong suốt tối ưu trải nghiệm tập trung */
+    backdrop-filter: blur(4px) !important; /* Làm mờ nhẹ nền phía sau */
+}
+
+/* Lớp vỏ bọc Form Thêm Nhanh (Đè bẹp background:#fff cũ) */
+#qlAddModal {
+    background-color: #161b22 !important; /* Xám đậm layer 2 GitHub Dark */
+    border: 1px solid #30363d !important; /* Viền xám tối */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important; /* Bóng đổ sâu */
+    color: #c9d1d9 !important; /* Chữ mặc định sáng vừa */
+}
+
+/* Đồng bộ tiêu đề modal & icon đóng */
+#qlAddModal div[style*="display:flex;align-items:center;justify-content:space-between"] {
+    border-bottom: 1px solid #30363d !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 14px !important;
+}
+
+#qlAddModal div[style*="font-weight:600"] {
+    color: #f0f6fc !important; /* Chữ tiêu đề trắng sáng rõ */
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"] {
+    color: #8b949e !important;
+    transition: color 0.2s ease !important;
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"]:hover {
+    color: #f0f6fc !important;
+}
+
+/* Chống lỗi nhãn chữ tối trên nền tối (Labels) */
+#qlAddModal label {
+    color: #c9d1d9 !important;
+    font-weight: 600 !important;
+    display: inline-block !important;
+    margin-bottom: 4px !important;
+}
+
+/* Đồng bộ tất cả các ô input, select, textarea */
+#qlAddModal input, 
+#qlAddModal select, 
+#qlAddModal textarea {
+    background-color: #0d1117 !important; /* Nền tối phẳng phẳng */
+    border: 1px solid #30363d !important; /* Viền tối */
+    color: #c9d1d9 !important; /* Chữ sáng dịu */
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    outline: none !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Hiệu ứng Focus chuẩn GitHub */
+#qlAddModal input:focus, 
+#qlAddModal select:focus, 
+#qlAddModal textarea:focus {
+    border-color: #58a6ff !important; /* Nẩy viền xanh dương GitHub */
+    box-shadow: 0 0 0 3px rgba(56, 139, 253, 0.3) !important;
+}
+
+/* Định hình placeholder dịu đi trong nền tối */
+#qlAddModal input::placeholder,
+#qlAddModal textarea::placeholder {
+    color: #484f58 !important;
+}
+
+/* Các nút hành động chính ở Footer */
+#qlAddModal button[onclick*="qlSave"] {
+    background-color: #238636 !important; /* Nút Lưu xanh lá GitHub */
+    border: 1px solid rgba(240, 246, 252, 0.1) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease !important;
+}
+
+#qlAddModal button[onclick*="qlSave"]:hover {
+    background-color: #2ea043 !important;
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"].btn-outline {
+    background-color: #21262d !important; /* Nút Huỷ xám vừa */
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: background-color 0.2s ease, border-color 0.2s ease !important;
+}
+
+#qlAddModal button[onclick*="qlCloseAdd"].btn-outline:hover {
+    background-color: #30363d !important;
+    border-color: #8b949e !important;
+    color: #f0f6fc !important;
+}
+
+/* Đồng bộ nút inline thêm nhóm mới (+) */
+#qlAddModal #ql_group_add_btn {
+    background-color: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    transition: all 0.2s ease !important;
+}
+
+#qlAddModal #ql_group_add_btn:hover {
+    background-color: #30363d !important;
+    border-color: #8b949e !important;
+    color: #f0f6fc !important;
+}
+
+
