@@ -1046,6 +1046,12 @@ function showPage(name) {
   if (name === 'links' && typeof renderLinks === 'function') { renderLinks(); renderWebsites(); }
   if (name === 'prompts' && typeof renderPrompts === 'function') renderPrompts();
   localStorage.setItem('wt_activePage', name);
+  if (!['tasks', 'links', 'prompts'].includes(name)) {
+    try {
+      sessionStorage.removeItem('wt_activeSubPage');
+      sessionStorage.removeItem('wt_activeProject');
+    } catch(e){}
+  }
 }
 
 function closeModal(e){
@@ -1739,7 +1745,7 @@ function toggleTaskDoneSection(){
 
 function openProjectBoard(id){
   currentProjectId = id;
-  try{ localStorage.setItem('wt_activeProject', String(id)); } catch(e){}
+  try{ sessionStorage.setItem('wt_activeProject', String(id)); } catch(e){}
   const t = tasks.find(x=>x.id===id);
   if(!t) return;
   document.getElementById('tasksOverview').style.display='none';
@@ -1754,7 +1760,7 @@ function openProjectBoard(id){
 function backToOverview(){
   currentProjectId=null;
   _selectedCardIds.clear();
-  try{ localStorage.removeItem('wt_activeProject'); } catch(e){}
+  try{ sessionStorage.removeItem('wt_activeProject'); } catch(e){}
   document.getElementById('taskSubBoard').style.display='none';
   document.getElementById('tasksOverview').style.display='block';
   document.querySelector('main').classList.remove('board-mode');
@@ -4609,6 +4615,7 @@ function fallbackCopy(text, btn, onSuccess){
 }
 // ===== LINKS TAB SWITCHING =====
 function switchLinksTab(tab){
+  try{ sessionStorage.setItem('wt_activeSubPage', tab); } catch(e){}
   document.getElementById('linksPanel').style.display  = tab==='links'?'flex':'none';
   document.getElementById('websitesPanel').style.display = tab==='websites'?'flex':'none';
   const t1=document.getElementById('linksTab1'), t2=document.getElementById('linksTab2');
@@ -6576,6 +6583,7 @@ function updateTaskPendingStatus(taskId, status){
 let _gvTaskRef = null; // task being assigned
 
 function switchTasksTab(tab){
+  try{ sessionStorage.setItem('wt_activeSubPage', tab); } catch(e){}
   document.getElementById('panel-mytasks').style.display = tab==='mytasks' ? 'block' : 'none';
   document.getElementById('panel-giaoviec').style.display = tab==='giaoviec' ? 'block' : 'none';
   document.getElementById('tab-mytasks').classList.toggle('active', tab==='mytasks');
@@ -7668,6 +7676,7 @@ function clearIndexIdFilter(sheet){
 let _promptTab = 'viet';
 
 function switchPromptTab(tab){
+  try{ sessionStorage.setItem('wt_activeSubPage', tab); } catch(e){}
   _promptTab = tab;
   ['viet','anh','note'].forEach(t=>{
     const btn=document.getElementById('ptab-'+t);
@@ -8553,6 +8562,24 @@ window._websites = websites;
 setTimeout(syncLoaiBaiDropdowns, 150);
 
 // Restore last active page & sub-board
+function restoreSubTab(savedSubPage) {
+  if (!savedSubPage) return;
+  const activePage = localStorage.getItem('wt_activePage');
+  if (activePage === 'tasks') {
+    if (savedSubPage === 'mytasks' || savedSubPage === 'giaoviec') {
+      switchTasksTab(savedSubPage);
+    }
+  } else if (activePage === 'links') {
+    if (savedSubPage === 'links' || savedSubPage === 'websites') {
+      switchLinksTab(savedSubPage);
+    }
+  } else if (activePage === 'prompts') {
+    if (savedSubPage === 'viet' || savedSubPage === 'anh' || savedSubPage === 'note') {
+      switchPromptTab(savedSubPage);
+    }
+  }
+}
+
 function restorePosition(){
   const pWork = document.getElementById('panel-workspace-job');
   const pDash = document.getElementById('page-dashboard');
@@ -8561,26 +8588,43 @@ function restorePosition(){
     return;
   }
   if (!isAdminLoggedIn()) return;
-  let restoredPage = 'dashboard';
-  try{
-    const saved = localStorage.getItem('wt_activePage');
-    const validPages = ['dashboard','tasks','links','prompts','recurring','wstrack'];
-    const cfg = MEMBER_CONFIG[currentMember] || MEMBER_CONFIG['admin'];
-    if(saved && validPages.includes(saved) && cfg.pages.includes(saved)){
-      restoredPage = saved;
-    }
-  }catch(e){}
-  showPage(restoredPage);
 
-  if(restoredPage === 'tasks'){
+  let savedPage = localStorage.getItem('wt_activePage');
+  let savedSubPage = sessionStorage.getItem('wt_activeSubPage');
+
+  if (!savedSubPage) {
+    // KỊCH BẢN TẮT MÁY / TẮT TAB VÀO LẠI: Chỉ xóa sạch các khóa định tuyến con, giữ lại session Admin
+    try {
+      sessionStorage.removeItem('wt_activeSubPage');
+      sessionStorage.removeItem('wt_activeProject');
+    } catch(e){}
+    
+    if (savedPage) {
+      showPage(savedPage); // Nạp tab mẹ, giao diện con tự động quay về trang chủ chính tổng quan
+    } else {
+      showPage('dashboard'); // Mặc định về Tab Báo cáo nếu nạp phiên hoàn toàn mới
+    }
+  } else {
+    // KỊCH BẢN F5 (Duy trì phiên): Khôi phục toàn vẹn cấu trúc phân cấp sâu
+    if (savedPage) {
+      showPage(savedPage);
+      if (typeof restoreSubTab === 'function') {
+        restoreSubTab(savedSubPage);
+      }
+    }
+  }
+
+  // Khôi phục project nếu ở tasks và có activeProject trong session
+  const activePage = localStorage.getItem('wt_activePage');
+  if(activePage === 'tasks'){
     try{
-      const savedId = localStorage.getItem('wt_activeProject');
+      const savedId = sessionStorage.getItem('wt_activeProject');
       if(savedId){
         const pid = parseInt(savedId);
         const t = tasks.find(x=>x.id===pid);
         if(t) openProjectBoard(pid);
       }
-    }catch(e){ localStorage.removeItem('wt_activeProject'); }
+    }catch(e){ sessionStorage.removeItem('wt_activeProject'); }
   }
 }
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
