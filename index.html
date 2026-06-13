@@ -59,20 +59,18 @@
   <div class="meta" id="currentDate"></div>
   <!-- UNIFIED SEARCH BOX -->
   <div style="position:relative;display:flex;align-items:center" id="uniSearchWrap">
-    <div style="display:flex;align-items:center;gap:0;background:rgba(255,255,255,.95);border-radius:10px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2);min-width:300px">
+    <div class="search-box-container" style="display:flex;align-items:center;gap:0;border-radius:10px;overflow:hidden;min-width:300px">
       <!-- Mode toggle button -->
       <button id="uniModeBtn" onclick="uniToggleMode()" title="Chuyển chế độ tìm kiếm"
-        style="background:none;border:none;border-right:1px solid #e9ecef;padding:0 10px;height:38px;cursor:pointer;font-size:15px;transition:background .15s;flex-shrink:0"
-        onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">🔗</button>
+        style="background:none;border:none;padding:0 10px;height:38px;cursor:pointer;font-size:15px;flex-shrink:0">🔗</button>
       <!-- Input -->
       <input id="uniInput" type="text" placeholder="Tìm link / website..." autocomplete="off"
-        style="background:none;border:none;outline:none;color:#333;font-size:13px;padding:8px 8px;flex:1;font-weight:500;min-width:180px"
+        style="background:none;border:none;outline:none;font-size:13px;padding:8px 8px;flex:1;font-weight:500;min-width:180px"
         oninput="uniSearch()" onfocus="uniSearch()" onblur="setTimeout(uniClose,200)"
         onkeydown="uniKeydown(event)">
       <!-- Add button -->
       <button id="uniAddBtn" onclick="uniAdd()" title="Thêm mới"
-        style="background:none;border:none;padding:0 12px;cursor:pointer;font-size:22px;font-weight:300;height:38px;display:flex;align-items:center;color:#e74c3c;opacity:.8;transition:opacity .15s"
-        onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.8'">+</button>
+        style="background:none;border:none;padding:0 12px;cursor:pointer;font-size:22px;font-weight:300;height:38px;display:flex;align-items:center">+</button>
     </div>
     <!-- Dropdown: link/website results (reuse existing qlDropdown) -->
     <div id="qlDropdown" onmousedown="_qlKeepOpen=true" style="display:none;position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);width:360px;background:#fff;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.18);z-index:500;overflow:hidden;max-height:360px;overflow-y:auto"></div>
