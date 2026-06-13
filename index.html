@@ -33,6 +33,7 @@
       </div>
       <div id="loginPwErr" class="login-pw-err">Mật khẩu không đúng. Thử lại.</div>
       <button onclick="submitPassword()" class="login-submit-btn">Đăng nhập →</button>
+      <div id="loginStatusText" style="font-size:11px;color:var(--text-muted);margin-top:10px;text-align:center"></div>
     </div>
 
     <p class="login-footer-text">Phiên làm việc được ghi nhớ trong tab này</p>
@@ -1114,6 +1115,7 @@
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-database.js"></script>
   <!-- CO LAP LUONG XAC THUC V51 -->
+  <!-- CO LAP LUONG XAC THUC V53 -->
   <script>
     const AdminAuth = {
       setPassword(pw) {
@@ -1131,37 +1133,33 @@
           return;
         }
 
-        // Đọc dữ liệu mật khẩu thật từ LocalStorage (do script.js kéo từ Firebase về)
-        let storedPasswords = null;
-        try {
-          const localData = localStorage.getItem('wt_passwords');
-          if (localData) storedPasswords = JSON.parse(localData);
-        } catch(e) {
-          console.error("[V51] Lỗi đọc bộ nhớ mật khẩu:", e);
-        }
+        const btn = document.querySelector('.login-submit-btn');
+        if (btn) btn.textContent = "Đang xác thực...";
 
-        // Mạch cầu nối: Ưu tiên gọi hàm so khớp xuyên file của script.js nếu đã nạp xong
-        if (typeof window.validateAdminPassword === 'function') {
-          if (window.validateAdminPassword(input)) {
+        // Truy vấn trực tiếp mật khẩu thật từ Firebase DB gốc
+        firebase.database().ref('passwords/admin').once('value').then(snapshot => {
+          const correctPassword = snapshot.val();
+          if (input === correctPassword) {
+            if (btn) btn.textContent = "Đăng nhập thành công!";
             executeLoginSuccess();
           } else {
+            if (btn) btn.textContent = "Đăng nhập →";
             alert('Sai mật khẩu! Vui lòng kiểm tra lại.');
           }
-        } else if (storedPasswords && storedPasswords.admin) {
-          // Fallback 1: Nếu file chưa nạp xong nhưng LocalStorage đã có sẵn mật khẩu thật cũ
-          if (input === storedPasswords.admin) {
-            executeLoginSuccess();
-          } else {
-            alert('Sai mật khẩu! Vui lòng kiểm tra lại.');
+        }).catch(err => {
+          console.error("[V53 Error] Lỗi kết nối Firebase:", err);
+          // Fallback phòng thủ nếu mất mạng hoặc lỗi kết nối Firebase: Quét qua Local Storage cũ
+          const localData = localStorage.getItem('wt_passwords');
+          if (localData) {
+            const storedPasswords = JSON.parse(localData);
+            if (storedPasswords && input === storedPasswords.admin) {
+              executeLoginSuccess();
+              return;
+            }
           }
-        } else {
-          // Fallback 2: Nếu hệ thống vừa F5, Firebase đang kết nối ngầm (chờ 500ms rồi thử lại)
-          console.log("[V51 Guard] Hệ thống đang nạp mật khẩu cá nhân từ dữ liệu đám mây, vui lòng bấm lại sau 1 giây.");
-          // Kích hoạt hiệu ứng thông báo trên nút đăng nhập
-          const btn = document.querySelector('.login-submit-btn');
-          if (btn) btn.textContent = "Đang tải dữ liệu...";
-          setTimeout(submitPassword, 500); 
-        }
+          if (btn) btn.textContent = "Đăng nhập →";
+          alert('Lỗi kết nối cơ sở dữ liệu. Vui lòng thử lại sau.');
+        });
       },
       togglePwVis() {
         const inp = document.getElementById('loginPwInput');
@@ -1199,6 +1197,22 @@
           if (err) err.style.display = 'none';
         });
       }
+      
+      const statusDiv = document.getElementById('loginStatusText');
+      if (statusDiv) {
+        try {
+          const localData = localStorage.getItem('wt_passwords');
+          if (localData) {
+            const stored = JSON.parse(localData);
+            statusDiv.textContent = stored.admin ? "Thiết lập máy khách: Đã nhận mật khẩu riêng" : "Thiết lập máy khách: Trống";
+          } else {
+            statusDiv.textContent = "Thiết lập máy khách: Trống (Chờ đồng bộ)";
+          }
+        } catch(e) {
+          statusDiv.textContent = "Thiết lập máy khách: Trống";
+        }
+      }
+
       if (sessionStorage.getItem('wt_session_admin') === 'true') {
         const ls = document.getElementById('loginScreen');
         if (ls) ls.style.display = 'none';
@@ -1206,7 +1220,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v51"></script>
+  <script src="script.js?v=premium_ui_perfect_v53"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
