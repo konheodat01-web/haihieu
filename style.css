@@ -59,8 +59,8 @@ body { font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:var(--te
   .panel-body{padding:16px}
   
   .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-  input,select,textarea{font-family:inherit;font-size:13px;border:1px solid var(--gray-border);border-radius:6px;padding:7px 10px;outline:none;background:#fff;color:var(--text)}
-  input:focus,select:focus,textarea:focus{border-color:var(--red);box-shadow:0 0 0 2px rgba(192,57,43,.1)}
+  input,select,textarea{font-family:inherit;font-size:13px;border:1px solid #30363d !important;border-radius:6px;padding:7px 10px;outline:none;background-color:#0d1117 !important;color:#c9d1d9 !important}
+  input:focus,select:focus,textarea:focus{border-color:#58a6ff !important;box-shadow:0 0 0 2px rgba(56, 139, 253, 0.3) !important}
   input[type=text],input[type=date]{height:34px}
   select{height:34px;cursor:pointer}
   
@@ -552,8 +552,8 @@ header.main-header, .main-header {
 .login-pw-input {
   width: 100%;
   box-sizing: border-box;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #0d1117 !important;
+  border: 1px solid #30363d !important;
   border-radius: 12px;
   padding: 14px 48px 14px 18px;
   font-size: 15px;
@@ -562,7 +562,8 @@ header.main-header, .main-header {
   transition: border-color 0.2s;
 }
 .login-pw-input:focus {
-  border-color: rgba(192, 57, 43, 0.7);
+  border-color: #58a6ff !important;
+  box-shadow: 0 0 0 2px rgba(56, 139, 253, 0.3) !important;
 }
 .login-pw-toggle {
   position: absolute;
@@ -620,42 +621,141 @@ header.main-header, .main-header {
   -webkit-backdrop-filter: blur(5px);
 }
 .report-card.hai .rh, .report-card.hieu .rh, .stat-card .rh {
-  background: rgba(255, 255, 255, 0.04) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
-  color: #ffffff !important;
+  background: #21262d !important;
+  border-bottom: 1px solid #30363d !important;
+  color: #f0f6fc !important;
 }
 .report-card h1, .stat-card h1, .stat-card .value, .stat-number, .total-count {
-  color: #4dadff !important;
-  text-shadow: 0 0 10px rgba(77, 173, 255, 0.3);
+  color: #f0f6fc !important;
+  text-shadow: none !important;
 }
 
 /* DASHBOARD DYNAMIC GLASS STATS CARDS */
 .db-card-glass {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
   border-radius: 14px;
   padding: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  color: #fff;
+  box-shadow: none !important;
+  color: #f0f6fc;
 }
 .db-card-glass .db-card-value {
   font-size: 32px;
   font-weight: 800;
   margin: 8px 0;
-  color: #4dadff; /* Neon cyan */
-  text-shadow: 0 0 10px rgba(77, 173, 255, 0.3);
+  color: #f0f6fc !important; /* Flat White count */
+  text-shadow: none !important;
 }
 .db-card-glass .db-card-label {
   font-size: 12px;
-  opacity: 0.8;
+  color: #8b949e !important; /* Muted gray label */
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .db-card-glass .db-card-desc {
   font-size: 12px;
-  opacity: 0.9;
+  color: #8b949e !important;
 }
+
+/* MINIMALIST MONOCHROMATIC OVERRIDES (GITHUB DARK MODE) */
+body, html, .app-shell-wrapper, main.main-workspace-container, .workspace-panel, .page {
+  background: #0d1117 !important;
+}
+header.main-header, .main-header {
+  background: #161b22 !important;
+  border-bottom: 1px solid #30363d !important;
+}
+
+/* Report & stats card container block values */
+.report-card, .stat-card {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+  box-shadow: none !important;
+}
+
+/* TYPOGRAPHY TEXT CONTRAST HIERARCHY */
+h1, h2, h3, h4, .value, .stat-number, .total-count, strong, .sidebar-brand {
+  color: #f0f6fc !important;
+  text-shadow: none !important;
+}
+p, .text-muted, .meta, .sidebar-sub-item:not(.active) {
+  color: #8b949e !important;
+}
+
+/* BUTTONS HIERARCHY FOR ACTIONS AND MENU ITEMS */
+.sidebar-nav-item, .sidebar-footer button, .btn-outline {
+  background: none;
+  border: none;
+  color: #c9d1d9;
+}
+.sidebar-nav-item.active, .sidebar-nav-item:hover, .sidebar-sub-item.active, .sidebar-sub-item:hover {
+  background: #21262d !important;
+  color: #f0f6fc !important;
+}
+
+/* General outline actions */
+.btn, .btn-view-all {
+  background: #21262d !important;
+  color: #c9d1d9 !important;
+  border: 1px solid #30363d !important;
+  border-radius: 6px !important;
+  padding: 6px 12px;
+  font-family: inherit;
+}
+.btn:hover, .btn-view-all:hover {
+  background: #30363d !important;
+  color: #f0f6fc !important;
+  border-color: #8b949e !important;
+}
+
+/* Primary confirm action buttons */
+.btn-primary {
+  background: #238636 !important;
+  color: #ffffff !important;
+  border: 1px solid #2ea44f !important;
+  border-radius: 6px !important;
+  font-family: inherit;
+}
+.btn-primary:hover {
+  background: #2ea44f !important;
+}
+
+/* Danger deletion warning buttons */
+.btn-danger, .text-danger-btn {
+  background: rgba(248, 81, 73, 0.1) !important;
+  color: #f85149 !important;
+  border: 1px solid rgba(248, 81, 73, 0.4) !important;
+  border-radius: 6px !important;
+  font-family: inherit;
+}
+.btn-danger:hover {
+  background: #f85149 !important;
+  color: #ffffff !important;
+}
+
+/* MUTED STATUS BADGES CHUẨN GITHUB DARK */
+.badge-green, .tag-good {
+  background: rgba(46, 160, 67, 0.15) !important;
+  color: #3fb950 !important;
+  border: 1px solid rgba(46, 160, 67, 0.3) !important;
+}
+.badge-red, .badge-error, .tag-error {
+  background: rgba(248, 81, 73, 0.15) !important;
+  color: #f85149 !important;
+  border: 1px solid rgba(248, 81, 73, 0.3) !important;
+}
+.badge-blue, .badge-info {
+  background: rgba(56, 139, 253, 0.15) !important;
+  color: #58a6ff !important;
+  border: 1px solid rgba(56, 139, 253, 0.3) !important;
+}
+.badge-gray, .badge-pending {
+  background: rgba(139, 148, 158, 0.15) !important;
+  color: #8b949e !important;
+  border: 1px solid rgba(139, 148, 158, 0.3) !important;
+}
+
 
 
 
