@@ -27,7 +27,6 @@
         <input id="loginPwInput" type="password" placeholder="Mật khẩu Admin..."
           autocomplete="current-password"
           class="login-pw-input"
-          onkeydown="if(event.key==='Enter')submitPassword()"
           oninput="document.getElementById('loginPwErr').style.display='none'">
         <button onclick="togglePwVis()" class="login-pw-toggle">👁</button>
       </div>
@@ -1198,24 +1197,32 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       const pwInput = document.getElementById('loginPwInput');
-      if (pwInput) {
-        pwInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') submitPassword();
-        });
+      const submitBtn = document.querySelector('.login-submit-btn');
+
+      if (submitBtn && pwInput) {
+        function triggerSubmit(e) {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          if (submitBtn.textContent === "Đang xác thực...") return;
+          submitPassword();
+        }
+
+        // Gán duy nhất 1 luồng xử lý bằng chuột
+        submitBtn.onclick = triggerSubmit;
+
+        // Gán duy nhất 1 luồng xử lý bằng phím Enter trên ô mật khẩu
+        pwInput.onkeydown = function(e) {
+          if (e.key === 'Enter') {
+            triggerSubmit(e);
+          }
+        };
+
         pwInput.addEventListener('input', () => {
           const err = document.getElementById('loginPwErr');
           if (err) err.style.display = 'none';
         });
-      }
-      
-      const submitBtn = document.querySelector('.login-submit-btn');
-      if (submitBtn) {
-        submitBtn.onclick = null;
-        submitBtn.onclick = function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          submitPassword();
-        };
       }
       
       const statusDiv = document.getElementById('loginStatusText');
@@ -1240,7 +1247,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v60"></script>
+  <script src="script.js?v=premium_ui_perfect_v61"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
