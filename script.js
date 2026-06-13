@@ -1416,6 +1416,21 @@ let pendingDragCard = null;
 let editingCardId = null;
 let editingProjectId = null;
 
+function patchLegacyTaskColumns(task) {
+  if (task && task.cols && Array.isArray(task.cols)) {
+    const hasDoing = task.cols.some(col => col.id === 'doing');
+    if (!hasDoing) {
+      console.log(`[V35 Guard] Phát hiện task lỗi thiếu cột doing: ${task.name}. Tiến hành cứu hộ.`);
+      const updatedCols = [
+        task.cols[0],
+        { id: 'doing', label: 'Đang làm', color: '#2980b9' },
+        ...task.cols.slice(1)
+      ];
+      task.cols = updatedCols;
+    }
+  }
+}
+
 function normalizeTaskCards(task){
   if(!task) return;
   // Firebase may return cols as object instead of array
@@ -1425,6 +1440,9 @@ function normalizeTaskCards(task){
     colEntries.sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
     task.cols = colEntries.map(e=>e[1]);
   }
+  
+  patchLegacyTaskColumns(task);
+
   // Firebase may return cards as object {0:{...},1:{...}} instead of array
   if(task.cards && !Array.isArray(task.cards) && typeof task.cards === 'object'){
     const cardEntries = Object.entries(task.cards);
