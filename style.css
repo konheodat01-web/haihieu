@@ -1049,77 +1049,67 @@ nav.sidebar i.fa {
     border-color: #e67e22 !important;
 }
 
-/* V16: Monochromatic Dark Task Polish for page-recurring */
-#recurringList > div div[style*="font-weight:600"],
-#recurDoneList div[style*="font-weight:600"],
-#page-recurring span[style*="font-weight:600"],
-#page-recurring span[style*="font-weight: 600"] {
-    color: #f0f6fc !important;
-    font-size: 14px !important;
+/* V18: Dark Mode Panel & Monochromatic Polish for page-recurring */
+#page-recurring .panel {
+    background: #0d1117 !important;
+    border: 1px solid #30363d !important;
 }
 
-#page-recurring #recurringList span:not([style*="color"]):not([style*="background"]),
-#page-recurring #recurringList div:not([style*="font-weight"]):not([style*="background"]) {
+.task-recur-card {
+    background: #161b22 !important;
+    border: 1px solid #30363d !important;
     color: #c9d1d9 !important;
+    box-shadow: none !important;
+}
+
+#page-recurring #recurringList div[style*="font-weight:600"],
+#page-recurring #recurDoneList div[style*="font-weight:600"],
+#page-recurring span[style*="font-weight"] {
+    color: #f0f6fc !important;
+}
+
+.task-recur-card.task-recur-done {
+    background: rgba(46, 160, 67, 0.1) !important;
+    border: 1px solid rgba(46, 160, 67, 0.3) !important;
+    color: #8b949e !important;
+}
+
+.task-recur-card.task-recur-due {
+    background: rgba(248, 81, 73, 0.05) !important;
+    border: 1px solid #30363d !important;
+    border-left: 4px solid #f85149 !important;
 }
 
 #page-recurring .text-danger,
 #page-recurring [style*="color:var(--red)"],
 #page-recurring [style*="color: var(--red)"],
-#page-recurring i.fa-warning,
-#page-recurring i.fa-exclamation-triangle,
-#page-recurring [class*="overdue"],
-#page-recurring [class*="tre-han"] {
+#page-recurring [class*="due"],
+#page-recurring i.fa-warning {
     color: #f85149 !important;
     font-weight: 600 !important;
 }
 
-#page-recurring #recurringList button,
-#page-recurring #recurDoneList button {
+#page-recurring button, #page-recurring .btn {
     background: #21262d !important;
     border: 1px solid #30363d !important;
     color: #c9d1d9 !important;
-    border-radius: 4px !important;
-    padding: 4px 10px !important;
-    transition: all 0.15s ease !important;
 }
-
-#page-recurring #recurringList button:hover,
-#page-recurring #recurDoneList button:hover {
+#page-recurring button:hover {
     background: #30363d !important;
     color: #f0f6fc !important;
-    border-color: #8b949e !important;
 }
 
 #page-recurring button[onclick*="deleteRecurring"] {
     color: rgba(248, 81, 73, 0.7) !important;
-    border-color: transparent !important;
     background: transparent !important;
+    border-color: transparent !important;
 }
-
 #page-recurring button[onclick*="deleteRecurring"]:hover {
     color: #f85149 !important;
     background: rgba(248, 81, 73, 0.1) !important;
     border-color: rgba(248, 81, 73, 0.4) !important;
 }
 
-/* V17: Class states for recurring tasks */
-.task-recur-card {
-    background: #161b22 !important;
-    border: 1px solid #30363d !important;
-    color: #c9d1d9 !important;
-    transition: all 0.15s ease !important;
-}
-.task-recur-card.task-recur-done {
-    background: rgba(46, 160, 67, 0.1) !important;
-    border: 1px solid rgba(46, 160, 67, 0.3) !important;
-    opacity: 0.7;
-}
-.task-recur-card.task-recur-due {
-    background: rgba(248, 81, 73, 0.05) !important;
-    border: 1px solid #30363d !important;
-    border-left: 4px solid #f85149 !important;
-}
 
 
 
