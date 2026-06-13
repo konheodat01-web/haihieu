@@ -3984,13 +3984,61 @@ function saveChangePassword(){
   const nw = document.getElementById('cpwNew')?.value || '';
   const cf = document.getElementById('cpwConfirm')?.value || '';
   const err = document.getElementById('cpwErr');
-  const correct = AdminAuth.getPassword();
-  if(old !== correct){ if(err) { err.textContent='Mật khẩu hiện tại không đúng.'; err.style.display='block'; } return; }
-  if(!nw){ if(err) { err.textContent='Vui lòng nhập mật khẩu mới.'; err.style.display='block'; } return; }
-  if(nw !== cf){ if(err) { err.textContent='Mật khẩu xác nhận không khớp.'; err.style.display='block'; } return; }
-  AdminAuth.setPassword(nw);
-  closeChangePassword();
-  if (typeof toast === 'function') toast('✅ Đã đổi mật khẩu thành công!');
+
+  if (!old || !nw || !cf) {
+    if (err) { err.textContent = 'Vui lòng nhập đầy đủ các trường!'; err.style.display = 'block'; }
+    return;
+  }
+
+  if (nw !== cf) {
+    if (err) { err.textContent = 'Mật khẩu mới và xác nhận mật khẩu không khớp!'; err.style.display = 'block'; }
+    return;
+  }
+
+  // Đọc mật khẩu hiện tại từ Local Storage (do Firebase đồng bộ xuống)
+  let currentRealPassword = "123456"; // Fallback mặc định
+  try {
+    const localData = localStorage.getItem('wt_passwords');
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      if (parsed && parsed.admin) currentRealPassword = parsed.admin;
+    }
+  } catch(e) {
+    console.error("[V57] Lỗi đọc mật khẩu cục bộ:", e);
+  }
+
+  // So khớp mật khẩu hiện tại
+  if (old !== currentRealPassword) {
+    if (err) { err.textContent = 'Mật khẩu hiện tại không chính xác!'; err.style.display = 'block'; }
+    return;
+  }
+
+  // ĐỒNG BỘ MẬT KHẨU MỚI LÊN THẲNG FIREBASE VÀ LOCAL STORAGE
+  if (window.firebase) {
+    firebase.database().ref('passwords/admin').set(nw).then(() => {
+      // Cập nhật lại Local Storage để đồng bộ ngay lập tức
+      try {
+        const pws = JSON.parse(localStorage.getItem('wt_passwords') || '{}');
+        pws['admin'] = nw;
+        localStorage.setItem('wt_passwords', JSON.stringify(pws));
+      } catch (e) {}
+      
+      closeChangePassword();
+      if (typeof toast === 'function') toast('✅ Đổi mật khẩu thành công! Mật khẩu mới đã được cập nhật.');
+    }).catch(errFirebase => {
+      console.error("[V57 Firebase Error] Không thể ghi đè mật khẩu mới:", errFirebase);
+      if (err) { err.textContent = 'Lỗi kết nối mạng, không thể lưu mật khẩu mới lên đám mây.'; err.style.display = 'block'; }
+    });
+  } else {
+    // Fallback nếu không tải được Firebase SDK
+    try {
+      const pws = JSON.parse(localStorage.getItem('wt_passwords') || '{}');
+      pws['admin'] = nw;
+      localStorage.setItem('wt_passwords', JSON.stringify(pws));
+      closeChangePassword();
+      if (typeof toast === 'function') toast('✅ Đổi mật khẩu cục bộ thành công!');
+    } catch (e) {}
+  }
 }
 
 function openResetPwModal(){}
