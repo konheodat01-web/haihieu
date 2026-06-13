@@ -9192,6 +9192,7 @@ function updateNavBadges() {
     badgeTasks.textContent = activeTasksCount || '';
     badgeTasks.style.display = activeTasksCount ? 'inline-block' : 'none';
   }
+  const badgeGv = document.getElementById('gvBadge');
   if (badgeGv) {
     const activeGv = (giaoViecList || []).filter(g => g.status !== 'Done' && g.status !== 'Đã Duyệt').length;
     badgeGv.textContent = activeGv || '';
