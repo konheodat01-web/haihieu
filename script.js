@@ -9474,4 +9474,13 @@ document.getElementById('page-tasks')?.addEventListener('click', function(event)
       TaskImporter.open();
     }
   }
-});
+});
+
+window.validateAdminPassword = function(inputPassword) {
+  try {
+    const pws = JSON.parse(localStorage.getItem('wt_passwords') || '{}');
+    return inputPassword === pws['admin'];
+  } catch(e) {
+    return false;
+  }
+};

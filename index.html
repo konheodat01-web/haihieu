@@ -1113,16 +1113,9 @@
   <!-- Firebase SDK (v8 compat bundle) -->
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-database.js"></script>
-  <!-- CO LAP LUONG XAC THUC V48 -->
+  <!-- CO LAP LUONG XAC THUC V51 -->
   <script>
     const AdminAuth = {
-      DEFAULT_PW: '123456',
-      getPassword() {
-        try {
-          const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
-          return pws['admin'] || this.DEFAULT_PW;
-        } catch(e) { return this.DEFAULT_PW; }
-      },
       setPassword(pw) {
         try {
           const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
@@ -1132,27 +1125,42 @@
       },
       submitPassword() {
         const inp = document.getElementById('loginPwInput');
-        const err = document.getElementById('loginPwErr');
-        const pw = inp?.value || '';
-        
-        if (pw !== this.getPassword()) {
-          if (err) err.style.display = 'block';
-          if (inp) { inp.value = ''; inp.focus(); }
+        const input = inp?.value.trim() || '';
+        if (!input) {
+          alert('Vui lòng nhập mật khẩu!');
           return;
         }
-        
+
+        // Đọc dữ liệu mật khẩu thật từ LocalStorage (do script.js kéo từ Firebase về)
+        let storedPasswords = null;
         try {
-          sessionStorage.setItem('wt_session_admin', 'true');
-          localStorage.setItem('wt_activeMember', 'admin');
-        } catch(e) {}
-        
-        const ls = document.getElementById('loginScreen');
-        if (ls) ls.style.display = 'none';
-        
-        if (typeof onAdminLoginSuccess === 'function') {
-          onAdminLoginSuccess();
+          const localData = localStorage.getItem('wt_passwords');
+          if (localData) storedPasswords = JSON.parse(localData);
+        } catch(e) {
+          console.error("[V51] Lỗi đọc bộ nhớ mật khẩu:", e);
+        }
+
+        // Mạch cầu nối: Ưu tiên gọi hàm so khớp xuyên file của script.js nếu đã nạp xong
+        if (typeof window.validateAdminPassword === 'function') {
+          if (window.validateAdminPassword(input)) {
+            executeLoginSuccess();
+          } else {
+            alert('Sai mật khẩu! Vui lòng kiểm tra lại.');
+          }
+        } else if (storedPasswords && storedPasswords.admin) {
+          // Fallback 1: Nếu file chưa nạp xong nhưng LocalStorage đã có sẵn mật khẩu thật cũ
+          if (input === storedPasswords.admin) {
+            executeLoginSuccess();
+          } else {
+            alert('Sai mật khẩu! Vui lòng kiểm tra lại.');
+          }
         } else {
-          window.location.reload();
+          // Fallback 2: Nếu hệ thống vừa F5, Firebase đang kết nối ngầm (chờ 500ms rồi thử lại)
+          console.log("[V51 Guard] Hệ thống đang nạp mật khẩu cá nhân từ dữ liệu đám mây, vui lòng bấm lại sau 1 giây.");
+          // Kích hoạt hiệu ứng thông báo trên nút đăng nhập
+          const btn = document.querySelector('.login-submit-btn');
+          if (btn) btn.textContent = "Đang tải dữ liệu...";
+          setTimeout(submitPassword, 500); 
         }
       },
       togglePwVis() {
@@ -1165,6 +1173,16 @@
         if (ls) ls.style.display = 'flex';
       }
     };
+
+    function executeLoginSuccess() {
+      sessionStorage.setItem('wt_session_admin', 'true');
+      localStorage.setItem('wt_activeMember', 'admin');
+      if (typeof onAdminLoginSuccess === 'function') {
+        onAdminLoginSuccess();
+      } else {
+        window.location.reload();
+      }
+    }
 
     function submitPassword() { AdminAuth.submitPassword(); }
     function togglePwVis() { AdminAuth.togglePwVis(); }
@@ -1188,7 +1206,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v48"></script>
+  <script src="script.js?v=premium_ui_perfect_v51"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
