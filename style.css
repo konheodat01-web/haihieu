@@ -1184,16 +1184,28 @@ nav.sidebar i.fa {
     border-color: #30363d !important;
 }
 
+#page-prompts > div:first-child {
+    display: flex !important;
+    gap: 10px !important;
+    background: transparent !important;
+    border: none !important;
+    padding-bottom: 12px !important;
+    overflow: visible !important;
+}
+
 #page-prompts .gv-tab {
-    background-color: #161b22 !important;
+    border-radius: 6px !important;
     border: 1px solid #30363d !important;
+    background-color: #161b22 !important;
     color: #8b949e !important;
+    padding: 6px 14px !important;
+    transition: all 0.15s ease;
 }
 
 #page-prompts .gv-tab.active {
-    background-color: #0d1117 !important;
+    background-color: #21262d !important;
     color: #f0f6fc !important;
-    border-bottom: 1px solid #0d1117 !important;
+    border-color: #8b949e !important;
 }
 
 .prompt-cat-tag {
@@ -1221,6 +1233,13 @@ nav.sidebar i.fa {
     border: 1px solid #30363d !important;
 }
 
+#page-prompts .prompt-card span[style*="color:var(--text)"],
+#page-prompts .prompt-card span[style*="color: var(--text)"] {
+    color: #f0f6fc !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+}
+
 .prompt-card {
     background-color: #161b22 !important;
     border: 1px solid #30363d !important;
@@ -1230,14 +1249,19 @@ nav.sidebar i.fa {
 }
 
 .prompt-content {
+    display: none;
     background-color: #0d1117 !important;
     border: 1px solid #30363d !important;
     color: #c9d1d9 !important;
     font-family: monospace;
-    padding: 10px;
+    padding: 12px;
     border-radius: 6px;
     margin-top: 8px;
     white-space: pre-wrap;
+}
+
+.prompt-content.expanded {
+    display: block !important;
 }
 
 #page-prompts button,
