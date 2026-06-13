@@ -3475,6 +3475,28 @@ function saveProject(){
       if(cols!==null) t.cols=cols;
       t.team=document.getElementById('npm_team')?.value||t.team||'Team 01';
       t.recurring=document.getElementById('npm_recurring')?.checked?{type:document.getElementById('npm_recur_type')?.value||'weekly',days:parseInt(document.getElementById('npm_recur_days')?.value||7)}:null;
+
+      // === BẮT ĐẦU LUỒNG APPEND-ONLY SYNC CHO DẠNG TASK URL ===
+      if (t.dang === 'url') {
+        if (!t.cards) t.cards = [];
+        const lines = t.desc.split('\n').map(l => l.trim()).filter(Boolean);
+        const urls = [...new Set(lines.map(extractUrlFromLine).filter(Boolean))];
+        const firstColId = (t.cols && t.cols.length > 0) ? t.cols[0].id : 'todo';
+
+        urls.forEach(url => {
+          const hasCard = t.cards.some(c => (c.name || '').toLowerCase().trim() === url.toLowerCase().trim());
+          if (!hasCard) {
+            t.cards.push({
+              id: 'c' + cardNextId++,
+              colId: firstColId,
+              name: url,
+              desc: ''
+            });
+          }
+        });
+      }
+      // === KẾT THÚC LUỒNG APPEND-ONLY SYNC ===
+
       if(currentProjectId===editingProjectId){
         document.getElementById('subBoardTitle').textContent=t.name;
         renderSubBoard(t);
@@ -3545,11 +3567,18 @@ function saveCard(){
   if(!task) return;
   const colId=document.getElementById('ac_col').value;
   const desc=document.getElementById('ac_desc').value.trim();
+
+  // Ép phẳng tên thẻ về dạng URL sạch nếu là task dạng URL
+  let finalName = name;
+  if (task.dang === 'url') {
+    finalName = extractUrlFromLine(name) || name;
+  }
+
   if(editingCardId){
     const card=task.cards.find(c=>c.id===editingCardId);
-    if(card){card.name=name;card.colId=colId;card.desc=desc;}
+    if(card){card.name=finalName;card.colId=colId;card.desc=desc;}
   } else {
-    task.cards.push({id:'c'+cardNextId++,colId,name,desc});
+    task.cards.push({id:'c'+cardNextId++,colId,name:finalName,desc});
   }
   closeAddCardModal();
   renderSubBoard(task);
