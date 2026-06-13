@@ -1113,8 +1113,82 @@
   <!-- Firebase SDK (v8 compat bundle) -->
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-app.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/firebase@8.10.1/firebase-database.js"></script>
+  <!-- CO LAP LUONG XAC THUC V48 -->
+  <script>
+    const AdminAuth = {
+      DEFAULT_PW: '123456',
+      getPassword() {
+        try {
+          const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
+          return pws['admin'] || this.DEFAULT_PW;
+        } catch(e) { return this.DEFAULT_PW; }
+      },
+      setPassword(pw) {
+        try {
+          const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
+          pws['admin'] = pw;
+          localStorage.setItem('wt_passwords', JSON.stringify(pws));
+        } catch(e) {}
+      },
+      submitPassword() {
+        const inp = document.getElementById('loginPwInput');
+        const err = document.getElementById('loginPwErr');
+        const pw = inp?.value || '';
+        
+        if (pw !== this.getPassword()) {
+          if (err) err.style.display = 'block';
+          if (inp) { inp.value = ''; inp.focus(); }
+          return;
+        }
+        
+        try {
+          sessionStorage.setItem('wt_session_admin', 'true');
+          localStorage.setItem('wt_activeMember', 'admin');
+        } catch(e) {}
+        
+        const ls = document.getElementById('loginScreen');
+        if (ls) ls.style.display = 'none';
+        
+        if (typeof onAdminLoginSuccess === 'function') {
+          onAdminLoginSuccess();
+        } else {
+          window.location.reload();
+        }
+      },
+      togglePwVis() {
+        const inp = document.getElementById('loginPwInput');
+        if (inp) inp.type = (inp.type === 'password') ? 'text' : 'password';
+      },
+      logout() {
+        try { sessionStorage.removeItem('wt_session_admin'); } catch(e) {}
+        const ls = document.getElementById('loginScreen');
+        if (ls) ls.style.display = 'flex';
+      }
+    };
+
+    function submitPassword() { AdminAuth.submitPassword(); }
+    function togglePwVis() { AdminAuth.togglePwVis(); }
+    function logout() { AdminAuth.logout(); }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const pwInput = document.getElementById('loginPwInput');
+      if (pwInput) {
+        pwInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') submitPassword();
+        });
+        pwInput.addEventListener('input', () => {
+          const err = document.getElementById('loginPwErr');
+          if (err) err.style.display = 'none';
+        });
+      }
+      if (sessionStorage.getItem('wt_session_admin') === 'true') {
+        const ls = document.getElementById('loginScreen');
+        if (ls) ls.style.display = 'none';
+      }
+    });
+  </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v47"></script>
+  <script src="script.js?v=premium_ui_perfect_v48"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">

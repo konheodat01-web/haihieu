@@ -3952,127 +3952,15 @@ function hideKbTooltip(){
   if(tip) tip.style.display='none';
 }
 
-// ===== ADMIN AUTHENTICATION FLOW =====
-const AdminAuth = {
-  DEFAULT_PW: '123456',
-  
-  getPassword() {
-    try {
-      const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
-      return pws['admin'] || this.DEFAULT_PW;
-    } catch(e) {
-      return this.DEFAULT_PW;
-    }
-  },
-
-  setPassword(pw) {
-    try {
-      const pws = JSON.parse(localStorage.getItem('wt_passwords')||'{}');
-      pws['admin'] = pw;
-      localStorage.setItem('wt_passwords', JSON.stringify(pws));
-    } catch(e) {}
-  },
-
-  submitPassword() {
-    const inp = document.getElementById('loginPwInput');
-    const err = document.getElementById('loginPwErr');
-    const pw = inp?.value || '';
-    
-    if (pw !== this.getPassword()) {
-      if (err) err.style.display = 'block';
-      if (inp) { inp.value = ''; inp.focus(); }
-      return;
-    }
-    
-    this.login();
-  },
-
-  togglePwVis() {
-    const inp = document.getElementById('loginPwInput');
-    if (inp) inp.type = (inp.type === 'password') ? 'text' : 'password';
-  },
-
-  login() {
-    try {
-      sessionStorage.setItem('wt_session_admin', 'true');
-      localStorage.setItem('wt_activeMember', 'admin');
-    } catch(e) {}
-    
-    const ls = document.getElementById('loginScreen');
-    if (ls) ls.style.display = 'none';
-    
-    currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
-    
-    // Switch to job workspace first to ensure parent container is display block & active tab highlighted
-    switchWorkspace('job', document.querySelector('.sidebar-nav-item'));
-    
-    showPage('dashboard');
-    renderDashboard();
-    renderTasksOverview();
-  },
-
-  logout() {
-    try { sessionStorage.removeItem('wt_session_admin'); } catch(e) {}
-    const ls = document.getElementById('loginScreen');
-    if (ls) ls.style.display = 'flex';
-  },
-
-  checkSession() {
-    try {
-      if (sessionStorage.getItem('wt_session_admin') === 'true') {
-        const ls = document.getElementById('loginScreen');
-        if (ls) ls.style.display = 'none';
-        currentMember = 'admin'; try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
-        
-        // Switch to job workspace first to ensure parent container is display block & active tab highlighted
-        switchWorkspace('job', document.querySelector('.sidebar-nav-item'));
-        
-        restorePosition();
-        renderDashboard();
-        renderTasksOverview();
-      }
-    } catch(e) {}
-  }
-};
-
-// Aliases for HTML onClick bindings
-function submitPassword() { AdminAuth.submitPassword(); }
-function togglePwVis() { AdminAuth.togglePwVis(); }
-function logout() { AdminAuth.logout(); }
-
-// Initialize login elements and session defensively once DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-  const pwInput = document.getElementById('loginPwInput');
-  if (pwInput) {
-    pwInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        AdminAuth.submitPassword();
-      }
-    });
-    pwInput.addEventListener('input', () => {
-      const err = document.getElementById('loginPwErr');
-      if (err) err.style.display = 'none';
-    });
-  }
-
-  const submitBtn = document.querySelector('button[onclick="submitPassword()"]');
-  if (submitBtn) {
-    submitBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      AdminAuth.submitPassword();
-    });
-  }
-
-  const toggleBtn = document.querySelector('button[onclick="togglePwVis()"]');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      AdminAuth.togglePwVis();
-    });
-  }
-
-  AdminAuth.checkSession();
-});
+// ===== ADMIN AUTHENTICATION SUCCESS CALLBACK (V48 Isolation) =====
+function onAdminLoginSuccess() {
+  currentMember = 'admin';
+  try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
+  switchWorkspace('job', document.querySelector('.sidebar-nav-item'));
+  restorePosition();
+  renderDashboard();
+  renderTasksOverview();
+}
 
 // ===== CHANGE PASSWORD =====
 function openChangePassword(){
