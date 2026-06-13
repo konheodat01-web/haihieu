@@ -1171,7 +1171,7 @@
     };
 
     function executeLoginSuccess() {
-      console.log("[V56] Đăng nhập thành công. Tiến hành bẻ khóa giao diện cưỡng bức.");
+      console.log("[V60] Đăng nhập thành công. Tiến hành bẻ khóa giao diện cưỡng bức và đồng bộ lại dữ liệu.");
       sessionStorage.setItem('wt_session_admin', 'true');
       localStorage.setItem('wt_activeMember', 'admin');
 
@@ -1181,11 +1181,14 @@
         loginContainer.style.setProperty('display', 'none', 'important');
       }
 
-      // 2. Kích hoạt hiển thị lớp vỏ bọc hệ thống chính
-      // index.html không dùng .app-shell-wrapper, phần main/header của nó lộ ra mặc định hoặc được ẩn tùy theo loginScreen
-      // Hãy gọi hàm onAdminLoginSuccess nếu có để đồng bộ trạng thái
+      // 2. Kích hoạt hiển thị lớp vỏ bọc hệ thống chính và đồng bộ dữ liệu
       if (typeof onAdminLoginSuccess === 'function') {
         onAdminLoginSuccess();
+      }
+      
+      // Kích hoạt nạp lại dữ liệu tươi từ Firebase
+      if (typeof initFirebaseListener === 'function') {
+        initFirebaseListener();
       }
     }
 
@@ -1237,7 +1240,7 @@
     });
   </script>
   <script src="firebase.js?v=premium_ui_perfect_v8"></script>
-  <script src="script.js?v=premium_ui_perfect_v59"></script>
+  <script src="script.js?v=premium_ui_perfect_v60"></script>
 
 <!-- EDIT INDEX TASK MODAL -->
 <div class="modal-overlay" id="editIndexModal" onclick="if(event.target===this)closeEditIndexModal()">
