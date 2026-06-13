@@ -1750,12 +1750,10 @@ function renderSubBoard(task){
   board.innerHTML='';
   cols.forEach(col=>{
     const cards = (task.cards||[]).filter(c=>{
-      if(c.colId===col.id) return true;
-      // Legacy: 'todo' maps to first col
-      if(col.id==='col_new' && c.colId==='todo') return true;
-      // Legacy: 'pending' maps to col_pending
-      if(col.id==='col_pending' && c.colId==='pending') return true;
-      return false;
+      if(col.id==='col_new'){
+        return c.colId==='col_new' || c.colId==='todo' || !c.colId;
+      }
+      return c.colId===col.id;
     });
     const colEl = document.createElement('div');
     colEl.style.cssText=`flex:0 0 220px;background:var(--gray-light);border-radius:10px;padding:10px;border-top:3px solid ${col.color};min-height:200px;max-height:calc(100vh - 180px);display:flex;flex-direction:column;overflow:hidden`;
@@ -1976,20 +1974,20 @@ function closeNewProjectModal(){document.getElementById('newProjectModal').class
 
 function parseSteps(stepsText){
   const lines = stepsText.trim().split('\n').map(l=>l.trim()).filter(l=>l);
-  if(!lines.length) return null;
   const midCols = lines.map((l,i)=>{
     const label = l.replace(/^(b.{0,4}c\s*\d+|step\s*\d+|\d+)\s*[:.)]\s*/i,'').trim() || l;
     return {
-      id:'col_s'+i,
-      label: label || ('Bước '+(i+1)),
-      color:['#2980b9','#8e44ad','#16a085','#d35400','#c0392b','#2c3e50'][i%6]
+      id: 'col_s' + i,
+      label: label || ('Bước ' + (i+1)),
+      color: ['#8e44ad','#16a085','#d35400','#c0392b','#2c3e50','#2980b9'][i%6]
     };
   });
   return [
-    {id:'col_new', label:'Chưa làm', color:'#95a5a6'},
+    {id: 'col_new', label: 'Chưa làm', color: '#95a5a6'},
+    {id: 'doing',   label: 'Đang làm',  color: '#2980b9'},
     ...midCols,
-    {id:'done', label:'Hoàn thành', color:'#27ae60'},
-    {id:'col_pending', label:'Pending', color:'#e67e22'},
+    {id: 'done',    label: 'Hoàn thành', color: '#27ae60'},
+    {id: 'col_pending', label: 'Pending', color: '#e67e22'}
   ];
 }
 
