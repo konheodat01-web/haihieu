@@ -193,15 +193,15 @@ function renderDashboard() {
     </div>
     
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-bottom:20px">
-      <div style="background:linear-gradient(135deg,#c0392b,#8e1212);border-radius:14px;padding:20px;color:#fff;box-shadow:0 8px 24px rgba(192,57,43,0.25)">
-        <div style="font-size:12px;opacity:0.8;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Tổng dự án</div>
-        <div style="font-size:32px;font-weight:800;margin:8px 0">${(tasks || []).length}</div>
-        <div style="font-size:12px;opacity:0.9">Đang được quản lý trên hệ thống</div>
+      <div class="db-card-glass">
+        <div class="db-card-label">Tổng dự án</div>
+        <div class="db-card-value">${(tasks || []).length}</div>
+        <div class="db-card-desc">Đang được quản lý trên hệ thống</div>
       </div>
-      <div style="background:#fff;border:1px solid var(--gray-border);border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.02)">
-        <div style="font-size:12px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Tài khoản Web</div>
-        <div style="font-size:32px;font-weight:800;margin:8px 0;color:var(--text-main)">${(websites || []).length}</div>
-        <div style="font-size:12px;color:var(--text-muted)">Tổng tài khoản quản trị website</div>
+      <div class="db-card-glass">
+        <div class="db-card-label">Tài khoản Web</div>
+        <div class="db-card-value">${(websites || []).length}</div>
+        <div class="db-card-desc">Tổng tài khoản quản trị website</div>
       </div>
     </div>
     

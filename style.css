@@ -16,7 +16,7 @@
 }
 body { font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;color:var(--text);background:#f5f6fa;height:100vh }
   
-  header{background:var(--red);color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:fixed;top:0;left:0;right:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+  header{background:#141724;color:#fff;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;position:fixed;top:0;left:0;right:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.15);border-bottom: 1px solid rgba(255, 255, 255, 0.05)}
   header h1{font-size:16px;font-weight:600;letter-spacing:.3px}
   header .meta{font-size:12px;opacity:.8}
 
@@ -331,11 +331,13 @@ nav button[id^="eco-btn-"].active {
 }
 
 /* APP SHELL & MASTER CONTAINER VIEWPORT CONTROL */
-.main-header {
+header.main-header, .main-header {
   height: 56px;
   width: 100vw;
   box-sizing: border-box;
   flex-shrink: 0;
+  background: #141724 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
 }
 
 .app-shell-wrapper {
@@ -344,6 +346,7 @@ nav button[id^="eco-btn-"].active {
   height: calc(100vh - 56px);
   overflow: hidden;
   background: #0f111a;
+  margin-top: 56px; /* Shift down to avoid header overlap */
 }
 
 /* SIDEBAR REFACTORING & OPTIMIZATION */
@@ -473,12 +476,23 @@ nav button[id^="eco-btn-"].active {
   height: 100%;
 }
 
-/* Responsive/Safe Content Wrappers */
-.page-content-wrap {
-  padding: 24px;
+/* Static sub-page content wrapper layout */
+.page {
+  padding: 24px !important;
   box-sizing: border-box;
   height: 100%;
+  width: 100%;
   overflow-y: auto;
+}
+
+/* Guard exclusions: scroll controls for iframe apps and Kanban boards */
+#page-tasks, #page-recurring, .workspace-panel, .iframe-panel-wrap {
+  overflow: hidden !important;
+}
+#page-tasks .kanban-wrapper, #page-recurring .kanban-wrapper {
+  overflow-x: auto;
+  height: 100%;
+  width: 100%;
 }
 
 .iframe-panel-wrap {
@@ -596,5 +610,52 @@ nav button[id^="eco-btn-"].active {
 .is-hidden {
   display: none !important;
 }
+
+/* PREMIUM DARK GLASSMORPHISM AND NEON ACCENTS */
+.report-card, .stat-card {
+  background: rgba(255, 255, 255, 0.02) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.report-card.hai .rh, .report-card.hieu .rh, .stat-card .rh {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  color: #ffffff !important;
+}
+.report-card h1, .stat-card h1, .stat-card .value, .stat-number, .total-count {
+  color: #4dadff !important;
+  text-shadow: 0 0 10px rgba(77, 173, 255, 0.3);
+}
+
+/* DASHBOARD DYNAMIC GLASS STATS CARDS */
+.db-card-glass {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  color: #fff;
+}
+.db-card-glass .db-card-value {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 8px 0;
+  color: #4dadff; /* Neon cyan */
+  text-shadow: 0 0 10px rgba(77, 173, 255, 0.3);
+}
+.db-card-glass .db-card-label {
+  font-size: 12px;
+  opacity: 0.8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.db-card-glass .db-card-desc {
+  font-size: 12px;
+  opacity: 0.9;
+}
+
 
 
