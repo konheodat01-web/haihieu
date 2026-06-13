@@ -9076,10 +9076,397 @@ function updateNavBadges() {
     badgeTasks.textContent = activeTasksCount || '';
     badgeTasks.style.display = activeTasksCount ? 'inline-block' : 'none';
   }
-  const badgeGv = document.getElementById('gvBadge');
   if (badgeGv) {
     const activeGv = (giaoViecList || []).filter(g => g.status !== 'Done' && g.status !== 'Đã Duyệt').length;
     badgeGv.textContent = activeGv || '';
     badgeGv.style.display = activeGv ? 'inline-block' : 'none';
   }
 }
+
+// ==========================================================================
+// V32: TaskImporter Namespace for Quick Import (Anti-Regression Recovery)
+// ==========================================================================
+const TaskImporter = {
+  parsedTasks: [],
+  open: function() {
+    document.getElementById('quickImportModal').classList.add('open');
+    document.getElementById('quickImportModal').style.display = 'flex';
+    this.goBack();
+    setTimeout(() => {
+      document.getElementById('qi_input').focus();
+      this.onDangChange();
+    }, 50);
+    const teamRow = document.getElementById('qi_team_row');
+    if (teamRow) {
+      teamRow.style.display = currentMember === 'hai' ? 'none' : 'block';
+    }
+    const personSelect = document.getElementById('qi_person');
+    if (personSelect) {
+      if (currentMember !== 'admin') {
+        personSelect.value = currentMember === 'hai' ? 'Hải' : 'Hiếu';
+        personSelect.disabled = true;
+      } else {
+        personSelect.value = '';
+        personSelect.disabled = false;
+      }
+    }
+    const dateFrom = document.getElementById('qi_from');
+    if (dateFrom) dateFrom.value = todayVN();
+  },
+  close: function(e) {
+    const isBackdropClick = e && e.target === document.getElementById('quickImportModal');
+    const isDirectClose = !e;
+    if (!isBackdropClick && !isDirectClose) return;
+    const hasContent = (document.getElementById('qi_input')?.value || '').trim() ||
+                       (document.getElementById('qi_taskname')?.value || '').trim() ||
+                       (document.getElementById('qi_steps')?.value || '').trim();
+    if (hasContent && isBackdropClick) {
+      if (!confirm('Có task chưa thêm xong. Bạn có muốn thoát không?\n\nNhấn OK để thoát, Huỷ để quay lại điền tiếp.')) return;
+    }
+    document.getElementById('quickImportModal').classList.remove('open');
+    document.getElementById('quickImportModal').style.display = 'none';
+    this.resetForm();
+  },
+  resetForm: function() {
+    document.getElementById('qi_input').value = '';
+    document.getElementById('qi_taskname').value = '';
+    document.getElementById('qi_steps').value = '';
+    document.getElementById('qi_person').selectedIndex = 0;
+    document.getElementById('qi_step1').style.display = 'block';
+    document.getElementById('qi_step2').style.display = 'none';
+    document.getElementById('qi_loading').style.display = 'none';
+    document.getElementById('qi_btn_back').style.display = 'none';
+    document.getElementById('qi_btn_add').style.display = 'none';
+    document.getElementById('qi_error').style.display = 'none';
+    document.getElementById('qi_preview').innerHTML = '';
+    this.parsedTasks = [];
+    const qf = document.getElementById('qi_from'); if (qf) qf.value = todayVN();
+    const qd = document.getElementById('qi_deadline'); if (qd) qd.value = '';
+    const dang = document.getElementById('qi_dang')?.value || 'url';
+    const btnParse = document.getElementById('qi_btn_parse');
+    const btnParseUrl = document.getElementById('qi_btn_parse_url');
+    if (btnParse) btnParse.style.display = dang === 'url' ? 'none' : 'inline-flex';
+    if (btnParseUrl) btnParseUrl.style.display = dang === 'url' ? 'inline-flex' : 'none';
+  },
+  goBack: function() {
+    document.getElementById('qi_step1').style.display = 'block';
+    document.getElementById('qi_step2').style.display = 'none';
+    document.getElementById('qi_loading').style.display = 'none';
+    const dang = document.getElementById('qi_dang')?.value || 'url';
+    document.getElementById('qi_btn_parse').style.display = dang === 'url' ? 'none' : 'inline-flex';
+    document.getElementById('qi_btn_parse_url').style.display = dang === 'url' ? 'inline-flex' : 'none';
+    document.getElementById('qi_btn_back').style.display = 'none';
+    document.getElementById('qi_btn_add').style.display = 'none';
+    document.getElementById('qi_error').style.display = 'none';
+  },
+  onDangChange: function() {
+    const dang = document.getElementById('qi_dang')?.value || 'text';
+    const hint = document.getElementById('qi_url_hint');
+    const btnParse = document.getElementById('qi_btn_parse');
+    const btnParseUrl = document.getElementById('qi_btn_parse_url');
+    if (hint) hint.style.display = dang === 'url' ? 'block' : 'none';
+    if (btnParse) btnParse.style.display = dang === 'url' ? 'none' : 'inline-flex';
+    if (btnParseUrl) btnParseUrl.style.display = dang === 'url' ? 'inline-flex' : 'none';
+    const stepsRow = document.getElementById('qi_steps_row');
+    if (stepsRow) stepsRow.style.display = 'block';
+  },
+  addDefaultSteps: function() {
+    const el = document.getElementById('qi_steps');
+    if (!el) return;
+    if (!el.value.trim()) {
+      el.value = 'Viết trang chủ\nThêm ảnh vào docs\nThêm ảnh vào drive\nThêm ảnh vào bài đăng';
+    }
+    el.focus();
+  },
+  parse: async function() {
+    const text = (document.getElementById('qi_input').value || '').trim();
+    if (!text) {
+      const e = document.getElementById('qi_error');
+      e.textContent = 'Vui lòng dán nội dung vào!';
+      e.style.display = 'block';
+      return;
+    }
+    document.getElementById('qi_step1').style.display = 'none';
+    document.getElementById('qi_loading').style.display = 'block';
+    document.getElementById('qi_btn_parse').style.display = 'none';
+    const person = document.getElementById('qi_person').value;
+    const manualTaskName = (document.getElementById('qi_taskname')?.value || '').trim();
+    const manualSteps = (document.getElementById('qi_steps')?.value || '').trim();
+    await new Promise(r => setTimeout(r, 400));
+
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    const domainPat = /^(https?:\/\/)?[\w.-]+\.[a-zA-Z]{2,10}(\/\S*)?(\s[\s\S]*)?$/i;
+    const isStepLine = l => /^(b.{0,5}c\s*\d+|step\s*\d+|\d+\s*[:.)]\s*\w)/i.test(l);
+
+    const domainLines = lines.filter(l => domainPat.test(l));
+    const instrLines = lines.filter(l => !domainPat.test(l) && l.length > 2);
+    const stepLines = instrLines.filter(l => isStepLine(l));
+    const descLines = instrLines.filter(l => !isStepLine(l));
+    const fullDesc = descLines.join(' ');
+
+    const detectLoai = s => {
+      s = s.toLowerCase();
+      if (/tinh g[oọ]n nhanh/.test(s)) return 'Tinh Gọn Nhanh';
+      if (/ch[iỉ]\s*vi[eế]t/.test(s)) return 'Chỉ Viết';
+      if (/ch[iỉ]\s*[dđ][aă]ng/.test(s)) return 'Chỉ Đăng';
+      if (/tinh g[oọ]n/.test(s)) return 'Tinh Gọn';
+      return '';
+    };
+    const detectType = s => {
+      s = s.toLowerCase();
+      if (/backlink|seo|t[uừ]\s*kh[oó]a|keyword/.test(s)) return 'SEO';
+      if (/thi[eế]t k[eế]|design/.test(s)) return 'Thiết kế';
+      if (/code|k[yỹ]\s*thu[aậ]t|fix/.test(s)) return 'Kỹ thuật';
+      return 'Nội dung';
+    };
+
+    const loai = detectLoai(fullDesc);
+    const type = detectType(fullDesc);
+    const soBai = parseInt((fullDesc.match(/(\d+)\s*bài/i) || [])[1]) || 0;
+
+    const cols = manualSteps ? parseSteps(manualSteps)
+               : stepLines.length >= 1 ? parseSteps(stepLines.join('\n'))
+               : null;
+    const firstColId = cols ? cols[0].id : 'col_new';
+
+    const itemLines = domainLines.length > 0 ? lines.filter(l => l.length > 2) : lines.filter(l => l.length > 2);
+    const cards = itemLines.map((line, i) => {
+      return { id: 'qc' + (cardNextId + i), colId: firstColId, name: line.replace(/^https?:\/\//, ''), desc: '' };
+    });
+    cardNextId += cards.length;
+
+    let taskName = manualTaskName;
+    if (!taskName) {
+      if (descLines.filter(l => !isStepLine(l)).length > 0) {
+        taskName = descLines.filter(l => !isStepLine(l))[0];
+        if (taskName.length > 70) taskName = taskName.slice(0, 70) + '…';
+      } else if (domainLines.length > 0) {
+        taskName = `${domainLines.length} website${soBai ? ' — ' + soBai + ' bài/web' : ''}`;
+      } else {
+        taskName = lines[0] || 'Task mới';
+      }
+    }
+
+    this.parsedTasks = [{
+      id: taskNextId,
+      name: taskName,
+      type, desc: fullDesc, person,
+      from: document.getElementById('qi_from')?.value || todayVN(),
+      deadline: document.getElementById('qi_deadline')?.value || '',
+      priority: document.getElementById('qi_priority')?.value || 'Bình thường',
+      team: currentMember === 'hai' ? 'Team 01' : (document.getElementById('qi_team')?.value || 'Team 01'),
+      cols, cards,
+      _loaiBai: loai, _soBai: soBai,
+    }];
+
+    document.getElementById('qi_loading').style.display = 'none';
+    document.getElementById('qi_step2').style.display = 'block';
+    document.getElementById('qi_count').textContent = '1';
+    document.getElementById('qi_btn_back').style.display = 'inline-flex';
+    document.getElementById('qi_btn_add').style.display = 'inline-flex';
+
+    const t = this.parsedTasks[0];
+    const colList = cols ? cols.map(c => c.label) : ['Cần làm', 'Đang làm', 'Pending', 'Hoàn thành'];
+    document.getElementById('qi_preview').innerHTML = `
+      <div style="background:#161b22;border-radius:8px;padding:12px 14px;border:1px solid #30363d">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+          <span class="badge ${TASK_TYPE_COLORS[t.type] || 'badge-gray'}" style="font-size:11px">${t.type}</span>
+          ${t._loaiBai ? `<span class="badge badge-red" style="font-size:11px">${t._loaiBai}</span>` : ''}
+          ${t._soBai ? `<span class="badge badge-blue" style="font-size:11px">${t._soBai} bài/web</span>` : ''}
+          ${t.person ? `<span class="tag-person ${t.person === 'Hải' ? 'tag-hai' : t.person === 'Hiếu' ? 'tag-hieu' : ''}" style="font-size:11px">${t.person}</span>` : ''}
+        </div>
+        <div style="margin-bottom:6px">
+          <label style="font-size:11px;color:#8b949e;display:block;margin-bottom:3px">Tên task</label>
+          <input type="text" value="${t.name.replace(/"/g, '&quot;')}" oninput="TaskImporter.parsedTasks[0].name=this.value"
+            style="width:100%;font-size:14px;font-weight:600;border:1px solid #30363d;background-color:#0d1117;color:#c9d1d9;border-radius:6px;padding:6px 8px;box-sizing:border-box">
+        </div>
+        <div style="margin-bottom:10px;font-size:11px;color:#8b949e">
+          Kanban: <b style="color:#c9d1d9">${colList.join(' → ')}</b>
+        </div>
+        <div style="font-size:12px;font-weight:500;margin-bottom:6px;color:#c9d1d9">Task con (${t.cards.length} thẻ — vào cột "${colList[0]}")</div>
+        <div data-cards style="display:flex;flex-direction:column;gap:4px">
+          ${t.cards.map((c, i) => `
+            <div style="display:flex;align-items:center;gap:6px;background-color:#0d1117;border-radius:5px;padding:5px 8px;border:1px solid #30363d">
+              <span style="font-size:11px;color:#8b949e;min-width:20px">${i + 1}.</span>
+              <input type="text" value="${c.name.replace(/"/g, '&quot;')}" 
+                oninput="TaskImporter.parsedTasks[0].cards[${i}].name=this.value"
+                style="flex:1;font-size:12px;border:none;outline:none;background:transparent;color:#c9d1d9">
+              <button onclick="TaskImporter.parsedTasks[0].cards.splice(${i},1);TaskImporter.repreview()" 
+                style="background:none;border:none;cursor:pointer;color:#8b949e;font-size:14px;padding:0 2px">&#10005;</button>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  },
+  repreview: function() {
+    const t = this.parsedTasks[0];
+    if (!t) return;
+    const cardsHtml = t.cards.map((c, i) => `
+      <div style="display:flex;align-items:center;gap:6px;background-color:#0d1117;border-radius:5px;padding:5px 8px;border:1px solid #30363d">
+        <span style="font-size:11px;color:#8b949e;min-width:20px">${i + 1}.</span>
+        <input type="text" value="${c.name.replace(/"/g, '&quot;')}" 
+          oninput="TaskImporter.parsedTasks[0].cards[${i}].name=this.value"
+          style="flex:1;font-size:12px;border:none;outline:none;background:transparent;color:#c9d1d9">
+        <button onclick="TaskImporter.parsedTasks[0].cards.splice(${i},1);TaskImporter.repreview()" 
+          style="background:none;border:none;cursor:pointer;color:#8b949e;font-size:14px;padding:0 2px">&#10005;</button>
+      </div>`).join('');
+    const cardList = document.getElementById('qi_preview').querySelector('[data-cards]');
+    if (cardList) cardList.innerHTML = cardsHtml;
+  },
+  parseUrl: function() {
+    const raw = (document.getElementById('qi_input')?.value || '');
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const urls = lines.map(extractUrlFromLine).filter(Boolean);
+    if (!urls.length) {
+      const err = document.getElementById('qi_error');
+      if (err) {
+        err.textContent = 'Không tìm thấy URL hợp lệ trong nội dung dán vào.';
+        err.style.display = 'block';
+      }
+      return;
+    }
+    const err = document.getElementById('qi_error'); if (err) err.style.display = 'none';
+
+    let taskName = (document.getElementById('qi_taskname')?.value || '').trim() || `Task URL (${urls.length} link)`;
+    const person = document.getElementById('qi_person')?.value || '';
+    const from = document.getElementById('qi_from')?.value || todayVN();
+    const deadline = document.getElementById('qi_deadline')?.value || '';
+    const priority = document.getElementById('qi_priority')?.value || 'Bình thường';
+    const team = document.getElementById('qi_team')?.value || 'Team 01';
+
+    const manualSteps = (document.getElementById('qi_steps')?.value || '').trim();
+    const cols = manualSteps ? parseSteps(manualSteps) : null;
+    const firstColId = cols ? cols[0].id : 'todo';
+    const startId = cardNextId;
+    cardNextId += urls.length;
+    this.parsedTasks = [{
+      name: taskName, person, type: 'SEO', dang: 'url',
+      from, deadline, desc: '', priority, team,
+      cols,
+      cards: urls.map((u, i) => ({ id: 'qcu' + (startId + i), colId: firstColId, name: u, desc: '' }))
+    }];
+
+    document.getElementById('qi_step1').style.display = 'none';
+    document.getElementById('qi_step2').style.display = 'block';
+    document.getElementById('qi_btn_parse_url').style.display = 'none';
+    document.getElementById('qi_btn_back').style.display = 'inline-flex';
+    document.getElementById('qi_btn_add').style.display = 'inline-flex';
+    document.getElementById('qi_count').textContent = 1;
+
+    const t = this.parsedTasks[0];
+    const inKho = t.cards.filter(card => {
+      const q = card.name.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      return websites.some(w => {
+        const wu = (w.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+        return wu === q || wu.includes(q) || q.includes(wu);
+      });
+    }).length;
+
+    document.getElementById('qi_preview').innerHTML = `
+      <div style="background:#161b22;border-radius:8px;padding:12px 14px;margin-bottom:10px;border:1px solid #30363d">
+        <div style="font-size:13px;font-weight:600;margin-bottom:8px;color:#f0f6fc">${t.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:12px;background:rgba(46,160,67,0.15);border:1px solid rgba(46,160,67,0.3);border-radius:20px;padding:2px 10px;color:#56d364">✅ Trong kho: ${inKho}</span>
+          <span style="font-size:12px;background:rgba(248,81,73,0.15);border:1px solid rgba(248,81,73,0.3);border-radius:20px;padding:2px 10px;color:#f85149">🔍 Chưa có: ${t.cards.length - inKho}</span>
+          <span style="font-size:12px;background:rgba(56,139,253,0.15);border:1px solid rgba(56,139,253,0.3);border-radius:20px;padding:2px 10px;color:#58a6ff">Tổng: ${t.cards.length} URL</span>
+        </div>
+        <div data-cards style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto">
+          ${t.cards.map((card, i) => {
+            const url = card.name;
+            const q = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+            const ws = websites.find(w => {
+              const wu = (w.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+              return wu === q || wu.includes(q) || q.includes(wu);
+            });
+            const icon = ws ? (WS_STATUS_ICON[ws.status] || '✅') : '🔍';
+            const tip = ws ? (ws.brand + ' — ' + ws.status) : 'Chưa có trong kho';
+            const tipColor = icon === '✅' ? '#56d364' : icon === '🔍' ? '#8b949e' : '#f85149';
+            return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background-color:#0d1117;border-radius:6px;border:1px solid #30363d">
+              <span style="font-size:14px" title="${tip}">${icon}</span>
+              <span style="flex:1;font-size:12px;color:#c9d1d9">${url}</span>
+              <span style="font-size:11px;color:${tipColor}">${tip}</span>
+              <button onclick="TaskImporter.parsedTasks[0].cards.splice(${i},1);TaskImporter.repreviewUrl()" 
+                style="background:none;border:none;cursor:pointer;color:#8b949e;font-size:14px;padding:0 2px">✕</button>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`;
+  },
+  repreviewUrl: function() {
+    const t = this.parsedTasks[0];
+    if (!t) return;
+    const inKho = t.cards.filter(card => {
+      const q = card.name.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+      return websites.some(w => {
+        const wu = (w.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+        return wu === q || wu.includes(q) || q.includes(wu);
+      });
+    }).length;
+    const container = document.getElementById('qi_preview');
+    if (container) {
+      const summaryBadges = container.querySelector('[style*="display:flex;gap:8px"]');
+      if (summaryBadges) {
+        summaryBadges.innerHTML = `
+          <span style="font-size:12px;background:rgba(46,160,67,0.15);border:1px solid rgba(46,160,67,0.3);border-radius:20px;padding:2px 10px;color:#56d364">✅ Trong kho: ${inKho}</span>
+          <span style="font-size:12px;background:rgba(248,81,73,0.15);border:1px solid rgba(248,81,73,0.3);border-radius:20px;padding:2px 10px;color:#f85149">🔍 Chưa có: ${t.cards.length - inKho}</span>
+          <span style="font-size:12px;background:rgba(56,139,253,0.15);border:1px solid rgba(56,139,253,0.3);border-radius:20px;padding:2px 10px;color:#58a6ff">Tổng: ${t.cards.length} URL</span>`;
+      }
+      const cardList = container.querySelector('[data-cards]');
+      if (cardList) {
+        cardList.innerHTML = t.cards.map((card, i) => {
+          const url = card.name;
+          const q = url.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+          const ws = websites.find(w => {
+            const wu = (w.url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+            return wu === q || wu.includes(q) || q.includes(wu);
+          });
+          const icon = ws ? (WS_STATUS_ICON[ws.status] || '✅') : '🔍';
+          const tip = ws ? (ws.brand + ' — ' + ws.status) : 'Chưa có trong kho';
+          const tipColor = icon === '✅' ? '#56d364' : icon === '🔍' ? '#8b949e' : '#f85149';
+          return `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background-color:#0d1117;border-radius:6px;border:1px solid #30363d">
+            <span style="font-size:14px" title="${tip}">${icon}</span>
+            <span style="flex:1;font-size:12px;color:#c9d1d9">${url}</span>
+            <span style="font-size:11px;color:${tipColor}">${tip}</span>
+            <button onclick="TaskImporter.parsedTasks[0].cards.splice(${i},1);TaskImporter.repreviewUrl()" 
+              style="background:none;border:none;cursor:pointer;color:#8b949e;font-size:14px;padding:0 2px">✕</button>
+          </div>`;
+        }).join('');
+      }
+    }
+  },
+  addAll: function() {
+    if (!this.parsedTasks.length) return;
+    const t = this.parsedTasks[0];
+    const newTask = {
+      id: taskNextId++,
+      name: t.name,
+      person: t.person || '',
+      type: t.type || 'SEO',
+      dang: t.dang || 'url',
+      from: t.from || todayVN(),
+      deadline: t.deadline || '',
+      desc: t.desc || '',
+      priority: t.priority || 'Bình thường',
+      team: t.team || 'Team 01',
+      cols: t.cols || null,
+      cards: (t.cards || []).map(c => ({ ...c })),
+    };
+    tasks.push(newTask);
+    document.getElementById('quickImportModal').classList.remove('open');
+    document.getElementById('quickImportModal').style.display = 'none';
+    this.resetForm();
+    renderTasksOverview();
+    saveAppData();
+    toast(`&#10003; Đã thêm task "${newTask.name}" với ${newTask.cards.length} thẻ con!`);
+  }
+};
+
+// Event delegation listener for #page-tasks to open TaskImporter modal
+document.getElementById('page-tasks')?.addEventListener('click', function(event) {
+  const importBtn = event.target.closest('[data-action="import-message"]');
+  if (importBtn) {
+    event.preventDefault();
+    if (typeof TaskImporter.open === 'function') {
+      TaskImporter.open();
+    }
+  }
+});

@@ -297,7 +297,7 @@
           <option value="pending">Pending</option>
           <option value="overdue">Quá hạn deadline</option>
         </select>
-        <button class="btn btn-outline btn-sm" onclick="openQuickImport()">&#128196; Nhập từ tin nhắn</button>
+        <button class="btn btn-outline btn-sm" data-action="import-message">&#128196; Nhập từ tin nhắn</button>
         <button class="btn btn-primary btn-sm" onclick="openNewProjectModal()">&#43; Thêm task</button>
         <button class="btn btn-outline btn-sm" onclick="openTaskTrash()" id="trashBtn" style="position:relative">
           🗑 Thùng rác
@@ -1769,6 +1769,103 @@
 </div>
 
 
+
+<!-- QUICK IMPORT MODAL -->
+<div class="modal-overlay" id="quickImportModal" onclick="TaskImporter.close(event)" style="display:none">
+  <div class="modal" style="max-width:640px; background-color:#161b22; border:1px solid #30363d; color:#c9d1d9" onclick="event.stopPropagation()">
+    <div class="modal-header" style="border-bottom:1px solid #30363d">
+      <h3 style="color:#f0f6fc">&#128196; Nhập nhanh từ tin nhắn</h3>
+      <button class="modal-close" onclick="TaskImporter.close()" style="color:#8b949e">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:12px; color:#c9d1d9">
+
+      <!-- STEP 1: paste -->
+      <div id="qi_step1">
+        <div class="form-group" style="width:100%">
+          <label style="font-size:13px;font-weight:500;color:#c9d1d9">Dán nội dung tin nhắn / yêu cầu công việc vào đây</label>
+          <textarea id="qi_input" rows="5" placeholder="VD:&#10;sv88.jp.net&#10;Thay logo" 
+            style="width:100%;font-size:13px;line-height:1.6;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9"></textarea>
+          <div id="qi_url_hint" 
+            style="display:none;margin-top:6px;font-size:12px;color:#58a6ff;background:rgba(56,139,253,0.15);border:1px solid rgba(56,139,253,0.3);border-radius:6px;padding:8px 12px">
+            🔗 Chế độ URL: mỗi dòng là 1 URL. Các dòng không phải URL sẽ bị bỏ qua tự động.
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%">
+          <div class="form-group">
+            <label style="color:#c9d1d9">Dạng task</label>
+            <select id="qi_dang" onchange="TaskImporter.onDangChange()" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
+              <option value="text">📝 Text</option>
+              <option value="url" selected>🔗 URL</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="color:#c9d1d9">Giao cho</label>
+            <select id="qi_person" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
+              <option value="">-- Chưa chọn --</option>
+              <option>Hải</option><option>Hiếu</option><option>Khác</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="color:#c9d1d9">Tên task (tùy chọn)</label>
+            <input type="text" id="qi_taskname" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9" placeholder="Để trống = tự phân tích">
+          </div>
+          <div class="form-group">
+            <label style="color:#c9d1d9">Ngày giao</label>
+            <input type="date" id="qi_from" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
+          </div>
+          <div class="form-group">
+            <label style="color:#c9d1d9">Deadline</label>
+            <input type="date" id="qi_deadline" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
+          </div>
+          <div class="form-group">
+            <label style="color:#c9d1d9">Ưu tiên</label>
+            <select id="qi_priority" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
+              <option value="Bình thường">🟠 Bình thường</option>
+              <option value="Cao">🔴 Cao</option>
+              <option value="Thấp">🟢 Thấp</option>
+            </select>
+          </div>
+          <div class="form-group" id="qi_team_row">
+            <label style="color:#c9d1d9">Team</label>
+            <select id="qi_team" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
+              <option value="Team 01">Team 01</option>
+              <option value="Team 02">Team 02</option>
+            </select>
+          </div>
+        </div>
+        <!-- BƯỚC THỦ CÔNG -->
+        <div class="form-group" id="qi_steps_row" style="width:100%; margin-top:10px">
+          <label style="font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:space-between;color:#c9d1d9">
+            <span>Các bước thực hiện <span style="font-weight:400;color:#8b949e">(mỗi dòng 1 bước)</span></span>
+            <button onclick="TaskImporter.addDefaultSteps()" style="background:none;border:1px solid #30363d;border-radius:5px;padding:2px 8px;font-size:11px;cursor:pointer;color:#8b949e">+ Bước mặc định</button>
+          </label>
+          <textarea id="qi_steps" rows="4" placeholder="VD:&#10;Viết trang chủ&#10;Thêm ảnh vào docs&#10;Thêm ảnh vào drive&#10;Thêm ảnh vào bài đăng" 
+            style="width:100%;font-size:12px;line-height:1.7;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9"></textarea>
+        </div>
+        <div id="qi_error" style="color:var(--red);font-size:12px;display:none;margin-top:6px"></div>
+      </div>
+
+      <!-- STEP 2: preview parsed tasks -->
+      <div id="qi_step2" style="display:none">
+        <div style="font-size:13px;font-weight:500;margin-bottom:10px;color:#c9d1d9">AI đã phân tích được <span id="qi_count" style="color:#58a6ff">0</span> task — kiểm tra trước khi thêm:</div>
+        <div id="qi_preview" style="display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto"></div>
+      </div>
+
+      <div id="qi_loading" style="display:none;text-align:center;padding:24px;color:#8b949e">
+        <div style="font-size:24px;margin-bottom:8px">&#129302;</div>
+        <div style="font-size:13px">AI đang phân tích nội dung...</div>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="border-top:1px solid #30363d">
+      <button class="btn btn-outline" onclick="TaskImporter.close()" style="background:transparent; border:none; color:#8b949e">Đóng</button>
+      <button class="btn btn-outline" id="qi_btn_back" style="display:none; background:transparent; border:none; color:#8b949e" onclick="TaskImporter.goBack()">&#8592; Nhập lại</button>
+      <button class="btn btn-primary" id="qi_btn_parse" onclick="TaskImporter.parse()" style="background-color:#21262d; border:1px solid #30363d; color:#c9d1d9">&#129302; Phân tích với AI</button>
+      <button class="btn btn-primary" id="qi_btn_parse_url" style="display:none; background-color:#21262d; border:1px solid #30363d; color:#c9d1d9" onclick="TaskImporter.parseUrl()">🔗 Nhận URL</button>
+      <button class="btn btn-primary" id="qi_btn_add" style="display:none; background-color:#238636; border:none; color:#ffffff" onclick="TaskImporter.addAll()">&#43; Thêm tất cả vào Kanban</button>
+    </div>
+  </div>
+</div>
 
 <div id="appVersion" style="display:none;position:fixed;bottom:8px;left:120px;font-size:10px;color:#aaa;z-index:9999;pointer-events:none;user-select:none;font-family:monospace;background:rgba(255,255,255,0.8);padding:2px 6px;border-radius:4px;">v1.2.0</div>
 </body></html>
