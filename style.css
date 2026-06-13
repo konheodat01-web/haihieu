@@ -1293,13 +1293,12 @@ nav.sidebar i.fa {
 }
 #page-links,
 #page-links #linksPanel,
-#page-links #websitesPanel,
-#page-links > div:first-child {
+#page-links #websitesPanel {
     background-color: #0d1117 !important;
     border-color: #30363d !important;
 }
 
-/* Đồng bộ thanh Tab rời độc lập giống Tab Prompt */
+/* 1. Đồng bộ thanh Tab rời độc lập kiểu nút Premium */
 #page-links > div:first-child {
     display: flex !important;
     gap: 10px !important;
@@ -1308,21 +1307,91 @@ nav.sidebar i.fa {
     padding-bottom: 12px !important;
 }
 
-#page-links .gv-tab {
+#page-links #linksTab1,
+#page-links #linksTab2 {
     border-radius: 6px !important;
     border: 1px solid #30363d !important;
     background-color: #161b22 !important;
     color: #8b949e !important;
     padding: 6px 14px !important;
+    font-size: 13px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
 }
 
-#page-links .gv-tab.active {
+#page-links #linksTab1.active,
+#page-links #linksTab2.active {
     background-color: #21262d !important;
     color: #f0f6fc !important;
     border-color: #8b949e !important;
 }
 
-/* Đồng bộ nền các thẻ Card Website */
+/* 2. Hạ tông toàn bộ Dải bộ lọc trạng thái về Translucent */
+#page-links #wsPillAll {
+    background-color: #21262d !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #30363d !important;
+}
+#page-links #wsPillTot {
+    background-color: rgba(46, 160, 67, 0.15) !important;
+    color: #3fb950 !important;
+    border: 1px solid rgba(46, 160, 67, 0.3) !important;
+}
+#page-links #wsPillMK {
+    background-color: rgba(230, 126, 34, 0.15) !important;
+    color: #e67e22 !important;
+    border: 1px solid rgba(230, 126, 34, 0.3) !important;
+}
+#page-links #wsPillLoi {
+    background-color: rgba(248, 81, 73, 0.15) !important;
+    color: #f85149 !important;
+    border: 1px solid rgba(248, 81, 73, 0.3) !important;
+}
+
+/* Đồng bộ bộ đếm bên trong nút lọc */
+#page-links button span {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #f0f6fc !important;
+    border-radius: 10px !important;
+    padding: 1px 6px !important;
+    margin-left: 6px !important;
+}
+
+/* 3. Làm sạch nút Xóa 🗑️ và nút Bánh răng ⚙️ trong Form (Thiết kế Borderless) */
+#page-links form button[onclick*="Delete"], 
+#page-links form button[onclick*="delete"],
+#page-links form button[id*="delete"] {
+    background: transparent !important;
+    border: none !important;
+    color: rgba(248, 81, 73, 0.7) !important;
+    padding: 4px !important;
+    cursor: pointer !important;
+}
+#page-links form button[onclick*="delete"]:hover {
+    color: #f85149 !important;
+    background: rgba(248, 81, 73, 0.1) !important;
+    border-radius: 4px !important;
+}
+
+/* Nút Bánh răng cài đặt */
+#page-links form button[onclick*="GroupManager"],
+#page-links form button[onclick*="CategoryManager"],
+#page-links form button[onclick*="openWsGroupManager"] {
+    background: transparent !important;
+    border: none !important;
+    color: #8b949e !important;
+    padding: 4px !important;
+    cursor: pointer !important;
+}
+#page-links form button[onclick*="GroupManager"]:hover,
+#page-links form button[onclick*="CategoryManager"]:hover,
+#page-links form button[onclick*="openWsGroupManager"]:hover {
+    color: #f0f6fc !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 4px !important;
+}
+
+/* Giữ nguyên các định nghĩa màu nền website card của V25 */
 #page-links #websitesGrid > div,
 #page-links #workLinksGrid > div {
     background-color: #161b22 !important;
@@ -1330,44 +1399,33 @@ nav.sidebar i.fa {
     color: #c9d1d9 !important;
     border-radius: 8px !important;
 }
-
-/* Ép sáng cho tên Brand chính trong Card */
 #page-links #websitesGrid > div strong,
-#page-links #workLinksGrid > div strong,
-#page-links [class="brand"] {
+#page-links #workLinksGrid > div strong {
     color: #f0f6fc !important;
 }
-
 #page-links #websitesGrid span[style*="background"],
 #page-links #workLinksGrid span[style*="background"] {
     background-color: #21262d !important;
     color: #c9d1d9 !important;
     border: 1px solid #30363d !important;
 }
-
-/* Bảo toàn sắc tím mờ cho thẻ và nút 301 */
 #page-links #websitesGrid span[style="background:#f0f0ff"],
 #page-links #websitesGrid button[style*="background:#e8f5e9"] {
     background-color: rgba(108, 92, 231, 0.15) !important;
     color: #a78bfa !important;
     border-color: rgba(108, 92, 231, 0.3) !important;
 }
-
-/* Đồng bộ hóa Form nhập liệu bên phải */
 #page-links #linkAddPanel,
 #page-links #websiteFormPanel {
     background-color: #161b22 !important;
     border-left: 1px solid #30363d !important;
 }
-
 #page-links #linkAddPanel > div:first-child,
 #page-links #websiteFormPanel > div:first-child {
     background-color: #21262d !important;
     color: #f0f6fc !important;
     border-bottom: 1px solid #30363d !important;
 }
-
-/* Vá triệt để các ô input/select bên trong Form */
 #page-links form input,
 #page-links form select,
 #page-links form textarea {
@@ -1376,26 +1434,22 @@ nav.sidebar i.fa {
     color: #c9d1d9 !important;
     border-radius: 6px !important;
 }
-
 #page-links form input:focus {
     border-color: #58a6ff !important;
 }
-
 #page-links #websiteFormPanel div[style*="background:#f8f0ff"],
 #page-links #websiteFormPanel div[style*="background: #f8f0ff"] {
     background-color: rgba(108, 92, 231, 0.1) !important;
     border: 1px solid rgba(108, 92, 231, 0.3) !important;
 }
-
-/* Nút sao chép TK/MK mờ dịu mắt */
 #page-links button[style="background:#27ae60"] {
     background-color: rgba(46, 160, 67, 0.15) !important;
     color: #3fb950 !important;
     border: 1px solid rgba(46, 160, 67, 0.3) !important;
 }
-
 #page-links button[style*="background:#2980b9"] {
     background-color: rgba(56, 139, 253, 0.15) !important;
     color: #58a6ff !important;
     border: 1px solid rgba(56, 139, 253, 0.3) !important;
 }
+

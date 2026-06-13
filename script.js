@@ -4538,8 +4538,20 @@ function switchLinksTab(tab){
   document.getElementById('linksPanel').style.display  = tab==='links'?'flex':'none';
   document.getElementById('websitesPanel').style.display = tab==='websites'?'flex':'none';
   const t1=document.getElementById('linksTab1'), t2=document.getElementById('linksTab2');
-  if(t1){t1.style.borderBottomColor=tab==='links'?'var(--red)':'transparent';t1.style.color=tab==='links'?'var(--red)':'var(--text-muted)';t1.style.fontWeight=tab==='links'?'600':'500';}
-  if(t2){t2.style.borderBottomColor=tab==='websites'?'var(--red)':'transparent';t2.style.color=tab==='websites'?'var(--red)':'var(--text-muted)';t2.style.fontWeight=tab==='websites'?'600':'500';}
+  if(t1){
+    t1.classList.toggle('active', tab==='links');
+    t1.style.background = '';
+    t1.style.color = '';
+    t1.style.borderBottomColor = '';
+    t1.style.fontWeight = '';
+  }
+  if(t2){
+    t2.classList.toggle('active', tab==='websites');
+    t2.style.background = '';
+    t2.style.color = '';
+    t2.style.borderBottomColor = '';
+    t2.style.fontWeight = '';
+  }
   if(tab==='websites'){
     // Hide Team 02 filter option for Hải
     const teamOpt=document.querySelector('#websiteFilterTeam option[value="Team 02"]');
