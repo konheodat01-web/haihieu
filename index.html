@@ -44,16 +44,10 @@
 
 <header class="main-header">
   <div style="display:flex;align-items:center;gap:12px">
-    <div class="member-picker" id="memberPicker">
-      <div class="member-avatar" id="memberAvatar" onclick="toggleMemberDropdown()" style="overflow:hidden;padding:0"></div>
-      <div class="member-role-label" id="memberRoleLabel">Admin</div>
-      <div class="member-dropdown" id="memberDropdown">
-        <div class="md-header">Xem với tư cách</div>
-        <div class="md-item active" id="mdi-admin" onclick="switchMemberWithPw('admin')">
-          <div class="md-avatar" id="md-avatar-admin" style="background:#2c3e50;overflow:hidden"></div>
-          <div><div class="md-name">Admin</div><div class="md-role">Xem toàn bộ</div></div>
-          <span class="md-check" id="mdc-admin">&#10003;</span>
-        </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="background:#2c3e50;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px">A</div>
+      <span style="font-weight:600;font-size:13px;color:var(--text)">Admin Portal</span>
+    </div>
     <h1>&#128188; Quản lý công việc</h1>
   </div>
   <div class="meta" id="currentDate"></div>

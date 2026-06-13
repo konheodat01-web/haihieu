@@ -1178,6 +1178,9 @@ function initFirebaseListener(){
   window._fbDb.ref('appData').on('value', (snapshot)=>{
     const r = snapshot.val();
     if(!r) return;
+    if (!data) data = { hai: [], hieu: [] };
+    if (!data.hai) data.hai = [];
+    if (!data.hieu) data.hieu = [];
     console.log('Firebase received, _sid=', r._sid, 'mySession=', _sessionId, 'tasks=', (r.tasks||[]).length);
     // Only skip pushes from THIS session (to avoid echo)
     if(r._sid && r._sid === _sessionId){
@@ -8575,24 +8578,8 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 let _switchPwTarget = null;
 
 function switchMemberWithPw(m){
-  window._memberSwitching = true;
-  document.getElementById('memberDropdown').classList.remove('open');
-  if(m === currentMember) return;
-  _switchPwTarget = m;
-  const p = PROFILE_INFO[m];
-  const avSrc = _settings.avatars?.[m] || null;
-  const avEl = document.getElementById('switchPwAvatar');
-  if(avEl){
-    avEl.innerHTML = avSrc
-      ? `<img src="${avSrc}" style="width:100%;height:100%;object-fit:cover;display:block">`
-      : `<div style="${p.avatarStyle};width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:${p.fontSize};font-weight:700">${p.icon}</div>`;
-  }
-  document.getElementById('switchPwName').textContent = p.name;
-  document.getElementById('switchPwInput').value = '';
-  document.getElementById('switchPwErr').style.display = 'none';
-  document.getElementById('switchPwTitle').textContent = `🔑 Chuyển sang ${p.name}`;
-  document.getElementById('switchPwModal').style.display = 'flex';
-  setTimeout(()=>document.getElementById('switchPwInput').focus(), 100);
+  console.warn("[V64 Protection] Tính năng chuyển đổi hồ sơ đã bị vô hiệu hóa.");
+  return false;
 }
 function closeSwitchPwModal(){
   _switchPwTarget = null;
@@ -9007,8 +8994,22 @@ function saveFlexItem(){ const idx=parseInt(document.getElementById('flexEditIdx
 function deleteFlexItem(idx){ if(!confirm('Xóa khoản này?'))return; _flexSalary[_flexModalSheet].splice(idx,1); _saveFlexSalary(); renderFlexList(); renderDashboard(); }
 function _saveFlexSalary(){ try{localStorage.setItem('wt_flex_salary',JSON.stringify(_flexSalary));}catch(e){} saveAppData(); }
 
-// Start Firebase real-time listener
-setTimeout(initFirebaseListener, 1000);
+// Start Firebase real-time listener with active retry fallback
+(function autoStartFirebase() {
+  let attempts = 0;
+  const checker = setInterval(() => {
+    attempts++;
+    if (window._fbReady && window._fbDb) {
+      initFirebaseListener();
+      clearInterval(checker);
+    } else if (attempts >= 30) { // Sau 15 giây tự hủy để tránh rò rỉ RAM
+      clearInterval(checker);
+      // Chạy Offline cứu hộ
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderTasksOverview === 'function') renderTasksOverview();
+    }
+  }, 500);
+})();
 
 
 function bulkNghiemThu(sheet){
