@@ -1178,11 +1178,95 @@ nav.sidebar i.fa {
     color: #f0f6fc !important;
 }
 
+#page-prompts,
+#page-prompts > div {
+    background-color: #0d1117 !important;
+    border-color: #30363d !important;
+}
 
+#page-prompts .gv-tab {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    color: #8b949e !important;
+}
 
+#page-prompts .gv-tab.active {
+    background-color: #0d1117 !important;
+    color: #f0f6fc !important;
+    border-bottom: 1px solid #0d1117 !important;
+}
 
+.prompt-cat-tag {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    color: #8b949e !important;
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    display: inline-block;
+    transition: all 0.15s;
+}
 
+.prompt-cat-tag:hover,
+.prompt-cat-tag.active {
+    background-color: #21262d !important;
+    border-color: #8b949e !important;
+    color: #f0f6fc !important;
+}
 
+#page-prompts .prompt-card span[style*="background"] {
+    background-color: #21262d !important;
+    color: #c9d1d9 !important;
+    border: 1px solid #30363d !important;
+}
+
+.prompt-card {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 10px;
+}
+
+.prompt-content {
+    background-color: #0d1117 !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    font-family: monospace;
+    padding: 10px;
+    border-radius: 6px;
+    margin-top: 8px;
+    white-space: pre-wrap;
+}
+
+#page-prompts button,
+#page-prompts .btn {
+    background: #21262d !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+    border-radius: 6px !important;
+    transition: all 0.15s ease !important;
+}
+
+#page-prompts button:hover,
+#page-prompts .btn:hover {
+    background: #30363d !important;
+    color: #f0f6fc !important;
+    border-color: #8b949e !important;
+}
+
+#page-prompts .btn-danger,
+#page-prompts button[class*="danger"] {
+    background: rgba(248, 81, 73, 0.1) !important;
+    color: #f85149 !important;
+    border: 1px solid rgba(248, 81, 73, 0.4) !important;
+}
+
+#page-prompts .btn-danger:hover {
+    background: #f85149 !important;
+    color: #ffffff !important;
+}
 
 
 
