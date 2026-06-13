@@ -1453,3 +1453,20 @@ nav.sidebar i.fa {
     border: 1px solid rgba(56, 139, 253, 0.3) !important;
 }
 
+#page-links form .form-group button,
+#page-links form button[onclick*="Group"],
+#page-links form button[onclick*="group"] {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #8b949e !important;
+    padding: 4px 8px !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+}
+
+#page-links form .form-group button:hover {
+    color: #f0f6fc !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 4px !important;
+}
