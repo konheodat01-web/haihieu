@@ -1019,51 +1019,33 @@ function addEntry(){ /* DEAD CODE ELIMINATED */ }
 function deleteEntry(){ /* DEAD CODE ELIMINATED */ }
 function clearForm(){ /* DEAD CODE ELIMINATED */ }
 let _showPageRedirectCount = 0;
-function showPage(name){
+function showPage(name) {
+  switchWorkspace('job', null);
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.add('is-hidden');
+  });
   const target = document.getElementById('page-' + name);
-  if (!target) {
-    console.warn(`Page 'page-${name}' does not exist.`);
-    // Overwrite dead session in localStorage
+  if (target) {
+    target.classList.remove('is-hidden');
+  } else {
     localStorage.setItem('wt_activePage', 'dashboard');
-    if (name !== 'dashboard') {
-      if (_showPageRedirectCount < 3) {
-        _showPageRedirectCount++;
-        showPage('dashboard');
-      } else {
-        console.error('Infinite redirect detected in showPage');
-      }
-    }
-    _showPageRedirectCount = 0;
+    const fallbackPage = document.getElementById('page-dashboard');
+    if (fallbackPage) fallbackPage.classList.remove('is-hidden');
     return;
   }
-
-  // Khóa an toàn: Luôn đưa luồng Workspace Mẹ về 'job' để hiển thị các trang con
-  switchWorkspace('job', null);
-
-  // 1. Tắt active toàn bộ các sub-page con
-  document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-  target.classList.add('active');
-
-  // 2. Đồng bộ Highlighting cho nút con trong cây Sub-menu
   document.querySelectorAll('.sidebar-sub-item').forEach(item => item.classList.remove('active'));
-  const currentSubItem = Array.from(document.querySelectorAll('.sidebar-sub-item'))
-    .find(item => {
-      const attr = item.getAttribute('onclick');
-      return attr && attr.includes("'" + name + "'");
-    });
+  const currentSubItem = Array.from(document.querySelectorAll('.sidebar-sub-item')).find(item => {
+    const attr = item.getAttribute('onclick');
+    return attr && attr.includes("'" + name + "'");
+  });
   if (currentSubItem) currentSubItem.classList.add('active');
-
-  // 3. BẢO TOÀN 100% LOGIC RENDER DATA FIREBASE PHÍA SAU (Giữ nguyên dòng 1022-1066)
-  if (name === 'dashboard') renderDashboard();
-  if (name === 'tasks') renderTasksOverview();
-  if (name === 'recurring') renderRecurringTasks();
-  if (name === 'wstrack') renderWsTrack();
-  if (name === 'links') { renderLinks(); renderWebsites(); }
-  if (name === 'prompts') renderPrompts();
-  if (name !== 'tasks') clearTaskSelection();
-
-  // 4. BẢO TOÀN KHÓA PHIÊN LÀM VIỆC CŨ CỦA HỆ THỐNG
-  try { localStorage.setItem('wt_activePage', name); } catch(e) {}
+  if (name === 'dashboard' && typeof renderDashboard === 'function') renderDashboard();
+  if (name === 'tasks' && typeof renderTasksOverview === 'function') renderTasksOverview();
+  if (name === 'recurring' && typeof renderRecurringTasks === 'function') renderRecurringTasks();
+  if (name === 'wstrack' && typeof renderWsTrack === 'function') renderWsTrack();
+  if (name === 'links' && typeof renderLinks === 'function') { renderLinks(); renderWebsites(); }
+  if (name === 'prompts' && typeof renderPrompts === 'function') renderPrompts();
+  localStorage.setItem('wt_activePage', name);
 }
 
 function closeModal(e){
@@ -9018,31 +9000,26 @@ function applyBulkNT(sheet, val){
 
 // ===== HE SINH THAI WORKSPACE SWITCHER =====
 function switchWorkspace(workspaceId, element) {
-  // 1. Quản lý trạng thái Active của các nút Tab Mẹ
   document.querySelectorAll('.sidebar-nav-item').forEach(btn => btn.classList.remove('active'));
   if (element) {
     element.classList.add('active');
   } else {
-    const fallbackBtn = document.getElementById(`btn-tab-${workspaceId}`);
+    const fallbackBtn = document.getElementById('btn-tab-' + workspaceId);
     if (fallbackBtn) fallbackBtn.classList.add('active');
   }
-
-  // 2. Kích hoạt Layer Panel tương ứng bằng class
-  document.querySelectorAll('.workspace-panel').forEach(panel => panel.classList.remove('active'));
-  const targetPanel = document.getElementById(`panel-workspace-${workspaceId}`);
+  document.querySelectorAll('.workspace-panel').forEach(panel => {
+    panel.classList.add('is-hidden');
+  });
+  const targetPanel = document.getElementById('panel-workspace-' + workspaceId);
   if (targetPanel) {
-    targetPanel.classList.add('active');
-    
-    // VÁ LỖ HỔNG: Kiểm tra Iframe an toàn chống lỗi chuỗi URL tuyệt đối của trình duyệt
-    if (workspaceId === 'finance' || workspaceId === 'tools') {
+    targetPanel.classList.remove('is-hidden');
+    if (workspaceId === 'finance' || workspaceId === 'tools' || workspaceId === 'my-tools') {
       const iframe = targetPanel.querySelector('iframe');
       if (iframe && (!iframe.src || iframe.src.includes('about:blank') || iframe.src === '')) {
         iframe.src = iframe.getAttribute('data-src');
       }
     }
   }
-
-  // 3. Ẩn/Hiện cây Sub-menu con tự động theo nghiệp vụ công việc
   const submenu = document.getElementById('workspace-submenu');
   if (submenu) {
     submenu.style.display = (workspaceId === 'job') ? 'flex' : 'none';
