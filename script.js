@@ -3129,16 +3129,16 @@ function renderRecurringTasks(){
     const nextDate = r.nextDate||'—';
     const isDue = nextDate<=today;
     const isDoneToday = doneTodayList.some(d=>d.id===r.id);
-    let cardStyle = 'background:#fff;border:1px solid var(--gray-border);';
-    if(isDoneToday) cardStyle = 'background:#f0faf4;border:1px solid #a8deba;opacity:.7;';
-    else if(isDue) cardStyle = 'background:#fdf9f9;border-left:4px solid var(--red);border-top:1px solid var(--gray-border);border-right:1px solid var(--gray-border);border-bottom:1px solid var(--gray-border);';
-    return `<div style="${cardStyle}border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+    let cardClass = 'task-recur-card';
+    if(isDoneToday) cardClass += ' task-recur-done';
+    else if(isDue) cardClass += ' task-recur-due';
+    return `<div class="${cardClass}" style="border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:8px;">
       <div style="flex:1;min-width:0">
         <div style="font-weight:600;font-size:14px;margin-bottom:4px;${isDoneToday?'text-decoration:line-through;color:var(--text-muted)':''}">
           ${isDoneToday?'✅':'🔁'} ${r.name}
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <span style="font-size:11px;background:#f0f7fd;color:#2980b9;padding:1px 8px;border-radius:10px;border:1px solid #b8d4ea">${typeLabel}</span>
+          <span style="font-size:11px;background:#21262d;color:#c9d1d9;padding:2px 8px;border-radius:10px;border:1px solid #30363d">${typeLabel}</span>
           ${r.person?`<span style="font-size:11px;color:var(--text-muted)">👤 ${r.person}</span>`:''}
           ${isDoneToday
             ? `<span style="font-size:11px;color:#27ae60;font-weight:600">✓ Đã xong hôm nay</span><span style="font-size:11px;color:var(--text-muted)">📅 Lần tới: ${nextDate}</span>`
@@ -3152,7 +3152,7 @@ function renderRecurringTasks(){
           :`<button onclick="doneRecurringToday(${r.id})" class="btn btn-sm" style="background:#27ae60;color:#fff;border:none;font-size:11px">✓ Done</button>`
         }
         <button onclick="editRecurring(${r.id})" class="btn btn-sm btn-outline" style="font-size:11px">✎</button>
-        <button onclick="deleteRecurring(${r.id})" class="btn btn-sm btn-outline" style="font-size:11px;color:#e74c3c;border-color:#e74c3c">🗑</button>
+        <button onclick="deleteRecurring(${r.id})" class="btn btn-sm btn-outline" style="font-size:11px;">🗑</button>
       </div>
     </div>`;
   }).join('');
