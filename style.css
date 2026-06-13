@@ -1959,4 +1959,20 @@ nav.sidebar i.fa {
     color: #f0f6fc !important;
 }
 
+/* ECOSYSTEM APP SHELL OVERFLOW LOCK (V66) */
+#page-ecosystem {
+  display: none;
+  width: 100%;
+  height: calc(100vh - 76px);
+  overflow: hidden !important;
+  position: relative;
+}
+#page-ecosystem iframe {
+  width: 100% !important;
+  height: 100% !important;
+  border: none !important;
+  display: block;
+  overflow: hidden;
+}
+
 

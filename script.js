@@ -9086,6 +9086,7 @@ function applyBulkNT(sheet, val){
 
 
 // ===== HE SINH THAI WORKSPACE SWITCHER =====
+// ===== HE SINH THAI WORKSPACE SWITCHER =====
 function switchWorkspace(workspaceId, element) {
   document.querySelectorAll('.sidebar-nav-item').forEach(btn => btn.classList.remove('active'));
   if (element) {
@@ -9103,7 +9104,10 @@ function switchWorkspace(workspaceId, element) {
     if (workspaceId === 'finance' || workspaceId === 'tools' || workspaceId === 'my-tools') {
       const iframe = targetPanel.querySelector('iframe');
       if (iframe && (!iframe.src || iframe.src.includes('about:blank') || iframe.src === '')) {
-        iframe.src = iframe.getAttribute('data-src');
+        const dataSrc = iframe.getAttribute('data-src') || iframe.getAttribute('src');
+        if (dataSrc) {
+          loadEcosystemApp(iframe, dataSrc);
+        }
       }
     }
   }
@@ -9112,6 +9116,67 @@ function switchWorkspace(workspaceId, element) {
     submenu.style.display = (workspaceId === 'job') ? 'flex' : 'none';
   }
 }
+
+// ===== MICRO-FRONTEND LOADER V66 =====
+function loadEcosystemApp(iframe, targetUrl) {
+  if (!iframe) return;
+  const sessionToken = sessionStorage.getItem('wt_session_admin') === 'true' ? 'secure_admin_active' : 'guest';
+  const separator = targetUrl.includes('?') ? '&' : '?';
+  const iframeSrc = `${targetUrl}${separator}theme=dark&auth_token=${encodeURIComponent(sessionToken)}`;
+  console.log(`[V66 Dynamic Portal] Nạp iframe: ${iframeSrc}`);
+  iframe.src = iframeSrc;
+}
+
+// ===== CROSS-ORIGIN MESSAGE PROXY CONTROLLER V66 =====
+window.addEventListener('message', function(event) {
+  // Nhận các tin nhắn từ tool con gửi lên để proxy API request
+  const msg = event.data;
+  if (!msg || typeof msg !== 'object' || msg.type !== 'API_REQUEST') return;
+
+  console.log(`[V66 Proxy] Nhận yêu cầu gọi API hộ từ Origin: ${event.origin}`, msg);
+
+  // Danh sách trắng Origin được phép gọi Proxy (ở đây là toàn bộ github.io của tài khoản)
+  if (!event.origin.includes('github.io') && !event.origin.includes('localhost') && !event.origin.includes('127.0.0.1')) {
+    console.warn(`[V66 Proxy Warning] Chặn yêu cầu từ Origin không an toàn: ${event.origin}`);
+    return;
+  }
+
+  // Uỷ quyền fetch request cùng nguồn gốc
+  const fetchOpts = {
+    method: msg.method || 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      ...msg.headers
+    }
+  };
+  if (msg.body && (fetchOpts.method === 'POST' || fetchOpts.method === 'PUT')) {
+    fetchOpts.body = typeof msg.body === 'string' ? msg.body : JSON.stringify(msg.body);
+  }
+
+  fetch(msg.url, fetchOpts)
+    .then(res => {
+      const isJson = res.headers.get('content-type')?.includes('application/json');
+      return Promise.all([res.status, res.headers, isJson ? res.json() : res.text()]);
+    })
+    .then(([status, headers, body]) => {
+      // Bắn trả dữ liệu lại cho iframe đã gọi
+      event.source.postMessage({
+        type: 'API_RESPONSE',
+        requestId: msg.requestId,
+        status: status,
+        body: body
+      }, event.origin);
+    })
+    .catch(err => {
+      console.error(`[V66 Proxy Error] Lỗi fetch proxy:`, err);
+      event.source.postMessage({
+        type: 'API_RESPONSE',
+        requestId: msg.requestId,
+        status: 500,
+        error: err.message
+      }, event.origin);
+    });
+});
 
 function updateNavBadges() {
   const sidebar = document.querySelector('nav');
