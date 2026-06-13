@@ -895,6 +895,51 @@ tr.row-selected td {
   background: #21262d !important;
 }
 
+/* --- Target Projects and Rows to eliminate White Backdrops --- */
+.task-row, .kb-card, .project-list-item, .list-group-item, .item, .main-workspace-container div[style*="background"] {
+  background: #161b22 !important;
+  border: 1px solid #30363d !important;
+  box-shadow: none !important;
+}
+
+/* --- Typography Dark Contrast Correction (Without Universal * Selectors) --- */
+.main-workspace-container h1, 
+.main-workspace-container h2, 
+.main-workspace-container h3, 
+.main-workspace-container h4, 
+.main-workspace-container strong, 
+.main-workspace-container .value,
+.main-workspace-container .panel-title,
+.main-workspace-container .total-count,
+.main-workspace-container .stat-number {
+  color: #f0f6fc !important;
+}
+
+.main-workspace-container p, 
+.main-workspace-container td, 
+.main-workspace-container li,
+.main-workspace-container span:not([class*="badge"]):not([class*="tag"]):not([class*="status"]) {
+  color: #c9d1d9;
+}
+
+.main-workspace-container .text-muted, 
+.main-workspace-container .time, 
+.main-workspace-container .date, 
+nav.sidebar i.fa {
+  color: #8b949e !important;
+}
+
+/* Muted buttons styled cleanly */
+.btn-success, [class*="btn-view"] {
+  background: #21262d !important;
+  border: 1px solid #30363d !important;
+  color: #c9d1d9 !important;
+}
+.btn-success:hover, [class*="btn-view"]:hover {
+  background: #30363d !important;
+  border-color: #8b949e !important;
+}
+
 
 
 
