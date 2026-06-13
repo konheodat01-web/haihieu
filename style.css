@@ -979,6 +979,17 @@ nav.sidebar i.fa {
     border-radius: 0 !important;
 }
 
+/* 4. Đồng bộ hóa Dark Mode chuyên sâu cho toàn bộ các Tab con */
+.page table, .page thead, .page tbody, .page tr, .page td, .page th, .page li, .page ul {
+    background-color: #161b22 !important;
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+}
+.page th, .page label, .page .title {
+    color: #f0f6fc !important;
+    background-color: #21262d !important;
+}
+
 
 
 
