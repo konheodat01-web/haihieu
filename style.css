@@ -332,3 +332,31 @@ nav button[id^="eco-btn-"].active {
   font-weight: 600;
   background: rgba(192, 57, 43, 0.05);
 }
+
+/* SIDEBAR SUB-CONTAINER & TREE-VIEW GUIDELINE */
+.sidebar-sub-container {
+  border-left: 1.5px solid rgba(0, 0, 0, 0.08); /* Fallback for light background */
+  border-left-color: rgba(255, 255, 255, 0.08); /* Requested styling */
+  margin-left: 28px;
+  padding-left: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+/* ENFORCE FONTAWESOME FOR SIDEBAR ICONS */
+nav i.fa, .sidebar-tab i.fa, .sub-tab-btn i.fa {
+  font-family: 'FontAwesome' !important;
+}
+
+/* PAGE CONTENT WRAPPER WITH RESPONSIVE/SAFE PADDING */
+.page-content-wrap {
+  padding: 24px !important;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
