@@ -4587,14 +4587,86 @@ function switchLinksTab(tab){
 // ===== WEBSITES =====
 let wsGroups = ['Chính', 'Phụ', 'Khách']; // Team 01 sub-groups
 
+// 1. BIẾN TRẠNG THÁI LỌC LAI (HYBRID STATE) V94
+let currentJobFilter = 'all';
+
+// 2. HÀM KÍCH HOẠT LỌC PIL CHUYỂN ĐỔI TRẠNG THÁI (State Reset) V94
+function executeHybridFilter(filterVal, element) {
+  currentJobFilter = filterVal;
+  
+  // Đồng bộ sáng đèn nút bấm phẳng
+  document.querySelectorAll('.job-filter-bar .filter-pills').forEach(btn => btn.classList.remove('active'));
+  if (element) element.classList.add('active');
+
+  // RESET DROPDOWN VỀ RỖNG ĐỂ TRÁNH XUNG ĐỘT PHÉP GIAO LỌC
+  const dTeam = document.getElementById('websiteFilterTeam');
+  const dOwner = document.getElementById('websiteFilterOwner');
+  if (dTeam) dTeam.value = "";
+  if (dOwner) dOwner.value = "";
+
+  // Ép phân hệ render lại dữ liệu tức thì
+  renderWebsites();
+}
+
+// 3. ĐOẠN ĐÁNH CHẶN NGƯỢC (Dropdown change triggers resetting pills) V94
+function resetPillToAll() {
+  currentJobFilter = 'all';
+  document.querySelectorAll('.job-filter-bar .filter-pills').forEach(btn => {
+    if (btn.getAttribute('data-filter') === 'all') btn.classList.add('active');
+    else btn.classList.remove('active');
+  });
+}
+
+// 4. HÀM TRẢ VỀ MẢNG LỌC ĐỘNG HYBRID V94
+function getFilteredWebsites() {
+  const websiteList = websites || []; 
+  return websiteList.filter(site => {
+    if (currentJobFilter === 'all') return true;
+    
+    const [targetTeam, targetRole] = currentJobFilter.split('-');
+    const isPersonal = (site.owner === 'Hải' || site.owner === 'Hiếu'); // Định nghĩa tường minh
+    
+    if (targetRole === 'Admin') {
+      return site.team === targetTeam && isPersonal;
+    } else {
+      // Trường hợp Công ty: Không có owner hoặc owner bằng Công ty
+      return site.team === targetTeam && (!site.owner || site.owner === 'Công ty');
+    }
+  });
+}
+
+// 5. HÀM ĐẾM SỐ LƯỢNG ĐỘNG THỜI GIAN THỰC V94
+function updateMacroCounters() {
+  const list = websites || [];
+  
+  const allCount = list.length;
+  const cwnAdmin = list.filter(s => s.team === 'Team 01' && (s.owner === 'Hải' || s.owner === 'Hiếu')).length;
+  const cwnCompany = list.filter(s => s.team === 'Team 01' && (!s.owner || s.owner === 'Công ty')).length;
+  const m7Admin = list.filter(s => s.team === 'Team 02' && (s.owner === 'Hải' || s.owner === 'Hiếu')).length;
+  const m7Company = list.filter(s => s.team === 'Team 02' && (!s.owner || s.owner === 'Công ty')).length;
+
+  const eAll = document.getElementById('cnt-all');
+  const eCwnAdm = document.getElementById('cnt-cwn-adm');
+  const eCwnCom = document.getElementById('cnt-cwn-com');
+  const eM7Adm = document.getElementById('cnt-m7-adm');
+  const eM7Com = document.getElementById('cnt-m7-com');
+
+  if (eAll) eAll.textContent = allCount;
+  if (eCwnAdm) eCwnAdm.textContent = cwnAdmin;
+  if (eCwnCom) eCwnCom.textContent = cwnCompany;
+  if (eM7Adm) eM7Adm.textContent = m7Admin;
+  if (eM7Com) eM7Com.textContent = m7Company;
+}
+
 function renderWebsites(){
+  updateMacroCounters();
   const q=(document.getElementById('websiteSearch')||{}).value?.toLowerCase()||'';
   const fs=(document.getElementById('websiteFilterStatus')||{}).value||'';
   const ft=(document.getElementById('websiteFilterTeam')||{}).value||'';
   const fg=(document.getElementById('websiteFilterGroup')||{}).value||'';
   const fo=(document.getElementById('websiteFilterOwner')||{}).value||'';
   // Update pill counts (pre-status filter, but after team/group/owner filter)
-  wsUpdatePillCounts(websites.filter(w=>{
+  wsUpdatePillCounts(getFilteredWebsites().filter(w=>{
     if(q && !w.brand.toLowerCase().includes(q) && !(w.url||'').toLowerCase().includes(q)) return false;
     if(ft && w.team!==ft) return false;
     if(fg && w.group!==fg) return false;
@@ -4633,7 +4705,7 @@ function renderWebsites(){
   if(wfTeam&&groupRow) groupRow.style.display=wfTeam.value==='Team 02'?'none':'block';
 
   const ftr=(document.getElementById('websiteFilterTracked')||{}).value||'';
-  let list=websites.filter(w=>{
+  let list=getFilteredWebsites().filter(w=>{
     if(q && !w.brand.toLowerCase().includes(q) && !(w.url||'').toLowerCase().includes(q)) return false;
     if(fs && w.status!==fs) return false;
     if(ft && w.team!==ft) return false;
@@ -4673,6 +4745,7 @@ function renderWebsites(){
       <div style="display:flex;align-items:center;gap:4px;flex-shrink:0">
         ${w.is301?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0ff;color:#6c5ce7;border:1px solid #c3b1e1;white-space:nowrap">🔀 301</span>`:''}
         ${(()=>{ const kids=websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===w.url?.replace(/\/$/,''))); return kids.length?`<button onclick="event.stopPropagation();showW301s(${w.id})" style="font-size:10px;padding:1px 7px;border-radius:10px;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;cursor:pointer;white-space:nowrap" title="Xem ${kids.length} web 301">🔀 ×${kids.length}</button>`:'' })()}
+        ${!w.is301?`<button onclick="event.stopPropagation();openAdd301ForParent(${w.id},'${(w.url||'').replace(/'/g,"\\'")}')" style="font-size:10px;padding:1px 7px;border-radius:10px;background:#f3e5f5;color:#8e24aa;border:1px solid #d1c4e9;cursor:pointer;white-space:nowrap" title="Thêm web 301 kế thừa từ web này">+ 301</button>`:''}
         <span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${WS_STATUS_COLOR[w.status]||'#999'}18;color:${WS_STATUS_COLOR[w.status]||'#999'};white-space:nowrap">${w.status}</span>
         ${w.admin?`<a href="${joinAdminUrl(w.url,w.admin)}" target="_blank" onclick="event.stopPropagation()" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px">Admin</a>`:''}
         <button onclick="event.stopPropagation();copyText(this.dataset.url,this)" data-url="${(w.url||'').replace(/"/g,'&quot;')}" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 8px;color:var(--blue);border-color:#b8d4ea" title="Copy URL">🔗</button>
@@ -9598,4 +9671,49 @@ window.validateAdminPassword = function(inputPassword) {
   } catch(e) {
     return false;
   }
-};
+};
+
+// ===== V94 AUTO-FILL 301 AND SECURE TRIGGERFLOW =====
+function openAdd301ForParent(parentId, parentUrl) {
+  if (typeof openWebsiteForm === 'function') {
+    openWebsiteForm(null); // Reset form về trống
+  }
+  
+  const wfIs301 = document.getElementById('wf_is301');
+  if (wfIs301) {
+    wfIs301.checked = true;
+    if (typeof wfToggle301 === 'function') wfToggle301();
+  }
+  
+  const wfSourceUrl = document.getElementById('wf_source_url');
+  if (wfSourceUrl) {
+    wfSourceUrl.value = parentUrl; // Liên kết qua sourceUrl
+  }
+  
+  // Tự động kế thừa thông tin cha từ mảng websites toàn cục
+  const parentSite = websites.find(x => x.id === parentId);
+  if (parentSite) {
+    const wfBrand = document.getElementById('wf_brand');
+    if (wfBrand) wfBrand.value = `${parentSite.brand} - 301`;
+    
+    const wfTeam = document.getElementById('wf_team');
+    if (wfTeam) {
+      wfTeam.value = parentSite.team;
+      if (typeof onWfTeamChange === 'function') onWfTeamChange();
+    }
+    
+    const wfOwner = document.getElementById('wf_owner');
+    if (wfOwner) {
+      wfOwner.value = parentSite.owner || 'Công ty';
+    }
+  }
+}
+
+function triggerFlow(siteUrl) {
+  const toolsBaseUrl = 'https://gsc-bulk-tool.nthieucloud.shop';
+  const sessionToken = sessionStorage.getItem('wt_session_admin') === 'true' ? 'secure_admin_active' : 'guest';
+  const targetUrl = `${toolsBaseUrl}?flow_url=${encodeURIComponent(siteUrl)}&auth_token=${encodeURIComponent(sessionToken)}`;
+  
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+}
+
