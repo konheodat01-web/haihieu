@@ -1742,7 +1742,87 @@
   </div>
 </div>
 
-<!-- WEBSITE IMPORT MODAL --></div>
+<!-- WEBSITE IMPORT MODAL -->
+<div id="wsImportModal" class="modal-overlay" onclick="if(event.target===this)closeWsImportModal()" style="display:none">
+  <div class="modal" style="max-width:650px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>⬆ Import website nhanh</h3>
+      <button class="modal-close" onclick="closeWsImportModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="gap:12px">
+      <!-- Tab switch -->
+      <div style="display:flex;gap:0;border-bottom:1px solid #30363d;margin-bottom:4px">
+        <button id="wsImpTabNormal" onclick="wsImpSwitchTab('normal')" style="flex:1;padding:10px;font-size:13px;font-weight:600;border:none;cursor:pointer;border-bottom:2px solid var(--red);color:var(--red);background:transparent;margin-bottom:-1px">🌐 Import thường</button>
+        <button id="wsImpTab301" onclick="wsImpSwitchTab('301')" style="flex:1;padding:10px;font-size:13px;font-weight:500;border:none;cursor:pointer;border-bottom:2px solid transparent;color:var(--text-muted);background:transparent;margin-bottom:-1px">🔀 Import 301</button>
+      </div>
+
+      <!-- NORMAL MODE -->
+      <div id="wsImpPanelNormal">
+        <div style="font-size:12px;color:#8b949e;background:rgba(255,255,255,0.03);padding:10px 12px;border:1px solid #30363d;border-radius:6px;line-height:1.7">
+          <b>Dán danh sách URL</b> (mỗi dòng 1 URL) hoặc <b>upload file CSV/TXT</b><br>
+          Định dạng CSV: <code>brand, url, admin, account, password, status, team, owner, group, note</code>
+        </div>
+        <div class="form-group" style="width:100%;margin-top:8px">
+          <label>Dán danh sách URL / CSV</label>
+          <textarea id="wsImportText" rows="8" style="width:100%;font-size:12px;font-family:monospace;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:8px" placeholder="https://debets.sbs&#10;https://ggwin.llc&#10;..."></textarea>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <input type="file" id="wsImportFile" accept=".csv,.txt" style="display:none" onchange="wsImportReadFile(this)">
+          <button class="btn btn-outline btn-sm" onclick="document.getElementById('wsImportFile').click()">📂 Upload CSV</button>
+          <span id="wsImportFileName" style="font-size:12px;color:var(--text-muted)"></span>
+        </div>
+      </div>
+
+      <!-- 301 MODE -->
+      <div id="wsImpPanel301" style="display:none">
+        <div style="font-size:12px;color:#a29bfe;background:rgba(108,92,231,0.08);padding:10px 12px;border-radius:6px;line-height:1.7;border:1px solid rgba(108,92,231,0.2)">
+          Dán danh sách URL vào <b>2 cột tương ứng</b> (mỗi dòng 1 URL).<br>
+          <span style="font-size:11px;opacity:0.85">Thông tin tài khoản, mật khẩu, đuôi quản trị sẽ tự động sao chép từ web gốc tương ứng trong kho dữ liệu.</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+          <div class="form-group" style="margin:0">
+            <label style="font-weight:600;color:#f85149">🌐 Website gốc</label>
+            <textarea id="wsImport301Source" rows="8" style="width:100%;font-size:12px;font-family:monospace;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:8px" placeholder="debets.sbs&#10;ggwin.llc&#10;..."></textarea>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label style="font-weight:600;color:#a29bfe">🔀 Website 301 mới</label>
+            <textarea id="wsImport301Target" rows="8" style="width:100%;font-size:12px;font-family:monospace;background:#0d1117;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:8px" placeholder="debets301.com&#10;ggwin301.net&#10;..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMON DEFAULTS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px">
+        <div class="form-group">
+          <label>Team mặc định</label>
+          <select id="wsImportTeam" style="width:100%"><option>Team 01</option><option>Team 02</option></select>
+        </div>
+        <div class="form-group">
+          <label>Người quản lý</label>
+          <select id="wsImportOwner" style="width:100%">
+            <option value="Công ty">Công ty</option>
+            <option value="Hải">Hải</option>
+            <option value="Hiếu">Hiếu</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Trạng thái mặc định</label>
+          <select id="wsImportStatus" style="width:100%">
+            <option>Tốt</option>
+            <option>Lỗi web</option>
+            <option>Chờ cấp lại mật khẩu</option>
+          </select>
+        </div>
+      </div>
+      <div id="wsImportPreview" style="max-height:140px;overflow-y:auto;font-size:12px;display:none;border:1px solid #30363d;border-radius:6px;padding:8px;background:#0d1117;color:#c9d1d9"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeWsImportModal()">Huỷ</button>
+      <button class="btn btn-primary" id="wsImportRunBtn" onclick="wsImportRun()">⬆ Import tất cả</button>
+      <button class="btn" id="wsImport301RunBtn" onclick="wsImport301Run()" style="display:none;background:#6c5ce7;color:#fff;border:none">🔀 Import 301</button>
+    </div>
+  </div>
+</div>
 
 
 

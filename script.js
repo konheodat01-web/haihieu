@@ -9722,3 +9722,287 @@ function triggerFlow(siteUrl) {
   window.open(targetUrl, '_blank', 'noopener,noreferrer');
 }
 
+// ==========================================
+// TÍNH NĂNG IMPORT WEBSITE (KHÔI PHỤC & TỐI ƯU)
+// ==========================================
+let _wsImpMode = 'normal';
+
+function openWsImportModal(){
+  const modal = document.getElementById('wsImportModal');
+  if(!modal) return;
+  modal.style.display = 'flex';
+  
+  const textInput = document.getElementById('wsImportText');
+  if(textInput) textInput.value = '';
+  
+  const preview = document.getElementById('wsImportPreview');
+  if(preview) {
+    preview.style.display = 'none';
+    preview.innerHTML = '';
+  }
+  
+  const fileLabel = document.getElementById('wsImportFileName');
+  if(fileLabel) fileLabel.textContent = '';
+  
+  const fileInput = document.getElementById('wsImportFile');
+  if(fileInput) fileInput.value = '';
+}
+
+function closeWsImportModal(){
+  const modal = document.getElementById('wsImportModal');
+  if(modal) modal.style.display = 'none';
+}
+
+function wsImpSwitchTab(mode){
+  _wsImpMode = mode;
+  const tabN = document.getElementById('wsImpTabNormal');
+  const tab3 = document.getElementById('wsImpTab301');
+  const panN = document.getElementById('wsImpPanelNormal');
+  const pan3 = document.getElementById('wsImpPanel301');
+  const btnN = document.getElementById('wsImportRunBtn');
+  const btn3 = document.getElementById('wsImport301RunBtn');
+  
+  if(!tabN || !tab3 || !panN || !pan3 || !btnN || !btn3) return;
+
+  if(mode === '301'){
+    tab3.style.borderBottomColor = '#6c5ce7';
+    tab3.style.color = '#a29bfe';
+    tab3.style.fontWeight = '600';
+    
+    tabN.style.borderBottomColor = 'transparent';
+    tabN.style.color = 'var(--text-muted)';
+    tabN.style.fontWeight = '500';
+    
+    panN.style.display = 'none';
+    pan3.style.display = 'block';
+    
+    btnN.style.display = 'none';
+    btn3.style.display = 'inline-flex';
+  } else {
+    tabN.style.borderBottomColor = 'var(--red)';
+    tabN.style.color = 'var(--red)';
+    tabN.style.fontWeight = '600';
+    
+    tab3.style.borderBottomColor = 'transparent';
+    tab3.style.color = 'var(--text-muted)';
+    tab3.style.fontWeight = '500';
+    
+    panN.style.display = 'block';
+    pan3.style.display = 'none';
+    
+    btnN.style.display = 'inline-flex';
+    btn3.style.display = 'none';
+  }
+  
+  const preview = document.getElementById('wsImportPreview');
+  if(preview) preview.style.display = 'none';
+}
+
+function wsImportReadFile(input){
+  const file = input.files[0];
+  if(!file) return;
+  
+  const fileLabel = document.getElementById('wsImportFileName');
+  if(fileLabel) fileLabel.textContent = file.name;
+  
+  const reader = new FileReader();
+  reader.onload = e => {
+    const textInput = document.getElementById('wsImportText');
+    if(textInput) {
+      textInput.value = e.target.result;
+      wsImportPreview();
+    }
+  };
+  reader.readAsText(file);
+}
+
+function wsImportParseLines(){
+  const textInput = document.getElementById('wsImportText');
+  const raw = textInput ? textInput.value.trim() : '';
+  if(!raw) return [];
+  
+  const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l);
+  
+  const teamEl = document.getElementById('wsImportTeam');
+  const ownerEl = document.getElementById('wsImportOwner');
+  const statusEl = document.getElementById('wsImportStatus');
+  
+  const team = teamEl ? teamEl.value : 'Team 01';
+  const owner = ownerEl ? ownerEl.value : 'Công ty';
+  const status = statusEl ? statusEl.value : 'Tốt';
+  
+  return lines.map(line=>{
+    const sep = line.includes('|') ? '|' : ',';
+    const parts = line.split(sep).map(p=>p.trim());
+    if(parts.length >= 2){
+      const brandRaw = parts[0] || '';
+      const urlRaw = parts[1] || '';
+      const urlFull = normalizeUrl(urlRaw || brandRaw);
+      const url = urlFull.split('/')[0];
+      const brand = brandRaw || url.split('.')[0];
+      
+      return {
+        brand,
+        url,
+        admin: normalizeAdmin(parts[2] || ''),
+        account: parts[3] || '',
+        password: parts[4] || '',
+        status: parts[5] || status,
+        team: parts[6] || team,
+        owner: parts[7] || owner,
+        group: parts[8] || '',
+        note: parts[9] || ''
+      };
+    } else {
+      const urlRaw = parts[0];
+      const url = normalizeUrl(urlRaw);
+      const domain = url.split('/')[0];
+      let brand = domain.replace(/^www\./, '').split('.')[0];
+      brand = brand.charAt(0).toUpperCase() + brand.slice(1);
+      return { brand, url, admin:'', account:'', password:'', status, team, owner, group:'', note:'' };
+    }
+  });
+}
+
+function wsImportPreview(){
+  const items = wsImportParseLines();
+  const el = document.getElementById('wsImportPreview');
+  if(!el) return;
+  if(!items.length){ el.style.display = 'none'; return; }
+  
+  el.style.display = 'block';
+  el.innerHTML = '<div style="font-weight:600;margin-bottom:6px;color:#f0f6fc">Đang tải cấu trúc dữ liệu (' + items.length + ' website):</div>'
+    + items.map(w=>`<div style="padding:4px 0;border-bottom:1px solid #30363d;display:flex;justify-content:space-between"><span style="font-weight:500;color:#c9d1d9">${w.brand}</span><span style="color:var(--blue)">${w.url}</span></div>`).join('');
+}
+
+// Bổ sung sự kiện cập nhật preview khi gõ text
+document.addEventListener('DOMContentLoaded', () => {
+  const wsText = document.getElementById('wsImportText');
+  if (wsText) {
+    wsText.addEventListener('input', wsImportPreview);
+  }
+});
+
+function wsImportRun(){
+  const items = wsImportParseLines();
+  if(!items.length){ toast('Không có dữ liệu để import!','#e74c3c'); return; }
+
+  const toAdd = [];
+  const toDup = [];
+  
+  items.forEach(w=>{
+    if(!w.url && !w.brand) return;
+    const dup = websites.find(x=>
+      w.url && x.url && x.url.replace(/\/$/,'') === w.url.replace(/\/$/,'')
+    );
+    if(dup) toDup.push({item:w, dup});
+    else toAdd.push(w);
+  });
+
+  let replaceAll = false;
+  if(toDup.length){
+    const names = toDup.map(d=>'• '+d.dup.brand+' ('+d.dup.url+')').join('\n');
+    const msg = toDup.length + ' website đã tồn tại trong hệ thống:\n' + names + '\n\nBấm OK để thay thế dữ liệu trùng lặp\nBấm Cancel để bỏ qua website trùng lặp.';
+    replaceAll = confirm(msg);
+  }
+
+  let added = 0, replaced = 0, skipped = 0;
+  toAdd.forEach(w=>{ 
+    websites.push({...w, id: wsNextId++}); 
+    added++; 
+  });
+  
+  toDup.forEach(({item:w, dup})=>{
+    if(replaceAll){
+      const i = websites.findIndex(x=>x.id === dup.id);
+      if(i >= 0){ 
+        websites[i] = {...w, id: dup.id}; 
+        replaced++; 
+      }
+    } else { 
+      skipped++; 
+    }
+  });
+
+  saveAppData(); 
+  renderWebsites(); 
+  autoFillAnchors(); 
+  updateWsIcons();
+  closeWsImportModal();
+  
+  let msg = '✓ Nhập dữ liệu hoàn tất: ' + added + ' thêm mới';
+  if(replaced) msg += ', ' + replaced + ' cập nhật';
+  if(skipped) msg += ', ' + skipped + ' bỏ qua';
+  toast(msg);
+}
+
+function wsImport301Run(){
+  const rawSource = document.getElementById('wsImport301Source')?.value.trim();
+  const rawTarget = document.getElementById('wsImport301Target')?.value.trim();
+  
+  if(!rawSource || !rawTarget){ toast('Vui lòng dán URL vào cả 2 cột!','#e74c3c'); return; }
+  
+  const sourceLines = rawSource.split('\n').map(l=>l.trim()).filter(l=>l);
+  const targetLines = rawTarget.split('\n').map(l=>l.trim()).filter(l=>l);
+  
+  if(sourceLines.length !== targetLines.length){
+    toast('Số lượng dòng của 2 cột không khớp nhau! Gốc: '+sourceLines.length+', Target: '+targetLines.length,'#e74c3c');
+    return;
+  }
+  
+  const team = document.getElementById('wsImportTeam')?.value || 'Team 01';
+  const owner = document.getElementById('wsImportOwner')?.value || 'Công ty';
+  const status = document.getElementById('wsImportStatus')?.value || 'Tốt';
+
+  let added = 0, skipped = 0, notFound = [];
+  
+  for(let i = 0; i < sourceLines.length; i++){
+    const sourceUrlRaw = normalizeUrl(sourceLines[i]);
+    const newUrlRaw = normalizeUrl(targetLines[i]);
+    const sourceDomain = sourceUrlRaw.split('/')[0];
+    const newDomain = newUrlRaw.split('/')[0];
+
+    const dupCheck = websites.find(x=> x.url && x.url.replace(/\/$/,'') === newDomain.replace(/\/$/,''));
+    if(dupCheck){ skipped++; continue; }
+
+    const source = websites.find(x=> x.url && (
+      x.url.replace(/\/$/,'') === sourceDomain.replace(/\/$/,'') ||
+      x.url.replace(/\/$/,'') === sourceUrlRaw.replace(/\/$/,'')
+    ));
+
+    let newBrand = newDomain.replace(/^www\./, '').split('.')[0];
+    newBrand = newBrand.charAt(0).toUpperCase() + newBrand.slice(1);
+
+    const entry = {
+      id: wsNextId++,
+      brand: source ? source.brand : newBrand,
+      url: newDomain,
+      admin: source ? (source.admin||'') : '',
+      account: source ? (source.account||'') : '',
+      password: source ? (source.password||'') : '',
+      status: status,
+      team: source ? (source.team||team) : team,
+      owner: source ? (source.owner||owner) : owner,
+      group: source ? (source.group||'') : '',
+      note: '301 từ ' + sourceDomain,
+      is301: true,
+      sourceUrl: sourceDomain
+    };
+
+    websites.push(entry);
+    added++;
+    if(!source) notFound.push(sourceDomain);
+  }
+
+  saveAppData(); 
+  renderWebsites(); 
+  autoFillAnchors(); 
+  updateWsIcons();
+  closeWsImportModal();
+
+  let msg = '✓ Nhập 301 hoàn tất: ' + added + ' website 301 được thêm';
+  if(skipped) msg += ', ' + skipped + ' bỏ qua (đã tồn tại)';
+  if(notFound.length) msg += '. ⚠ ' + notFound.length + ' website gốc không khớp dữ liệu trong kho';
+  toast(msg);
+}
+
