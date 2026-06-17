@@ -2054,7 +2054,7 @@ function openTaskTypeManager(){
   const overlay = document.createElement('div');
   overlay.id = 'taskTypeModal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:360px">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:360px">
     <div style="font-weight:700;font-size:15px;margin-bottom:14px">⚙ Quản lý loại task</div>
     <div id="ttList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">
       ${types.map((t,i)=>`<div style="display:flex;align-items:center;gap:8px">
@@ -2107,7 +2107,7 @@ function openWstApiSettings() {
   const overlay = document.createElement('div');
   overlay.id = 'wstApiModal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-weight:700;font-size:15px;margin-bottom:8px">🔑 Thiết lập API Serper.dev</div>
     <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;line-height:1.5">Nhập API Key cung cấp bởi <a href="https://serper.dev" target="_blank" style="color:var(--blue)">Serper.dev</a>. Đăng ký mới sẽ được tặng ngay 2.500 lượt miễn phí.</div>
     <div class="form-group" style="margin-bottom:12px"><label>Serper.dev API Key</label>
@@ -2530,7 +2530,7 @@ function openWstChecklistManager(){
   const overlay = document.createElement('div');
   overlay.id = 'wstClModal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:380px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;width:380px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-weight:700;font-size:15px;margin-bottom:4px">⚙ Quản lý Checklist</div>
     <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Kéo ☰ để sắp xếp thứ tự</div>
     <div id="wstClList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
@@ -3012,7 +3012,7 @@ function openWstPickModal(){
   const overlay = document.createElement('div');
   overlay.id = 'wstPickOverlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:20px;width:420px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:20px;width:420px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-weight:700;font-size:14px;margin-bottom:12px">+ Chọn website để theo dõi</div>
     <input type="text" placeholder="🔍 Tìm..." oninput="wstPickFilter(this.value)" style="width:100%;border:1px solid var(--gray-border);border-radius:6px;padding:6px 10px;font-size:12px;margin-bottom:10px">
     <div id="wstPickList" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
@@ -3083,7 +3083,7 @@ function openWstAddModal(){
   const overlay = document.createElement('div');
   overlay.id = 'wstAddOverlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;width:400px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-weight:700;font-size:14px;margin-bottom:14px">📈 Thêm dữ liệu — ${w?.brand||''}</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="form-group"><label>Ngày ghi nhận</label>
@@ -3236,7 +3236,7 @@ function openNewRecurringModal(id){
   const overlay = document.createElement('div');
   overlay.id = 'recurringModal';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:420px;max-width:95vw">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);width:420px;max-width:95vw">
     <div style="font-weight:700;font-size:15px;margin-bottom:16px">${r?'✎ Sửa':'+ Thêm'} task định kỳ</div>
     <div style="display:flex;flex-direction:column;gap:10px">
       <div class="form-group"><label>Tên task *</label>
@@ -4624,7 +4624,7 @@ function getFilteredWebsites() {
     if (currentJobFilter === 'all') return true;
     
     const [targetTeam, targetRole] = currentJobFilter.split('-');
-    const isPersonal = (site.owner === 'Hải' || site.owner === 'Hiếu'); // Định nghĩa tường minh
+    const isPersonal = site.owner && site.owner !== 'Công ty';
     
     if (targetRole === 'Admin') {
       return site.team === targetTeam && isPersonal;
@@ -4640,9 +4640,9 @@ function updateMacroCounters() {
   const list = websites || [];
   
   const allCount = list.length;
-  const cwnAdmin = list.filter(s => s.team === 'Team 01' && (s.owner === 'Hải' || s.owner === 'Hiếu')).length;
+  const cwnAdmin = list.filter(s => s.team === 'Team 01' && s.owner && s.owner !== 'Công ty').length;
   const cwnCompany = list.filter(s => s.team === 'Team 01' && (!s.owner || s.owner === 'Công ty')).length;
-  const m7Admin = list.filter(s => s.team === 'Team 02' && (s.owner === 'Hải' || s.owner === 'Hiếu')).length;
+  const m7Admin = list.filter(s => s.team === 'Team 02' && s.owner && s.owner !== 'Công ty').length;
   const m7Company = list.filter(s => s.team === 'Team 02' && (!s.owner || s.owner === 'Công ty')).length;
 
   const eAll = document.getElementById('cnt-all');
@@ -4811,7 +4811,7 @@ function showW301s(wsId){
   overlay.id = 'w301Overlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
   overlay.onclick = e=>{ if(e.target===overlay) overlay.remove(); };
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;width:480px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
       <div style="font-weight:700;font-size:15px">🔀 Web 301 từ <span style="color:var(--red)">${w.brand}</span></div>
       <button onclick="document.getElementById('w301Overlay').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">×</button>
@@ -8497,7 +8497,7 @@ function openBackupModal(){
   const overlay = document.createElement('div');
   overlay.id = 'backupOverlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);min-width:400px;max-width:500px">
+  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);min-width:400px;max-width:500px">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div style="font-weight:700;font-size:15px">🗃️ Backup tự động (7 ngày gần nhất)</div>
       <button onclick="document.getElementById('backupOverlay').remove()" style="background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted)">&times;</button>
@@ -9101,7 +9101,7 @@ function bulkNghiemThu(sheet){
   const overlay = document.createElement('div');
   overlay.id='bulkNtOverlay';
   overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML=`<div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);min-width:380px;max-width:480px">
+  overlay.innerHTML=`<div class="modal" style="border-radius:12px;padding:24px;box-shadow:0 8px 32px rgba(0,0,0,.2);min-width:380px;max-width:480px">
     <div style="font-weight:700;font-size:15px;margin-bottom:16px">🎯 Nghiệm thu cho ${ids.size} bài</div>
     <div id="bulkNtBtns" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">${btns}</div>
     <div id="bulkNtReasonWrap" style="display:none;margin-top:16px">
@@ -9716,4 +9716,4 @@ function triggerFlow(siteUrl) {
   
   window.open(targetUrl, '_blank', 'noopener,noreferrer');
 }
-
+

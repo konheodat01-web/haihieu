@@ -69,7 +69,7 @@
   <div style="display:flex;align-items:center;gap:12px">
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="background:#2c3e50;color:#fff;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px">A</div>
-      <span style="font-weight:600;font-size:13px;color:var(--text)">Admin Portal</span>
+      <span style="font-weight:600;font-size:13px;color:var(--white)">Admin Portal</span>
     </div>
     <h1>&#128188; Quản lý công việc</h1>
   </div>
@@ -230,12 +230,12 @@
     </div>
 
     <!-- Tab Mẹ 2: Tài chính -->
-    <button type="button" class="sidebar-nav-item" id="btn-tab-finance" onclick="switchWorkspace('finance', this)">
+    <button type="button" class="sidebar-nav-item" id="btn-tab-finance" onclick="window.open('https://finance-tracker.nthieucloud.shop/', '_blank')">
       <i class="fa fa-credit-card"></i> <span>Quản lý Tài chính</span>
     </button>
     
     <!-- Tab Mẹ 3: Kho Tool Nhỏ -->
-    <button type="button" class="sidebar-nav-item" id="btn-tab-tools" onclick="switchWorkspace('tools', this)">
+    <button type="button" class="sidebar-nav-item" id="btn-tab-tools" onclick="window.open('https://gsc-bulk-tool.nthieucloud.shop/', '_blank')">
       <i class="fa fa-cubes"></i> <span>Kho Tool Nhỏ</span>
     </button>
   </div>
@@ -1012,10 +1012,10 @@
 
   <!-- ECOSYSTEM PANELS -->
   <div id="panel-workspace-finance" class="workspace-panel iframe-panel-wrap">
-    <iframe id="iframe-finance" data-src="/finance" src="about:blank"></iframe>
+    <iframe id="iframe-finance" data-src="https://finance-tracker.nthieucloud.shop/" src="about:blank"></iframe>
   </div>
   <div id="panel-workspace-tools" class="workspace-panel iframe-panel-wrap">
-    <iframe id="iframe-tools" data-src="/my-tools" src="about:blank"></iframe>
+    <iframe id="iframe-tools" data-src="https://gsc-bulk-tool.nthieucloud.shop/" src="about:blank"></iframe>
   </div>
 </main>
 </div>
