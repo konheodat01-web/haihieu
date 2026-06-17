@@ -10242,7 +10242,7 @@ async function wstLoadGscDetailData() {
   // Show loading indicator
   document.getElementById('gscChartLoading').style.display = 'flex';
   
-  const host = 'http://103.82.195.87:3002'; // VPS API endpoint
+  const host = 'https://api.nthieucloud.shop'; // VPS API endpoint
   try {
     const perfRes = await fetch(`${host}/api/gsc/performance-history`, {
       method: 'POST',
@@ -10377,7 +10377,7 @@ async function wstSyncGscNow() {
     syncBtn.innerHTML = '<span>⏳ Đang đồng bộ...</span>';
   }
   
-  const host = 'http://103.82.195.87:3002';
+  const host = 'https://api.nthieucloud.shop';
   try {
     const res = await fetch(`${host}/api/gsc/sync-now`, {
       method: 'POST',
