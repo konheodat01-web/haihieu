@@ -1480,9 +1480,7 @@ function getProjectCols(task){
 
 function calcProjectProgress(task){
   if(!task.cards||!task.cards.length) return 0;
-  const cols = getProjectCols(task);
-  const lastColId = cols[cols.length-1].id;
-  const done = task.cards.filter(c=>c.colId===lastColId||c.colId==='done').length;
+  const done = task.cards.filter(c=>c.colId==='done').length;
   return Math.round(done/task.cards.length*100);
 }
 
@@ -1890,10 +1888,8 @@ function calcTaskAutoStatus(task){
   const cards = task.cards || [];
   if(!cards.length) return task.status || 'Chưa làm';
   const firstColId = cols[0].id;
-  const lastColId  = cols[cols.length-1].id;
-  const pendingColIds = new Set(cols.filter(c=>c.id==='pending'||c.id==='col_pending'||c.label.toLowerCase().includes('pending')).map(c=>c.id));
-  // Done: all cards in last col
-  if(cards.every(c=>c.colId===lastColId||c.colId==='done')) return 'Hoàn thành';
+  // Done: all cards in 'done' column
+  if(cards.every(c=>c.colId==='done')) return 'Hoàn thành';
   // Pending if task itself is pending
   if(task.pendingReason) return 'Pending';
   // Chưa làm: all cards still in first col (or todo)
@@ -9258,13 +9254,22 @@ function updateNavBadges() {
   if (badgeRecur) {
     let doneIds = new Set();
     try { doneIds = new Set(getRecurDoneToday().map(d => d.taskId)); } catch(e) {}
-    const activeRecurs = (recurringTasks || []).filter(t => !doneIds.has(t.id)).length;
+    const today = todayVN();
+    // Only count recurring tasks that are due or overdue today and not completed today
+    const activeRecurs = (recurringTasks || []).filter(t => {
+      const isDue = t.nextDate && t.nextDate <= today;
+      return isDue && !doneIds.has(t.id);
+    }).length;
     badgeRecur.textContent = activeRecurs || '';
     badgeRecur.style.display = activeRecurs ? 'inline-block' : 'none';
   }
   const badgeTasks = document.getElementById('navBadgeTasks');
   if (badgeTasks) {
-    const activeTasksCount = (tasks || []).length;
+    // Only count active (unfinished) tasks
+    const activeTasksCount = (tasks || []).filter(t => {
+      const isDone = calcProjectProgress(t) >= 100 || calcTaskAutoStatus(t) === 'Hoàn thành';
+      return !isDone;
+    }).length;
     badgeTasks.textContent = activeTasksCount || '';
     badgeTasks.style.display = activeTasksCount ? 'inline-block' : 'none';
   }
