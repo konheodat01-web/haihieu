@@ -2749,6 +2749,10 @@ function renderWsTrack(){
       <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:130px">Website (gốc)</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Nhóm</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px;min-width:140px">Từ khóa SEO</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="Clicks (28 ngày qua)">Clicks (28d)</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="Impressions (28 ngày qua)">Imps (28d)</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="CTR trung bình 28 ngày">CTR</th>
+      <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="Vị trí trung bình 28 ngày">Vị trí</th>
       ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">Mở bot</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
@@ -2812,6 +2816,54 @@ function renderWsTrack(){
           <button onclick="var btn=this;btn.innerHTML='⏳'; wstFetchRank(${w.id}).then(r=>{btn.innerHTML='↺'; renderWsTrack(); if(r.error)toast(r.error,'#e74c3c'); else toast('Xong!','#27ae60')})" style="background:none;border:1px solid var(--gray-border);border-radius:4px;cursor:pointer;padding:2px 4px;font-size:10px" title="Kiểm tra rank ngay">↺</button>
         </div>
       </td>
+      ${(()=>{
+        const redirectChain = getWstRedirectChainBackward(w);
+        let totalClicks = 0;
+        let totalImpressions = 0;
+        let totalWeightedPosition = 0;
+        
+        const limitDate = new Date();
+        limitDate.setDate(limitDate.getDate() - 28);
+        const limitStr = limitDate.toISOString().split('T')[0];
+        
+        const combinedHistory = {};
+        redirectChain.forEach(s => {
+          const cache = (typeof _gscCache !== 'undefined' ? _gscCache[s.id] : null) || {};
+          const hist = cache.performanceHistory || [];
+          hist.forEach(h => {
+            if (h.date >= limitStr) {
+              if (!combinedHistory[h.date]) {
+                combinedHistory[h.date] = { clicks: 0, impressions: 0, position: 0 };
+              }
+              combinedHistory[h.date].clicks += h.clicks || 0;
+              combinedHistory[h.date].impressions += h.impressions || 0;
+              combinedHistory[h.date].position = h.position || 0;
+            }
+          });
+        });
+        
+        Object.keys(combinedHistory).forEach(d => {
+          const item = combinedHistory[d];
+          totalClicks += item.clicks;
+          totalImpressions += item.impressions;
+          totalWeightedPosition += (item.position * item.impressions);
+        });
+        
+        const ctr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+        const avgPos = totalImpressions > 0 ? (totalWeightedPosition / totalImpressions) : 0;
+        
+        const clicksStr = totalClicks.toLocaleString();
+        const impsStr = totalImpressions >= 1000 ? (totalImpressions / 1000).toFixed(1) + 'k' : totalImpressions.toLocaleString();
+        const ctrStr = ctr.toFixed(1) + '%';
+        const posStr = avgPos > 0 ? avgPos.toFixed(1) : '—';
+        
+        return `
+          <td style="padding:8px 10px;text-align:center;font-weight:600;color:#58a6ff;cursor:pointer" onclick="wstOpenGscModal(${w.id})" title="Xem chi tiết GSC">${clicksStr}</td>
+          <td style="padding:8px 10px;text-align:center;color:#88d49e;cursor:pointer" onclick="wstOpenGscModal(${w.id})" title="Xem chi tiết GSC">${impsStr}</td>
+          <td style="padding:8px 10px;text-align:center;color:#f2a154;cursor:pointer" onclick="wstOpenGscModal(${w.id})" title="Xem chi tiết GSC">${ctrStr}</td>
+          <td style="padding:8px 10px;text-align:center;color:#c5a3ff;font-weight:600;cursor:pointer" onclick="wstOpenGscModal(${w.id})" title="Xem chi tiết GSC">${posStr}</td>
+        `;
+      })()}
       ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
         <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:16px" title="${item}">${cl[item]?'✅':'⬜'}</span>
       </td>`).join('')}
@@ -10051,3 +10103,397 @@ function wsImport301Run(){
   toast(msg);
 }
 
+\n
+// =====================================================================
+// GOOGLE SEARCH CONSOLE CONTROLLER (Bulletproof Spec v5.0)
+// =====================================================================
+let _gscCache = {};
+let _gscActiveSiteId = null;
+let _gscActiveTab = 'perf'; // 'perf' | 'queries' | 'pages'
+let _gscChartInstance = null;
+
+// Normalize URL helper
+function wstNormalizeUrl(v) {
+  let url = (v || '').trim().replace(/^https?:\/\//i, '').replace(/\/+$/, '');
+  url = url.replace(/^sc-domain:/i, '');
+  return url.toLowerCase();
+}
+
+// Trace redirect chain backward (C -> B -> A)
+function getWstRedirectChainBackward(site, depth = 0, visited = new Set()) {
+  if (depth > 5 || !site || visited.has(site.id)) return [];
+  visited.add(site.id);
+  const chain = [site];
+  
+  if (site.is301 && site.sourceUrl) {
+    const parentNorm = wstNormalizeUrl(site.sourceUrl);
+    const parent = websites.find(w => {
+      if (w.id === site.id) return false;
+      return wstNormalizeUrl(w.url) === parentNorm;
+    });
+    if (parent) {
+      chain.push(...getWstRedirectChainBackward(parent, depth + 1, visited));
+    }
+  }
+  return chain;
+}
+
+// Sanitize websites to strip raw passwords
+function sanitizeWebsitesForApi(rawWebsites) {
+  if (!Array.isArray(rawWebsites)) return [];
+  return rawWebsites.map(w => ({
+    id: w.id,
+    url: w.url,
+    brand: w.brand,
+    is301: !!w.is301,
+    sourceUrl: w.sourceUrl || '',
+    gscPropertyUrl: w.gscPropertyUrl || ''
+  }));
+}
+
+// Load GSC Cache from Firebase RTDB
+async function loadGscCache() {
+  try {
+    const res = await fetch('https://haihieu-tracker-default-rtdb.asia-southeast1.firebasedatabase.app/gsc_cache.json');
+    if (res.ok) {
+      _gscCache = await res.json() || {};
+      renderWsTrack();
+    }
+  } catch (err) {
+    console.error('Failed to load GSC Cache:', err);
+  }
+}
+
+// Open GSC Detail Modal
+async function wstOpenGscModal(siteId) {
+  _gscActiveSiteId = siteId;
+  const site = websites.find(w => w.id === siteId);
+  if (!site) return;
+  
+  const modal = document.getElementById('wstGscDetailModal');
+  if (modal) modal.style.display = 'flex';
+  
+  // Header text
+  document.getElementById('gscModalTitle').innerText = `${site.brand} Analytics (Google Search Console)`;
+  
+  const redirectChain = getWstRedirectChainBackward(site);
+  let chainText = `Chuỗi chuyển hướng: ${redirectChain.map(s => s.brand).join(' ➜ ')}`;
+  document.getElementById('gscModalSubtitle').innerText = chainText;
+  
+  _gscActiveTab = 'perf';
+  document.getElementById('gscDateRange').value = '28d';
+  
+  wstSwitchGscTab('perf');
+  wstLoadGscDetailData();
+}
+
+// Close Modal
+function wstCloseGscModal() {
+  const modal = document.getElementById('wstGscDetailModal');
+  if (modal) modal.style.display = 'none';
+  _gscActiveSiteId = null;
+  if (_gscChartInstance) {
+    _gscChartInstance.destroy();
+    _gscChartInstance = null;
+  }
+}
+
+// Switch Tabs
+function wstSwitchGscTab(tab) {
+  _gscActiveTab = tab;
+  
+  ['perf', 'queries', 'pages'].forEach(t => {
+    const btn = document.getElementById(`gscTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (btn) {
+      if (t === tab) {
+        btn.style.background = '#21262d';
+        btn.style.color = '#fff';
+      } else {
+        btn.style.background = 'transparent';
+        btn.style.color = '#8b949e';
+      }
+    }
+  });
+  
+  const panels = {
+    perf: document.getElementById('gscPanelPerf'),
+    queries: document.getElementById('gscPanelQueries'),
+    pages: document.getElementById('gscPanelPages')
+  };
+  
+  Object.keys(panels).forEach(p => {
+    if (panels[p]) panels[p].style.display = (p === tab) ? 'block' : 'none';
+  });
+}
+
+// Trigger load on date range change
+function wstChangeGscRange() {
+  wstLoadGscDetailData();
+}
+
+// Fetch details from GSC API via Backend Proxy
+async function wstLoadGscDetailData() {
+  if (!_gscActiveSiteId) return;
+  const site = websites.find(w => w.id === _gscActiveSiteId);
+  if (!site) return;
+  
+  const range = document.getElementById('gscDateRange').value;
+  
+  // Show loading indicator
+  document.getElementById('gscChartLoading').style.display = 'flex';
+  
+  const host = 'http://103.82.195.87:3002'; // VPS API endpoint
+  try {
+    const perfRes = await fetch(`${host}/api/gsc/performance-history`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        siteId: _gscActiveSiteId,
+        websites: sanitizeWebsitesForApi(websites)
+      })
+    });
+    
+    if (perfRes.ok) {
+      const data = await perfRes.json();
+      const history = data.performanceHistory || [];
+      
+      // Calculate summary stats
+      let clicks = 0;
+      let imps = 0;
+      let totalPos = 0;
+      
+      let dateLimit = new Date();
+      if (range === '7d') dateLimit.setDate(dateLimit.getDate() - 7);
+      else if (range === '28d') dateLimit.setDate(dateLimit.getDate() - 28);
+      else dateLimit.setDate(dateLimit.getDate() - 90);
+      const limitStr = dateLimit.toISOString().split('T')[0];
+      
+      const filteredHist = history.filter(h => h.date >= limitStr);
+      filteredHist.forEach(h => {
+        clicks += h.clicks || 0;
+        imps += h.impressions || 0;
+        totalPos += (h.position || 0) * (h.impressions || 0);
+      });
+      
+      const ctr = imps > 0 ? (clicks / imps) * 100 : 0;
+      const avgPos = imps > 0 ? (totalPos / imps) : 0;
+      
+      document.getElementById('gscSumClicks').innerText = clicks.toLocaleString();
+      document.getElementById('gscSumImpressions').innerText = imps.toLocaleString();
+      document.getElementById('gscSumCtr').innerText = ctr.toFixed(1) + '%';
+      document.getElementById('gscSumPosition').innerText = avgPos > 0 ? avgPos.toFixed(1) : '—';
+      
+      wstDrawGscChart(filteredHist);
+      document.getElementById('gscChartLoading').style.display = 'none';
+    }
+  } catch (err) {
+    console.error('Error loading GSC performance history:', err);
+  }
+  
+  // Fetch Top Queries and Pages dynamically
+  const queriesTbody = document.getElementById('gscQueriesTbody');
+  const pagesTbody = document.getElementById('gscPagesTbody');
+  
+  if (queriesTbody) queriesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">⏳ Đang tải cụm từ tìm kiếm...</td></tr>';
+  if (pagesTbody) pagesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">⏳ Đang tải danh sách trang...</td></tr>';
+  
+  if (!site.gscPropertyUrl) {
+    if (queriesTbody) queriesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Chưa cấu hình GSC Property URL cho web này!</td></tr>';
+    if (pagesTbody) pagesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Chưa cấu hình GSC Property URL cho web này!</td></tr>';
+    return;
+  }
+  
+  try {
+    const qRes = await fetch(`${host}/api/gsc/queries-and-pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gscPropertyUrl: site.gscPropertyUrl,
+        range: range
+      })
+    });
+    
+    if (qRes.ok) {
+      const data = await qRes.json();
+      
+      // Queries Table
+      const queries = data.queries || [];
+      if (queries.length === 0) {
+        if (queriesTbody) queriesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">Không tìm thấy dữ liệu từ khóa.</td></tr>';
+      } else {
+        if (queriesTbody) {
+          queriesTbody.innerHTML = queries.map(q => `
+            <tr style="border-bottom: 1px solid #30363d; height: 38px;">
+              <td style="padding: 8px 16px; color: #c9d1d9; font-weight: 500;">${q.query}</td>
+              <td style="padding: 8px 16px; text-align: right; color: #58a6ff; font-weight: 600;">${q.clicks.toLocaleString()}</td>
+              <td style="padding: 8px 16px; text-align: right; color: #8b949e;">${q.impressions.toLocaleString()}</td>
+              <td style="padding: 8px 16px; text-align: right; color: #f2a154;">${(q.ctr * 100).toFixed(1)}%</td>
+              <td style="padding: 8px 16px; text-align: right; color: #bc8cff; font-weight: 600;">${q.position.toFixed(1)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+      
+      // Pages Table (with home page pinned)
+      const pages = data.pages || [];
+      if (pages.length === 0) {
+        if (pagesTbody) pagesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">Không tìm thấy dữ liệu trang.</td></tr>';
+      } else {
+        if (pagesTbody) {
+          pagesTbody.innerHTML = pages.map(p => {
+            const isHome = p.page === '/';
+            return `
+              <tr style="border-bottom: 1px solid #30363d; height: 38px; ${isHome ? 'background: rgba(88,166,255,0.06); font-weight: 600;' : ''}">
+                <td style="padding: 8px 16px; color: ${isHome ? '#58a6ff' : '#c9d1d9'}; max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${p.fullUrl}">
+                  ${isHome ? '🏠 ' : ''}${p.page}
+                </td>
+                <td style="padding: 8px 16px; text-align: right; color: #58a6ff;">${p.clicks.toLocaleString()}</td>
+                <td style="padding: 8px 16px; text-align: right; color: #8b949e;">${p.impressions.toLocaleString()}</td>
+                <td style="padding: 8px 16px; text-align: right; color: #f2a154;">${(p.ctr * 100).toFixed(1)}%</td>
+                <td style="padding: 8px 16px; text-align: right; color: #bc8cff;">${p.position.toFixed(1)}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+    } else {
+      const errData = await qRes.json();
+      if (queriesTbody) queriesTbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Lỗi: ${errData.error}</td></tr>`;
+      if (pagesTbody) pagesTbody.innerHTML = `<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Lỗi: ${errData.error}</td></tr>`;
+    }
+  } catch (err) {
+    console.error('Error fetching queries/pages:', err);
+    if (queriesTbody) queriesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Lỗi kết nối VPS.</td></tr>';
+    if (pagesTbody) pagesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Lỗi kết nối VPS.</td></tr>';
+  }
+}
+
+// Sync Now via GSC API
+async function wstSyncGscNow() {
+  if (!_gscActiveSiteId) return;
+  const syncBtn = document.getElementById('gscSyncBtn');
+  if (syncBtn) {
+    syncBtn.disabled = true;
+    syncBtn.innerHTML = '<span>⏳ Đang đồng bộ...</span>';
+  }
+  
+  const host = 'http://103.82.195.87:3002';
+  try {
+    const res = await fetch(`${host}/api/gsc/sync-now`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        siteId: _gscActiveSiteId,
+        websites: sanitizeWebsitesForApi(websites),
+        force: true
+      })
+    });
+    
+    if (res.ok) {
+      toast('Đồng bộ GSC thành công!', '#27ae60');
+      await loadGscCache();
+      wstLoadGscDetailData();
+    } else {
+      const data = await res.json();
+      toast(`Lỗi đồng bộ: ${data.error || 'Unknown'}`, '#e74c3c');
+    }
+  } catch (err) {
+    console.error('Error triggering GSC sync:', err);
+    toast('Lỗi kết nối VPS!', '#e74c3c');
+  } finally {
+    if (syncBtn) {
+      syncBtn.disabled = false;
+      syncBtn.innerHTML = '<span>🔁 Đồng bộ ngay</span>';
+    }
+  }
+}
+
+// Draw GSC performance chart using Chart.js
+function wstDrawGscChart(history) {
+  const canvasEl = document.getElementById('gscChart');
+  if (!canvasEl) return;
+  const ctx = canvasEl.getContext('2d');
+  
+  if (_gscChartInstance) {
+    _gscChartInstance.destroy();
+  }
+  
+  const labels = history.map(h => h.date);
+  const clicksData = history.map(h => h.clicks);
+  const impressionsData = history.map(h => h.impressions);
+  
+  _gscChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Clicks',
+          data: clicksData,
+          borderColor: '#58a6ff',
+          backgroundColor: 'rgba(88,166,255,0.1)',
+          yAxisID: 'yClicks',
+          borderWidth: 2.5,
+          tension: 0.3,
+          pointRadius: 3
+        },
+        {
+          label: 'Impressions',
+          data: impressionsData,
+          borderColor: '#3fb950',
+          backgroundColor: 'rgba(63,185,80,0.1)',
+          yAxisID: 'yImps',
+          borderWidth: 2.5,
+          tension: 0.3,
+          pointRadius: 3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: 'index',
+        intersect: false
+      },
+      plugins: {
+        legend: {
+          labels: { color: '#c9d1d9', font: { size: 11 } }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: '#30363d' },
+          ticks: { color: '#8b949e', font: { size: 10 } }
+        },
+        yClicks: {
+          type: 'linear',
+          display: true,
+          position: 'left',
+          grid: { color: '#30363d' },
+          ticks: { color: '#58a6ff', font: { size: 10 } },
+          title: { display: true, text: 'Clicks', color: '#58a6ff' }
+        },
+        yImps: {
+          type: 'linear',
+          display: true,
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: '#3fb950', font: { size: 10 } },
+          title: { display: true, text: 'Impressions', color: '#3fb950' }
+        }
+      }
+    }
+  });
+}
+
+// Automatically load GSC Cache when track page is opened
+(function initGscCacheLoader() {
+  const originShowPage = window.showPage;
+  window.showPage = function(name) {
+    if (typeof originShowPage === 'function') originShowPage(name);
+    if (name === 'wstrack') {
+      loadGscCache();
+    }
+  };
+})();

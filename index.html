@@ -2066,5 +2066,128 @@
   </div>
 </div>
 
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- GSC DETAIL MODAL -->
+<div id="wstGscDetailModal" class="modal" style="display:none; z-index: 1000; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;">
+  <div style="background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 12px; width: 85%; max-width: 1000px; height: 90vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,0.5); overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <!-- Header -->
+    <div style="padding: 16px 20px; border-bottom: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; background: #0d1117;">
+      <div>
+        <h3 id="gscModalTitle" style="margin: 0; font-size: 16px; font-weight: 600; color: #f0f6fc;">Google Search Console Analytics</h3>
+        <div id="gscModalSubtitle" style="font-size: 11px; color: #8b949e; margin-top: 4px;"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button id="gscSyncBtn" onclick="wstSyncGscNow()" class="btn btn-sm" style="background: #238636; color: #fff; border: 1px solid rgba(240,246,252,0.1); border-radius: 6px; padding: 6px 12px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 500;">
+          <span>🔁 Đồng bộ ngay</span>
+        </button>
+        <button onclick="wstCloseGscModal()" style="background: none; border: none; color: #8b949e; font-size: 20px; cursor: pointer; padding: 4px;">&times;</button>
+      </div>
+    </div>
+    
+    <!-- Controls & Tab bar -->
+    <div style="padding: 12px 20px; background: #0d1117; border-bottom: 1px solid #30363d; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <!-- Tabs -->
+      <div style="display: flex; gap: 4px; background: #161b22; padding: 3px; border-radius: 6px; border: 1px solid #30363d;">
+        <button id="gscTabPerf" onclick="wstSwitchGscTab('perf')" style="background: #21262d; color: #fff; border: none; border-radius: 4px; padding: 6px 16px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">📊 Hiệu suất</button>
+        <button id="gscTabQueries" onclick="wstSwitchGscTab('queries')" style="background: transparent; color: #8b949e; border: none; border-radius: 4px; padding: 6px 16px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">🔍 Cụm từ tìm kiếm</button>
+        <button id="gscTabPages" onclick="wstSwitchGscTab('pages')" style="background: transparent; color: #8b949e; border: none; border-radius: 4px; padding: 6px 16px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s;">📄 Trang</button>
+      </div>
+      
+      <!-- Date Range select -->
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 11px; color: #8b949e;">Khoảng thời gian:</span>
+        <select id="gscDateRange" onchange="wstChangeGscRange()" style="background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; outline: none;">
+          <option value="7d">7 ngày qua</option>
+          <option value="28d" selected>28 ngày qua</option>
+          <option value="3m">3 tháng qua</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Content Area -->
+    <div style="flex: 1; overflow-y: auto; padding: 20px; background: #0d1117; display: flex; flex-direction: column; gap: 20px;">
+      
+      <!-- Summary metrics cards -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;" id="gscSummaryCards">
+        <!-- Card: Clicks -->
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 11px; color: #8b949e; margin-bottom: 4px;">Tổng số lượt nhấp</div>
+          <div id="gscSumClicks" style="font-size: 20px; font-weight: 700; color: #58a6ff;">—</div>
+        </div>
+        <!-- Card: Impressions -->
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 11px; color: #8b949e; margin-bottom: 4px;">Tổng số lượt hiển thị</div>
+          <div id="gscSumImpressions" style="font-size: 20px; font-weight: 700; color: #3fb950;">—</div>
+        </div>
+        <!-- Card: CTR -->
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 11px; color: #8b949e; margin-bottom: 4px;">CTR trung bình</div>
+          <div id="gscSumCtr" style="font-size: 20px; font-weight: 700; color: #f2a154;">—</div>
+        </div>
+        <!-- Card: Average Position -->
+        <div style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; text-align: center;">
+          <div style="font-size: 11px; color: #8b949e; margin-bottom: 4px;">Vị trí trung bình</div>
+          <div id="gscSumPosition" style="font-size: 20px; font-weight: 700; color: #bc8cff;">—</div>
+        </div>
+      </div>
+      
+      <!-- Panel: Performance (Chart.js) -->
+      <div id="gscPanelPerf" style="background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; height: 350px; position: relative;">
+        <canvas id="gscChart" style="width: 100%; height: 100%;"></canvas>
+        <div id="gscChartLoading" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(22,27,34,0.85); display: flex; align-items: center; justify-content: center; font-size: 13px; color: #8b949e; border-radius: 8px;">
+          ⏳ Đang tải biểu đồ dữ liệu...
+        </div>
+      </div>
+      
+      <!-- Panel: Queries Table -->
+      <div id="gscPanelQueries" style="display: none; background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden;">
+        <div style="max-height: 450px; overflow-y: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+            <thead>
+              <tr style="background: #21262d; border-bottom: 1px solid #30363d; color: #8b949e;">
+                <th style="padding: 10px 16px;">Cụm từ tìm kiếm</th>
+                <th style="padding: 10px 16px; text-align: right;">Số lượt nhấp</th>
+                <th style="padding: 10px 16px; text-align: right;">Số lượt hiển thị</th>
+                <th style="padding: 10px 16px; text-align: right;">CTR</th>
+                <th style="padding: 10px 16px; text-align: right;">Vị trí</th>
+              </tr>
+            </thead>
+            <tbody id="gscQueriesTbody">
+              <tr>
+                <td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">Đang tải danh sách từ khóa...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Panel: Pages Table -->
+      <div id="gscPanelPages" style="display: none; background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden;">
+        <div style="max-height: 450px; overflow-y: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+            <thead>
+              <tr style="background: #21262d; border-bottom: 1px solid #30363d; color: #8b949e;">
+                <th style="padding: 10px 16px;">Trang</th>
+                <th style="padding: 10px 16px; text-align: right;">Số lượt nhấp</th>
+                <th style="padding: 10px 16px; text-align: right;">Số lượt hiển thị</th>
+                <th style="padding: 10px 16px; text-align: right;">CTR</th>
+                <th style="padding: 10px 16px; text-align: right;">Vị trí</th>
+              </tr>
+            </thead>
+            <tbody id="gscPagesTbody">
+              <tr>
+                <td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">Đang tải danh sách trang...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
 <div id="appVersion" style="display:none;position:fixed;bottom:8px;left:120px;font-size:10px;color:#aaa;z-index:9999;pointer-events:none;user-select:none;font-family:monospace;background:rgba(255,255,255,0.8);padding:2px 6px;border-radius:4px;">v1.2.0</div>
 </body></html>
