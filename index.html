@@ -135,12 +135,7 @@
         <div class="form-group"><label>Tác dụng</label><textarea id="ql_desc" rows="2" style="width:100%"></textarea></div>
         <div class="form-group"><label>Ghi chú</label><input type="text" id="ql_note_work" style="width:100%"></div>
         <div class="form-group"><label>Hiển thị cho</label>
-          <select id="ql_owner_work" style="width:100%">
-<option value="admin">Chung (tất cả)</option>
-            <option value="Hải">Hải</option>
-            <option value="Hiếu">Hiếu</option>
-            
-          </select>
+          <select id="ql_owner_work" style="width:100%"><option value="admin">Chung (tất cả)</option></select>
         </div>
         <div class="form-group">
           <label>Tài khoản</label>
@@ -167,16 +162,12 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
           <div class="form-group"><label>Team</label>
             <select id="ql_team" style="width:100%">
-              <option value="Team 01">Team 01</option>
-              <option value="Team 02">Team 02</option>
+              <option value="Team 01">Chaewon</option>
+              <option value="Team 02">M7</option>
             </select>
           </div>
           <div class="form-group"><label>Người quản lý</label>
-            <select id="ql_owner" style="width:100%">
-              <option value="Công ty">Công ty</option>
-              <option value="Hải">Hải</option>
-              <option value="Hiếu">Hiếu</option>
-            </select>
+            <select id="ql_owner" style="width:100%"><option value="Công ty">Công ty</option><option value="admin">Admin</option></select>
           </div>
         </div>
         <div class="form-group"><label>Trạng thái</label>
@@ -287,10 +278,7 @@
     <div class="panel-header" style="border-radius:0;border:none;border-bottom:1px solid var(--gray-border);margin-bottom:0">
       <div class="panel-title">&#128203; Công việc khác</div>
       <div class="toolbar" style="flex-wrap:wrap;gap:6px">
-        <select id="tkFilterPerson" onchange="renderTasksOverview()" style="display:none">
-          <option value="">Tất cả người</option>
-          <option>Hải</option><option>Hiếu</option><option>Khác</option>
-        </select>
+        <select id="tkFilterPerson" onchange="renderTasksOverview()" style="display:none"><option value="">Tất cả</option><option value="admin">Admin</option><option value="Khác">Khác</option></select>
         <select id="tkFilterDate" onchange="renderTasksOverview()" style="height:32px;font-size:12px">
           <option value="">📅 Tất cả ngày</option>
           <option value="today">Hôm nay</option>
@@ -505,7 +493,7 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">
         <div class="form-group">
           <label>Người nhận</label>
-          <select id="npm_person" style="width:100%"><option value="">--</option><option>Hải</option><option>Hiếu</option><option>Khác</option></select>
+          <select id="npm_person" style="width:100%"><option value="">--</option><option value="admin">Admin</option><option value="Khác">Khác</option></select>
         </div>
         <div class="form-group">
           <label>Loại</label>
@@ -540,8 +528,8 @@
         <div class="form-group" id="npm_team_row">
           <label>Team</label>
           <select id="npm_team" style="width:100%">
-            <option value="Team 01">Team 01</option>
-            <option value="Team 02">Team 02</option>
+            <option value="Team 01">Chaewon</option>
+            <option value="Team 02">M7</option>
           </select>
         </div>
       </div>
@@ -721,9 +709,7 @@
         <select id="linkFilterGroup" onchange="renderLinks()" style="height:32px;font-size:12px">
           <option value="">Tất cả nhóm</option>
         </select>
-        <select id="linkFilterOwner" onchange="renderLinks()" style="height:32px;font-size:12px">
-          <option value="">Tất cả người</option><option value="admin">Chung</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>
-        </select>
+        <select id="linkFilterOwner" onchange="renderLinks()" style="height:32px;font-size:12px"><option value="">Tất cả</option><option value="admin">Chung</option></select>
         <select id="linkFilterAccount" onchange="renderLinks()" style="height:32px;font-size:12px">
           <option value="">Tất cả</option>
           <option value="has_account">Có tài khoản</option>
@@ -758,11 +744,7 @@
               </div>
             </div>
             <div class="form-group"><label>Hiển thị cho</label>
-              <select id="lf_owner" style="width:100%">
-                <option value="admin">Chung (tất cả)</option>
-                <option value="Hải">Hải</option>
-                <option value="Hiếu">Hiếu</option>
-              </select>
+              <select id="lf_owner" style="width:100%"><option value="admin">Chung (tất cả)</option></select>
             </div>
           </div>
           <div class="form-group"><label>Ghi chú</label><textarea id="lf_note" rows="2" style="width:100%" placeholder="Ghi chú thêm..."></textarea></div>
@@ -806,18 +788,13 @@
           <input type="text" id="websiteSearch" placeholder="&#128269; Tìm website..." oninput="renderWebsites()" style="width:160px;height:32px;font-size:12px">
           <select id="websiteFilterTeam" onchange="resetPillToAll();renderWebsites()" style="height:32px;font-size:12px">
             <option value="">Tất cả team</option>
-            <option value="Team 01">Team 01</option>
-            <option value="Team 02">Team 02</option>
+            <option value="Team 01">Chaewon</option>
+            <option value="Team 02">M7</option>
           </select>
           <select id="websiteFilterGroup" onchange="renderWebsites()" style="height:32px;font-size:12px;min-width:120px">
             <option value="">Tất cả nhóm</option>
           </select>
-          <select id="websiteFilterOwner" onchange="resetPillToAll();renderWebsites()" style="height:32px;font-size:12px">
-            <option value="">Tất cả người</option>
-            <option value="Hải">Hải</option>
-            <option value="Hiếu">Hiếu</option>
-            <option value="Chung">Chung</option>
-          </select>
+          <select id="websiteFilterOwner" onchange="resetPillToAll();renderWebsites()" style="height:32px;font-size:12px"><option value="">Tất cả người</option><option value="Chung">Chung</option></select>
           <input type="hidden" id="websiteFilterStatus" value="">
           <select id="websiteFilterTracked" onchange="renderWebsites()" style="height:32px;font-size:12px">
             <option value="">📊 Tất cả</option>
@@ -887,18 +864,13 @@
                 <label style="font-size:11px">Team</label>
                 <select id="wbe_team" style="width:100%;height:30px;font-size:12px">
                   <option value="">— Giữ nguyên —</option>
-                  <option value="Team 01">Team 01</option>
-                  <option value="Team 02">Team 02</option>
+                  <option value="Team 01">Chaewon</option>
+                  <option value="Team 02">M7</option>
                 </select>
               </div>
               <div class="form-group" style="margin:0">
                 <label style="font-size:11px">Người quản lý</label>
-                <select id="wbe_owner" style="width:100%;height:30px;font-size:12px">
-                  <option value="">— Giữ nguyên —</option>
-                  <option value="Công ty">Công ty</option>
-                  <option value="Hải">Hải</option>
-                  <option value="Hiếu">Hiếu</option>
-                </select>
+                <select id="wbe_owner" style="width:100%;height:30px;font-size:12px"><option value="">— Giữ nguyên —</option><option value="Công ty">Công ty</option><option value="admin">Admin</option></select>
               </div>
               <div class="form-group" style="margin:0">
                 <label style="font-size:11px">Nhóm con</label>
@@ -979,16 +951,12 @@
           <div id="wf_team_row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
             <div class="form-group"><label>Team</label>
               <select id="wf_team" style="width:100%" onchange="onWfTeamChange()">
-                <option value="Team 01">Team 01</option>
-                <option value="Team 02">Team 02</option>
+                <option value="Team 01">Chaewon</option>
+                <option value="Team 02">M7</option>
               </select>
             </div>
             <div class="form-group"><label>Người quản lý</label>
-              <select id="wf_owner" style="width:100%">
-                <option value="Công ty">Công ty</option>
-                <option value="Hải">Hải</option>
-                <option value="Hiếu">Hiếu</option>
-              </select>
+              <select id="wf_owner" style="width:100%"><option value="Công ty">Công ty</option><option value="admin">Admin</option></select>
             </div>
           </div>
           <div class="form-group"><label>Nhóm con <span style="font-size:11px;color:var(--text-muted)">(Team 01)</span></label>
@@ -1795,15 +1763,11 @@
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px">
         <div class="form-group">
           <label>Team mặc định</label>
-          <select id="wsImportTeam" style="width:100%"><option>Team 01</option><option>Team 02</option></select>
+          <select id="wsImportTeam" style="width:100%"><option value="Team 01">Chaewon</option><option value="Team 02">M7</option></select>
         </div>
         <div class="form-group">
           <label>Người quản lý</label>
-          <select id="wsImportOwner" style="width:100%">
-            <option value="Công ty">Công ty</option>
-            <option value="Hải">Hải</option>
-            <option value="Hiếu">Hiếu</option>
-          </select>
+          <select id="wsImportOwner" style="width:100%"><option value="Công ty">Công ty</option><option value="admin">Admin</option></select>
         </div>
         <div class="form-group">
           <label>Trạng thái mặc định</label>
@@ -2038,10 +2002,7 @@
           </div>
           <div class="form-group">
             <label style="color:#c9d1d9">Giao cho</label>
-            <select id="qi_person" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
-              <option value="">-- Chưa chọn --</option>
-              <option>Hải</option><option>Hiếu</option><option>Khác</option>
-            </select>
+            <select id="qi_person" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9"><option value="">-- Chưa chọn --</option><option value="admin">Admin</option><option value="Khác">Khác</option></select>
           </div>
           <div class="form-group">
             <label style="color:#c9d1d9">Tên task (tùy chọn)</label>
@@ -2066,8 +2027,8 @@
           <div class="form-group" id="qi_team_row">
             <label style="color:#c9d1d9">Team</label>
             <select id="qi_team" style="width:100%;background-color:#0d1117;border:1px solid #30363d;color:#c9d1d9">
-              <option value="Team 01">Team 01</option>
-              <option value="Team 02">Team 02</option>
+              <option value="Team 01">Chaewon</option>
+              <option value="Team 02">M7</option>
             </select>
           </div>
         </div>

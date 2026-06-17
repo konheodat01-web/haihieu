@@ -1669,7 +1669,7 @@ function renderTasksOverview(){
             ${priBadge}
             ${getTaskStatusBadge(t)}
             ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:10px">${t.person}</span>`:''}
-            ${t.team==='Team 02'?'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#555">Team 2</span>':''}
+            ${t.team==='Team 02'?'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#555">M7</span>':'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fdf2f2;color:var(--red)">Chaewon</span>'}
             <span style="font-weight:600;font-size:13px${isDone?';text-decoration:line-through;color:var(--text-muted)':''}">${t.name}</span>
           </div>
           ${isPendingTask?`<div style="font-size:11px;color:#e67e22;margin-top:3px">⏸ Pending: ${(t.pendingReason||'').slice(0,80)}</div>`:''}
@@ -4730,7 +4730,7 @@ function renderWebsites(){
       <div style="flex:1;min-width:0">
         <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
           <span style="font-weight:600;font-size:13px">${w.brand}</span>
-          ${w.team==='Team 02'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#666">Team 2</span>`:''}
+          ${w.team==='Team 02'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#666">M7</span>`:`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fdf2f2;color:var(--red)">Chaewon</span>`}
           ${w.group?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fff3cd;color:#856404">${w.group}</span>`:''}
           ${w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:${w.owner==='Hải'?'#fdf2f2':'#f0f7fd'};color:${w.owner==='Hải'?'var(--red)':'var(--blue)'}">${w.owner}</span>`:''}
         </div>
@@ -5494,18 +5494,14 @@ function updateOwnerFilters(m){
   const linkOwner=document.getElementById('linkFilterOwner');
   if(linkOwner){
     const cur=linkOwner.value;
-    if(m==='hai') linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung</option><option value="Hải">Hải</option>';
-    else if(m==='hieu') linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung</option><option value="Hiếu">Hiếu</option>';
-    else linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung (tất cả)</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
-    linkOwner.value=['','admin','Hải','Hiếu'].includes(cur)?cur:'';
+    linkOwner.innerHTML='<option value="">Tất cả</option><option value="admin">Chung</option>';
+    linkOwner.value=['','admin'].includes(cur)?cur:'';
   }
   const wsOwner=document.getElementById('websiteFilterOwner');
   if(wsOwner){
     const cur2=wsOwner.value;
-    if(m==='hai') wsOwner.innerHTML='<option value="">Tất cả người</option><option value="Công ty">Công ty</option><option value="Hải">Hải</option>';
-    else if(m==='hieu') wsOwner.innerHTML='<option value="">Tất cả người</option><option value="Công ty">Công ty</option><option value="Hiếu">Hiếu</option>';
-    else wsOwner.innerHTML='<option value="">Tất cả người</option><option value="Công ty">Công ty</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
-    wsOwner.value=['','Công ty','Hải','Hiếu'].includes(cur2)?cur2:'';
+    wsOwner.innerHTML='<option value="">Tất cả người</option><option value="Chung">Chung</option>';
+    wsOwner.value=['','Chung'].includes(cur2)?cur2:'';
   }
 }
 
@@ -5514,17 +5510,13 @@ function onWfTeamChange(){
   const ownerSel = document.getElementById('wf_owner');
   const groupRow = document.getElementById('wf_group')?.closest('.form-group');
 
-  // Owner options: Team 01 = Công ty/Hải/Hiếu, Team 02 = Công ty/Hiếu only
   if(ownerSel){
     const cur = ownerSel.value;
-    ownerSel.innerHTML = team==='Team 02'
-      ? '<option value="Công ty">Công ty</option><option value="Hiếu">Hiếu</option>'
-      : '<option value="Công ty">Công ty</option><option value="Hải">Hải</option><option value="Hiếu">Hiếu</option>';
-    // If previous value still valid, keep it
+    ownerSel.innerHTML = '<option value="Công ty">Công ty</option><option value="admin">Admin</option>';
     if([...ownerSel.options].find(o=>o.value===cur)) ownerSel.value=cur;
     else ownerSel.value='Công ty';
   }
-  // Group only for Team 01
+  // Group only for Team 01 (Chaewon)
   if(groupRow) groupRow.style.display = team==='Team 02' ? 'none' : 'block';
 }
 function openWsGroupManager(){
@@ -6024,8 +6016,8 @@ function renderIndexTasks(){
     const isOverdue = !isDone && t.dueDate < today;
     const isDue = !isDone && t.dueDate === today;
     const teamBadge = t.team==='Team 02'
-      ? '<span class="it-badge-team t2">Team 02</span>'
-      : '<span class="it-badge-team">Team 01</span>';
+      ? '<span class="it-badge-team t2">M7</span>'
+      : '<span class="it-badge-team">Chaewon</span>';
     let statusCell = '';
     if(isDone) statusCell = '<span class="it-status-done">✅ Done</span>';
     else if(isPending) statusCell = '<span class="it-status-pending">⏳ Pending</span>';
@@ -6125,7 +6117,7 @@ function renderIndexDueBanner(){
     return `<div class="it-due-card ${isOverdue?'overdue':isPending?'waiting':''}">
       ${renderItId(t.taskId)}${t.isSubTask?'<span style="font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin-left:3px">sub</span>':''}
       ${t.name?`<span style="font-size:12px;font-weight:500;color:var(--text)">${t.name}</span>`:''}
-      <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team}</span>
+      <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team==='Team 02'?'M7':'Chaewon'}</span>
       ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:11px">${t.person}</span>`:''}
       <span style="font-size:12px;color:var(--text-muted)">STT: ${t.stt}</span>
       ${isPending?`<span style="font-size:11px;color:#e67e22;flex:1">📝 ${t.pendingReason||''}</span>`:'<span style="flex:1"></span>'}
