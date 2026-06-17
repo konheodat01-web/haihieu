@@ -22,6 +22,37 @@ function _loadCustomLoai(){
 }
 _loadCustomLoai();
 
+// ===== SYSTEM MAPPING & LABELS =====
+const SYSTEM_MAPPING = {
+  teams: {
+    'Team 01': 'Chaewon',
+    'Team 02': 'M7'
+  },
+  websiteOwners: {
+    'admin': 'Admin',
+    'Công ty': 'Công ty'
+  },
+  taskOwners: {
+    'admin': 'Chung (tất cả)',
+    'Khác': 'Khác'
+  }
+};
+
+function getTeamLabel(teamVal) {
+  return SYSTEM_MAPPING.teams[teamVal] || teamVal || 'Chưa phân team';
+}
+
+function getWebsiteOwnerLabel(ownerVal) {
+  if (ownerVal === 'Hải' || ownerVal === 'Hiếu') return 'Admin';
+  return SYSTEM_MAPPING.websiteOwners[ownerVal] || ownerVal || 'Chưa phân công';
+}
+
+function getTaskOwnerLabel(ownerVal) {
+  if (ownerVal === 'Hải' || ownerVal === 'Hiếu') return 'Khác';
+  return SYSTEM_MAPPING.taskOwners[ownerVal] || ownerVal || 'Chung (tất cả)';
+}
+
+
 function _saveCustomLoai(){
   try{ localStorage.setItem('wt_loai_config', JSON.stringify(LOAI_CONFIG)); }catch(e){}
   syncLoaiBaiDropdowns();
@@ -1668,7 +1699,7 @@ function renderTasksOverview(){
             <span class="badge ${TASK_TYPE_COLORS[t.type]||'badge-gray'}" style="font-size:10px">${t.type}</span>
             ${priBadge}
             ${getTaskStatusBadge(t)}
-            ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':t.person==='Hiếu'?'tag-hieu':''}" style="font-size:10px">${t.person}</span>`:''}
+            ${t.person?`<span class="tag-person" style="font-size:10px">${getTaskOwnerLabel(t.person)}</span>`:''}
             ${t.team==='Team 02'?'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#555">M7</span>':'<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fdf2f2;color:var(--red)">Chaewon</span>'}
             <span style="font-weight:600;font-size:13px${isDone?';text-decoration:line-through;color:var(--text-muted)':''}">${t.name}</span>
           </div>
@@ -4732,7 +4763,7 @@ function renderWebsites(){
           <span style="font-weight:600;font-size:13px">${w.brand}</span>
           ${w.team==='Team 02'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f0f0;color:#666">M7</span>`:`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fdf2f2;color:var(--red)">Chaewon</span>`}
           ${w.group?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#fff3cd;color:#856404">${w.group}</span>`:''}
-          ${w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:${w.owner==='Hải'?'#fdf2f2':'#f0f7fd'};color:${w.owner==='Hải'?'var(--red)':'var(--blue)'}">${w.owner}</span>`:''}
+          ${w.owner&&w.owner!=='Công ty'&&w.owner!=='Chung'?`<span style="font-size:10px;padding:1px 6px;border-radius:10px;background:#f0f7fd;color:var(--blue)">${getWebsiteOwnerLabel(w.owner)}</span>`:''}
         </div>
         <div style="font-size:11px;color:var(--blue);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px">${w.url||''}</div>
         ${w.note?`<div style="font-size:11px;color:var(--text-muted);margin-top:1px">${w.note}</div>`:''}
@@ -6118,7 +6149,7 @@ function renderIndexDueBanner(){
       ${renderItId(t.taskId)}${t.isSubTask?'<span style="font-size:9px;background:#fff3cd;color:#856404;border:1px solid #ffc107;border-radius:4px;padding:1px 5px;margin-left:3px">sub</span>':''}
       ${t.name?`<span style="font-size:12px;font-weight:500;color:var(--text)">${t.name}</span>`:''}
       <span class="${t.team==='Team 02'?'it-badge-team t2':'it-badge-team'}">${t.team==='Team 02'?'M7':'Chaewon'}</span>
-      ${t.person?`<span class="tag-person ${t.person==='Hải'?'tag-hai':'tag-hieu'}" style="font-size:11px">${t.person}</span>`:''}
+      ${t.person?`<span class="tag-person" style="font-size:11px">${getTaskOwnerLabel(t.person)}</span>`:''}
       <span style="font-size:12px;color:var(--text-muted)">STT: ${t.stt}</span>
       ${isPending?`<span style="font-size:11px;color:#e67e22;flex:1">📝 ${t.pendingReason||''}</span>`:'<span style="flex:1"></span>'}
       ${isOverdue?`<span style="font-size:11px;color:#e74c3c;font-weight:600">⚠️ Trễ ${Math.ceil((new Date(today)-new Date(t.dueDate))/(864e5))}n</span>`:''}
@@ -9833,6 +9864,13 @@ function wsImportParseLines(){
       const url = urlFull.split('/')[0];
       const brand = brandRaw || url.split('.')[0];
       
+      let teamRaw = parts[6] || team;
+      if (teamRaw === 'Chaewon') teamRaw = 'Team 01';
+      if (teamRaw === 'M7') teamRaw = 'Team 02';
+      
+      let ownerRaw = parts[7] || owner;
+      if (ownerRaw === 'Hải' || ownerRaw === 'Hiếu') ownerRaw = 'admin';
+      
       return {
         brand,
         url,
@@ -9840,8 +9878,8 @@ function wsImportParseLines(){
         account: parts[3] || '',
         password: parts[4] || '',
         status: parts[5] || status,
-        team: parts[6] || team,
-        owner: parts[7] || owner,
+        team: teamRaw,
+        owner: ownerRaw,
         group: parts[8] || '',
         note: parts[9] || ''
       };
@@ -9851,7 +9889,15 @@ function wsImportParseLines(){
       const domain = url.split('/')[0];
       let brand = domain.replace(/^www\./, '').split('.')[0];
       brand = brand.charAt(0).toUpperCase() + brand.slice(1);
-      return { brand, url, admin:'', account:'', password:'', status, team, owner, group:'', note:'' };
+      
+      let teamRaw = team;
+      if (teamRaw === 'Chaewon') teamRaw = 'Team 01';
+      if (teamRaw === 'M7') teamRaw = 'Team 02';
+      
+      let ownerRaw = owner;
+      if (ownerRaw === 'Hải' || ownerRaw === 'Hiếu') ownerRaw = 'admin';
+      
+      return { brand, url, admin:'', account:'', password:'', status, team: teamRaw, owner: ownerRaw, group:'', note:'' };
     }
   });
 }
@@ -9942,9 +9988,16 @@ function wsImport301Run(){
     return;
   }
   
-  const team = document.getElementById('wsImportTeam')?.value || 'Team 01';
-  const owner = document.getElementById('wsImportOwner')?.value || 'Công ty';
+  const teamSelectVal = document.getElementById('wsImportTeam')?.value || 'Team 01';
+  const ownerSelectVal = document.getElementById('wsImportOwner')?.value || 'Công ty';
   const status = document.getElementById('wsImportStatus')?.value || 'Tốt';
+  
+  let team = teamSelectVal;
+  if (team === 'Chaewon') team = 'Team 01';
+  if (team === 'M7') team = 'Team 02';
+  
+  let owner = ownerSelectVal;
+  if (owner === 'Hải' || owner === 'Hiếu') owner = 'admin';
 
   let added = 0, skipped = 0, notFound = [];
   
