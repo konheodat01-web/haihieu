@@ -2547,71 +2547,7 @@ function saveWsTrack(){
 }
 
 
-function getWstChecklist(){
-  try{ return JSON.parse(localStorage.getItem('wst_checklist')||'null') || ['Dựng web','Content']; }catch(e){ return ['Dựng web','Content']; }
-}
-function saveWstChecklist(items){ localStorage.setItem('wst_checklist', JSON.stringify(items)); }
 
-function openWstChecklistManager(){
-  const items = getWstChecklist();
-  const overlay = document.createElement('div');
-  overlay.id = 'wstClModal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:9999;display:flex;align-items:center;justify-content:center';
-  overlay.innerHTML = `<div class="modal" style="border-radius:12px;padding:24px;width:380px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,.2)">
-    <div style="font-weight:700;font-size:15px;margin-bottom:4px">⚙ Quản lý Checklist</div>
-    <div style="font-size:11px;color:var(--text-muted);margin-bottom:12px">Kéo ☰ để sắp xếp thứ tự</div>
-    <div id="wstClList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px"></div>
-    <button onclick="wstClAddRow()" class="btn btn-sm btn-outline" style="width:100%;margin-bottom:12px">+ Thêm mục</button>
-    <div style="display:flex;justify-content:space-between">
-      <button onclick="document.getElementById('wstClModal').remove()" class="btn btn-outline">Huỷ</button>
-      <button onclick="wstClSave()" class="btn btn-primary">✓ Lưu</button>
-    </div>
-  </div>`;
-  document.body.appendChild(overlay);
-  // Build rows with drag handles
-  const list = document.getElementById('wstClList');
-  items.forEach(item => wstClMakeRow(list, item));
-  wstClInitDrag(list);
-}
-
-function wstClMakeRow(list, value){
-  const row = document.createElement('div');
-  row.className = 'wst-cl-row';
-  row.draggable = true;
-  row.style.cssText = 'display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--gray-border);border-radius:6px;padding:3px 6px';
-  row.innerHTML =
-    '<span class="wst-cl-handle" style="cursor:grab;color:var(--text-muted);font-size:16px;padding:0 4px;user-select:none">☰</span>' +
-    '<input type="text" value="'+(value||'')+'" class="wst-cl-input" style="flex:1;border:none;outline:none;padding:4px 0;font-size:13px" placeholder="Tên mục...">' +
-    '<button onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:#e74c3c;font-size:16px;padding:0">×</button>';
-  list.appendChild(row);
-  if(value==='') row.querySelector('input').focus();
-}
-
-function wstClAddRow(){
-  const list = document.getElementById('wstClList');
-  if(!list) return;
-  wstClMakeRow(list, '');
-  wstClInitDrag(list);
-}
-
-function wstClInitDrag(list){
-  let dragEl = null;
-  list.querySelectorAll('.wst-cl-row').forEach(row=>{
-    row.addEventListener('dragstart', e=>{ dragEl=row; setTimeout(()=>row.style.opacity='.4',0); });
-    row.addEventListener('dragend', ()=>{ row.style.opacity='1'; dragEl=null; });
-    row.addEventListener('dragover', e=>{ e.preventDefault(); if(dragEl&&dragEl!==row){ const rect=row.getBoundingClientRect(); const mid=rect.top+rect.height/2; if(e.clientY<mid) list.insertBefore(dragEl,row); else list.insertBefore(dragEl,row.nextSibling); } });
-  });
-}
-
-function wstClSave(){
-  const inputs = document.querySelectorAll('#wstClList .wst-cl-input');
-  const items = [...inputs].map(i=>(i.value||'').trim()).filter(Boolean);
-  if(!items.length){ toast('Cần ít nhất 1 mục!','#e74c3c'); return; }
-  saveWstChecklist(items);
-  document.getElementById('wstClModal').remove();
-  renderWsTrack();
-  toast('✓ Đã lưu checklist');
-}
 
 function getWstSite(wsId){
   return siteTracking.find(s=>s.wsId===wsId);
@@ -2680,7 +2616,6 @@ function renderWsTrack(){
   if(!tbody) return;
 
   const allTrackedWs = siteTracking.map(s=>websites.find(w=>w.id===s.wsId)).filter(Boolean);
-  const chkItems = getWstChecklist();
 
   if(wtApiKey && !window._wstApiLoaded) {
       window._wstApiLoaded = true;
@@ -2694,18 +2629,9 @@ function renderWsTrack(){
 
   const q=(document.getElementById('wst_search')?.value||'').toLowerCase();
   const fGroup=gSel?.value||'';
-  const fCheck='';
-
   let list = allTrackedWs.filter(w=>{
     if(q && !w.brand.toLowerCase().includes(q) && !(w.url||'').toLowerCase().includes(q)) return false;
     if(fGroup && (w.group||'')!==fGroup) return false;
-    if(fCheck){
-      const cl=getWstSite(w.id)?.checklist||{};
-      if(fCheck==='all_done' && !chkItems.every(i=>cl[i])) return false;
-      if(fCheck==='partial' && chkItems.every(i=>cl[i])) return false;
-      if(fCheck.startsWith('done_') && !cl[fCheck.slice(5)]) return false;
-      if(fCheck.startsWith('undone_') && cl[fCheck.slice(7)]) return false;
-    }
     return true;
   });
 
@@ -2717,26 +2643,15 @@ function renderWsTrack(){
     return websites.filter(x=>x.is301&&x.sourceUrl&&(x.sourceUrl===w.url||x.sourceUrl===(w.url||'').replace(/\/$/,'')));
   }
 
-  // Filters: moBot, index
-  const fMobot = document.getElementById('wst_filter_mobot')?.value||'';
+  // Filter: index
   const fIndex = document.getElementById('wst_filter_index')?.value||'';
-  list = list.filter(w=>{
-    if(fMobot){
+  if(fIndex){
+    list = list.filter(w=>{
       const site=getWstSite(w.id);
       const entries=(site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
-      const mb=entries[0]?.moBot||site?.moBot||'';
-      if(mb!==fMobot) return false;
-    }
-    if(fIndex){
-      const site=getWstSite(w.id);
-      const entries=(site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
-      if(entries[0]?.indexed!==fIndex) return false;
-    }
-    return true;
-  });
-
-  // Checklist filter (from fCheck already computed above)
-  // (fCheck handled inline in list filter)
+      return entries[0]?.indexed===fIndex;
+    });
+  }
 
   if(!list.length){ tbody.innerHTML=''; if(thead) thead.innerHTML=''; empty.style.display='block'; return; }
   empty.style.display='none';
@@ -2753,8 +2668,6 @@ function renderWsTrack(){
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="Impressions (28 ngày qua)">Imps (28d)</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="CTR trung bình 28 ngày">CTR</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap" title="Vị trí trung bình 28 ngày">Vị trí</th>
-      ${chkItems.map(item=>`<th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">${item}</th>`).join('')}
-      <th style="padding:8px 10px;text-align:center;font-size:11px;white-space:nowrap">Mở bot</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🏆 Rank</th>
       <th style="padding:8px 10px;text-align:center;font-size:11px">🔍 Index</th>
       <th style="padding:8px 10px;text-align:left;font-size:11px">Cập nhật</th>
@@ -2764,10 +2677,8 @@ function renderWsTrack(){
 
   tbody.innerHTML = list.map(w=>{
     const site = getWstSite(w.id);
-    const cl = site?.checklist||{};
     const entries = (site?.entries||[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
     const last = entries[0];
-    const allDone = chkItems.length && chkItems.every(i=>cl[i]);
     const kids = getW301Children(w);
     // Latest 301: sort by added order (last in array), use url or sourceUrl
     const latest301 = kids.length ? kids[kids.length-1] : null;
@@ -2775,9 +2686,8 @@ function renderWsTrack(){
     const isSameAsSource = !latest301;
     const isSelected = _wstSelected.has(w.id);
     const indexIcon = last?.indexed==='Đã index'?'✅':last?.indexed==='Chưa index'?'❌':last?.indexed==='Một phần'?'⚠️':'—';
-    const mb = last?.moBot||site?.moBot||'';
 
-    return `<tr style="border-bottom:1px solid #f0f0f0;${allDone?'background:#f6fff8':''};${isSelected?'background:#fdf2f2;':''}" onmouseover="if(!${isSelected})this.style.background='#fafafa'" onmouseout="if(!${isSelected})this.style.background='${allDone?'#f6fff8':''}'">
+    return `<tr style="border-bottom:1px solid #f0f0f0;${isSelected?'background:#fdf2f2;':''}" onmouseover="if(!${isSelected})this.style.background='#fafafa'" onmouseout="if(!${isSelected})this.style.background=''">
       <td style="padding:6px;text-align:center">
         <input type="checkbox" class="wst-chk" data-id="${w.id}" onchange="wstToggleSelect(${w.id},this)" ${isSelected?'checked':''} style="cursor:pointer;accent-color:var(--red)">
       </td>
@@ -2864,14 +2774,8 @@ function renderWsTrack(){
           <td style="padding:8px 10px;text-align:center;color:#c5a3ff;font-weight:600;cursor:pointer" onclick="wstOpenGscModal(${w.id})" title="Xem chi tiết GSC">${posStr}</td>
         `;
       })()}
-      ${chkItems.map(item=>`<td style="padding:8px 10px;text-align:center">
-        <span onclick="wstToggleCheck(${w.id},'${item}')" style="cursor:pointer;font-size:16px" title="${item}">${cl[item]?'✅':'⬜'}</span>
-      </td>`).join('')}
-      <td style="padding:8px 10px;text-align:center">
-        <input type="checkbox" onchange="wstToggleMoBot(${w.id},this.checked)" ${last?.moBot==='Mở'?'checked':''} style="width:16px;height:16px;cursor:pointer;accent-color:#27ae60" title="${last?.moBot==='Mở'?'Đang Mở — click để Đóng':'Đang Đóng — click để Mở'}">
-      </td>
       <td id="rank_td_${w.id}" style="padding:8px 10px;text-align:center;font-size:12px;font-weight:600">
-        ${!last?'<span style="color:var(--text-muted)">N/A</span>':last.moBot==='Đóng'?'<span style="color:#e74c3c">CMB</span>':wstFormatRankUI(last.rank)}
+        ${!last?'<span style="color:var(--text-muted)">N/A</span>':wstFormatRankUI(last.rank)}
       </td>
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted);white-space:nowrap">${last?.date||'—'}</td>
@@ -2933,30 +2837,7 @@ function wstShowWebInfo(wsId){
   showWebsiteInfo(w, true);
 }
 
-function wstToggleMoBot(wsId, checked){
-  let site = getWstSite(wsId);
-  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
-  if(!site.entries) site.entries=[];
-  // Get last entry and update its moBot, or create new entry
-  const entries = site.entries.slice().sort((a,b)=>b.date.localeCompare(a.date));
-  const last = entries[0];
-  if(last){
-    // Update moBot on latest entry
-    const idx = site.entries.findIndex(e=>e.id===last.id);
-    if(idx>=0) site.entries[idx].moBot = checked?'Mở':'Đóng';
-  } else {
-    site.entries.push({id:'wste'+Date.now(),date:todayVN(),moBot:checked?'Mở':'Đóng',rank:null,indexed:'',note:''});
-  }
-  saveWsTrack();
-  renderWsTrack();
-}
 
-function wstSaveMoBot(wsId, val){
-  let site = getWstSite(wsId);
-  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
-  site.moBot = val.trim();
-  saveWsTrack();
-}
 
 function wstAddEntry(wsId){
   _wstSelectedWsId = wsId;
@@ -3043,14 +2924,7 @@ function renderWstContent(wsId){
       <div style="font-size:11px;color:var(--blue)">${w.url||''}</div>
       <button onclick="openWstAddModal()" class="btn btn-primary btn-sm" style="margin-left:auto">+ Thêm dữ liệu</button>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;padding:10px 12px;background:#f8f9fa;border-radius:8px;border:1px solid var(--gray-border)">
-      <span style="font-size:11px;font-weight:600;color:var(--text-muted);line-height:2">Checklist:</span>
-      ${getWstChecklist().map(item=>{
-        const done=(site&&site.checklist&&site.checklist[item]);
-        const btn = '<button onclick="wstToggleCheck('+wsId+',\''+item+'\') " style="display:flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;border:1px solid '+(done?'#27ae60':'var(--gray-border)')+';background:'+(done?'#d4edda':'#fff')+';color:'+(done?'#155724':'var(--text-muted)')+';cursor:pointer;font-size:12px">'+(done?'✅ ':'⬜ ')+item+'</button>';
-        return btn;
-      }).join('')}
-    </div>
+
     ${!entries.length ? '<div style="text-align:center;padding:32px;color:var(--text-muted)">Chưa có dữ liệu nào. Bấm "+ Thêm dữ liệu" để bắt đầu.</div>' : `
     <table style="width:100%;border-collapse:collapse;font-size:12px">
       <thead><tr style="background:#f8f9fa;border-bottom:2px solid var(--gray-border)">
@@ -3168,16 +3042,8 @@ function openWstAddModal(){
       <div class="form-group"><label>Ngày ghi nhận</label>
         <input type="date" id="wst_date" style="width:100%" value="${todayVN()}">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="form-group"><label>🤖 Mở bot</label>
-          <select id="wst_mobot" style="width:100%">
-            <option value="Đóng" selected>🔴 Đóng</option>
-            <option value="Mở">🟢 Mở</option>
-          </select>
-        </div>
-        <div class="form-group"><label>🏆 Rank trung bình</label>
+      <div class="form-group"><label>🏆 Rank trung bình</label>
           <input type="number" id="wst_rank" min="1" style="width:100%" placeholder="VD: 15">
-        </div>
       </div>
       <div class="form-group"><label>🔍 Trạng thái Index Google</label>
         <select id="wst_indexed" style="width:100%">
@@ -3220,14 +3086,7 @@ function wstSaveEntry(){
   toast('✓ Đã lưu dữ liệu theo dõi');
 }
 
-function wstToggleCheck(wsId, item){
-  let site = getWstSite(wsId);
-  if(!site){ siteTracking.push({wsId,entries:[]}); site=getWstSite(wsId); }
-  if(!site.checklist) site.checklist={};
-  site.checklist[item] = !site.checklist[item];
-  saveWsTrack();
-  renderWsTrack();
-}
+
 
 function wstDeleteEntry(wsId, entryId){
   if(!confirm('Xoá mục này?')) return;
@@ -4341,6 +4200,13 @@ function populateGroupSelect(typeVal){
 
 // Hook lf_type change to repopulate group
 document.addEventListener('DOMContentLoaded', ()=>{
+  // One-time migration: dọn dẹp localStorage keys của tính năng đã xóa
+  if (!localStorage.getItem('migrated_v2_cleanup')) {
+    localStorage.removeItem('wst_checklist');
+    localStorage.removeItem('wst_filter_mobot');
+    localStorage.setItem('migrated_v2_cleanup', '1');
+  }
+
   const typeEl = document.getElementById('lf_type');
   if(typeEl) typeEl.addEventListener('change', ()=>populateGroupSelect(typeEl.value));
   populateGroupSelect('work');
