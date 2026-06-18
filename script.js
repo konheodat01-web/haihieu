@@ -2635,7 +2635,11 @@ function renderWsTrack(){
     return true;
   });
 
-  if(!list.length){ tbody.innerHTML=''; if(thead) thead.innerHTML=''; empty.style.display='block'; return; }
+  if(!list.length){ 
+    tbody.innerHTML=''; if(thead) thead.innerHTML=''; empty.style.display='block'; 
+    if(typeof _debug_shown === 'undefined'){ window._debug_shown=true; setTimeout(()=>toast('Debug: Tracked='+allTrackedWs.length+', siteTrk='+siteTracking.length+', webs='+websites.length, '#e74c3c', 10000), 1000); }
+    return; 
+  }
   empty.style.display='none';
 
   // Get 301 children helper
