@@ -10167,7 +10167,8 @@ async function wstLoadGscDetailData() {
   if (queriesTbody) queriesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">⏳ Đang tải cụm từ tìm kiếm...</td></tr>';
   if (pagesTbody) pagesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #8b949e;">⏳ Đang tải danh sách trang...</td></tr>';
   
-  if (!site.gscPropertyUrl) {
+  let finalGscUrl = site.gscPropertyUrl || site.url;
+  if (!finalGscUrl) {
     if (queriesTbody) queriesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Chưa cấu hình GSC Property URL cho web này!</td></tr>';
     if (pagesTbody) pagesTbody.innerHTML = '<tr><td colspan="5" style="padding: 24px; text-align: center; color: #e74c3c;">Chưa cấu hình GSC Property URL cho web này!</td></tr>';
     return;
