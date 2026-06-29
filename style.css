@@ -488,7 +488,11 @@ header.main-header, .main-header {
 }
 
 /* Guard exclusions: scroll controls for iframe apps and Kanban boards */
-#page-tasks, #page-recurring, .workspace-panel, .iframe-panel-wrap {
+#page-tasks, #page-recurring, .workspace-panel {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+.iframe-panel-wrap {
   overflow: hidden !important;
 }
 #page-tasks .kanban-wrapper, #page-recurring .kanban-wrapper {
