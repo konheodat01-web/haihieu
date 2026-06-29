@@ -1123,23 +1123,6 @@ nav.sidebar i.fa {
     background: #0d1117 !important;
 }
 
-#page-tasks .gv-tab {
-    color: #8b949e !important;
-    background: #161b22 !important;
-    border: 1px solid #30363d !important;
-    border-bottom: none !important;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-#page-tasks .gv-tab.active {
-    color: #f0f6fc !important;
-    background: #0d1117 !important;
-    border-color: #30363d !important;
-    border-bottom: 2px solid #58a6ff !important;
-}
-
 #page-tasks .task-row {
     background: #161b22 !important;
     border: 1px solid #30363d !important;
@@ -1197,21 +1180,6 @@ nav.sidebar i.fa {
     border: none !important;
     padding-bottom: 12px !important;
     overflow: visible !important;
-}
-
-#page-prompts .gv-tab {
-    border-radius: 6px !important;
-    border: 1px solid #30363d !important;
-    background-color: #161b22 !important;
-    color: #8b949e !important;
-    padding: 6px 14px !important;
-    transition: all 0.15s ease;
-}
-
-#page-prompts .gv-tab.active {
-    background-color: #21262d !important;
-    color: #f0f6fc !important;
-    border-color: #8b949e !important;
 }
 
 .prompt-cat-tag {
@@ -1547,24 +1515,6 @@ nav.sidebar i.fa {
     border-color: #30363d !important;
 }
 
-#page-prompts .gv-tab {
-    background-color: #161b22 !important;
-    border-color: #30363d !important;
-    color: #8b949e !important;
-    transition: all 0.15s ease !important;
-}
-
-#page-prompts .gv-tab.active {
-    background-color: #0d1117 !important;
-    color: #f0f6fc !important;
-    border-bottom-color: #0d1117 !important;
-}
-
-#page-prompts .gv-tab:hover:not(.active) {
-    background-color: #21262d !important;
-    color: #c9d1d9 !important;
-}
-
 /* Thiết lập các Category Tags */
 #page-prompts .prompt-cat-tag {
     background-color: #21262d !important;
@@ -1659,42 +1609,6 @@ nav.sidebar i.fa {
 
 /* Các tiêu đề lớn */
 #page-prompts h1, #page-prompts h2, #page-prompts h3, #page-prompts strong {
-    color: #f0f6fc !important;
-}
-
-/* ==========================================================================
-   V37: UNIFIED DROPDOWNS & POPOVERS DARK REFIT (qlDropdown, pqDropdown, etc)
-   ========================================================================== */
-
-/* Trục xuất nền trắng của các hộp dropdown và popover nổi toàn hệ thống */
-#qlDropdown, 
-#pqDropdown,
-#gvAssigneeDropdown,
-.member-dropdown,
-.dropdown-menu, 
-.custom-popover {
-    background-color: #161b22 !important; /* Tone xám đậm chuẩn layer 2 */
-    border: 1px solid #30363d !important; /* Viền tối phân cấp */
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5) !important; /* Bóng đổ tối */
-    color: #c9d1d9 !important;
-    z-index: 9999 !important;
-}
-
-/* Định dạng các hàng danh sách tìm kiếm (.search-item) */
-#qlDropdown .search-item,
-#gvAssigneeDropdown .search-item,
-.dropdown-menu .search-item {
-    background-color: transparent !important;
-    border-bottom: 1px solid #21262d !important;
-    color: #c9d1d9 !important;
-    transition: background-color 0.15s ease, color 0.15s ease !important;
-}
-
-/* Hover chuột sạch thay thế inline style */
-#qlDropdown .search-item:hover,
-#gvAssigneeDropdown .search-item:hover,
-.dropdown-menu .search-item:hover {
-    background-color: #21262d !important;
     color: #f0f6fc !important;
 }
 
