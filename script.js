@@ -3579,7 +3579,358 @@ function deleteCard(){
 function confirmPending(){
   const reason=document.getElementById('pendingReason').value.trim();
   if(pendingDragCard){
-  
+    if(pendingDragCard.gvId!=null){
+      // Card in a GV board
+      const g=giaoViecList.find(x=>x.id===pendingDragCard.gvId);
+      const card=(g?.taskCards||[]).find(c=>c.id===pendingDragCard.cardId);
+      if(card){
+        card.colId=pendingDragCard.colId;
+        card.pendingReason=reason;
+        card.pendingDate=todayVN();
+        card.pendingStatus='Chờ xử lý';
+      }
+      pendingDragCard=null;
+      if(g) renderGvKanban({id:g.id,name:g.taskName,cols:g.taskCols,cards:g.taskCards});
+      renderGiaoViec();
+      saveAppData();
+    } else {
+      const _tid = pendingDragCard.taskId || currentProjectId;
+      const task=tasks.find(t=>t.id===_tid);
+      // Bulk pending support
+      const idsToMove = pendingDragCard.bulkIds || [pendingDragCard.cardId];
+      (task?.cards||[]).forEach(c=>{
+        if(!idsToMove.includes(c.id)) return;
+        c.colId = pendingDragCard.colId;
+        c.pendingReason = reason;
+        c.pendingDate = todayVN();
+        c.pendingStatus = 'Chờ xử lý';
+      });
+      pendingDragCard=null;
+      clearCardSelection();
+      if(task) renderSubBoard(task);
+      renderTasksOverview();
+      saveAppData();
+    }
+    toast('❙❙ Đã chuyển sang Pending');
+  }
+  closePendingModal();
+}
+function closePendingModal(){document.getElementById('pendingModal').classList.remove('open');pendingDragCard=null;}
+
+function renderPendingSummary(){
+  const panel = document.getElementById('pendingSummaryPanel');
+  if(!panel) return;
+
+  // Collect pending cards
+  const allPendingCards=[];
+  // Filter tasks by current member
+  const myTasks = currentMember==='admin' ? tasks
+    : tasks.filter(t=>{
+        const p = (t.person||'').trim();
+        return !p || p===('');
+      });
+  myTasks.forEach(task=>{
+    const cols=getProjectCols(task);
+    const pendingColIds=new Set(cols.filter(c=>c.id==='pending'||c.id==='col_pending'||c.label.toLowerCase().includes('pending')).map(c=>c.id));
+    (task.cards||[]).forEach(card=>{
+      if(pendingColIds.has(card.colId)) allPendingCards.push({task,card});
+    });
+  });
+
+  // Collect pending parent tasks
+  const allPendingTasks = myTasks.filter(t=>t.pendingReason);
+
+  const body=document.getElementById('pendingSummaryBody');
+  const cnt=document.getElementById('pendingCount');
+  if(!body || !cnt) return;
+  const total = allPendingCards.length + allPendingTasks.length;
+  if(!total){panel.style.display='none';return;}
+  panel.style.display='block';
+  cnt.textContent=total;
+
+  const STATUSES=['Chờ xử lý','Đang xử lý','Đã xử lý xong'];
+  const sColor={'Chờ xử lý':'#e67e22','Đang xử lý':'#2980b9','Đã xử lý xong':'#27ae60'};
+
+  // Render pending parent tasks first
+  const parentRows = allPendingTasks.map(t=>{
+    const age=t.pendingDate?daysSince(t.pendingDate):0;
+    const ageStr=age===0?'Hôm nay':age===1?'Hôm qua':`${age} ngày`;
+    const st=t.pendingStatus||'Chờ xử lý';
+    return `<tr style="border-bottom:1px solid #fce0b0;background:#fff3e6">
+      <td style="padding:8px 12px">
+        <span onclick="openProjectBoard(${t.id})" style="color:var(--blue);cursor:pointer;font-weight:600;font-size:12px">⏸ ${t.name}</span>
+        <span style="font-size:10px;background:#e67e22;color:#fff;border-radius:10px;padding:1px 6px;margin-left:4px">Task cha</span>
+      </td>
+      <td style="padding:8px 12px;font-size:12px;color:var(--text-muted)">— Cả task —</td>
+      <td style="padding:8px 12px;white-space:nowrap;font-size:12px">
+        ${t.pendingDate?fmtDate(t.pendingDate):'?'}
+        <span style="color:var(--text-muted);font-size:11px">(${ageStr})</span>
+      </td>
+      <td style="padding:8px 12px;max-width:200px;color:var(--text-muted);font-size:12px">${t.pendingReason||'—'}</td>
+      <td style="padding:8px 12px">
+        <select onchange="updateTaskPendingStatus(${t.id},this.value)"
+          style="font-size:11px;padding:2px 6px;border:1px solid #fce0b0;border-radius:4px;background:#fff;color:${sColor[st]};font-weight:500;cursor:pointer">
+          ${STATUSES.map(s=>`<option value="${s}" ${st===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:8px 8px;white-space:nowrap">
+        <button class="btn btn-sm btn-outline" onclick="resolveTaskPending(${t.id})"
+          style="font-size:11px;padding:3px 8px;color:#27ae60;border-color:#27ae60" title="Xoá pending task">
+          ✓ Bỏ pending
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // Render pending cards
+  const firstColOf = task => getProjectCols(task)[0];
+  const cardRows = allPendingCards.map(({task,card})=>{
+    const age=card.pendingDate?daysSince(card.pendingDate):0;
+    const ageStr=age===0?'Hôm nay':age===1?'Hôm qua':`${age} ngày`;
+    const firstCol=firstColOf(task);
+    const st=card.pendingStatus||'Chờ xử lý';
+    return `<tr style="border-bottom:1px solid #fce0b0">
+      <td style="padding:8px 12px">
+        <span onclick="openProjectBoard(${task.id})" style="color:var(--blue);cursor:pointer;font-weight:500;font-size:12px">${task.name}</span>
+      </td>
+      <td style="padding:8px 12px;font-weight:500;font-size:12px">${card.name}</td>
+      <td style="padding:8px 12px;white-space:nowrap;font-size:12px">
+        ${card.pendingDate?fmtDate(card.pendingDate):'?'}
+        <span style="color:var(--text-muted);font-size:11px">(${ageStr})</span>
+      </td>
+      <td style="padding:8px 12px;max-width:200px;color:var(--text-muted);font-size:12px">${card.pendingReason||'—'}</td>
+      <td style="padding:8px 12px">
+        <select onchange="updatePendingStatus(${task.id},'${card.id}',this.value)"
+          style="font-size:11px;padding:2px 6px;border:1px solid #fce0b0;border-radius:4px;background:#fff;color:${sColor[st]};font-weight:500;cursor:pointer">
+          ${STATUSES.map(s=>`<option value="${s}" ${st===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </td>
+      <td style="padding:8px 8px;white-space:nowrap">
+        <button class="btn btn-sm btn-primary" onclick="resolvePending(${task.id},'${card.id}')"
+          style="font-size:11px;padding:3px 8px" title="Done → về cột đầu (${firstCol.label})">
+          &#10003; Done
+        </button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  body.innerHTML = parentRows + cardRows;
+}
+
+function updatePendingStatus(taskId,cardId,status){
+  const task=tasks.find(t=>t.id===taskId);
+  const card=task?.cards.find(c=>c.id===cardId);
+  if(card){card.pendingStatus=status;}
+}
+
+function resolvePending(taskId,cardId){
+  const task=tasks.find(t=>t.id===taskId);
+  const card=task?.cards.find(c=>c.id===cardId);
+  if(!card) return;
+  const firstCol=getProjectCols(task)[0];
+  card.colId=firstCol.id;
+  delete card.pendingReason; delete card.pendingDate; delete card.pendingStatus;
+  renderTasksOverview();
+  if(currentProjectId===taskId) renderSubBoard(task);
+  saveAppData();
+  toast(`&#10003; Đã resolve → "${firstCol.label}"`);
+}
+
+
+
+// [REMOVED: QUICK IMPORT] // ===== MEMBER SWITCHER =====
+const MEMBER_CONFIG = { admin: {label:'Admin', avatar:'A', pages:['dashboard','recurring','tasks','links','prompts','wstrack','ecosystem']} };
+
+function toggleMemberDropdown(){
+  document.getElementById('memberDropdown').classList.toggle('open');
+  // close on outside click
+  setTimeout(()=>document.addEventListener('click', closeMemberDropdownOutside, {once:true}), 10);
+}
+function closeMemberDropdownOutside(e){
+  if(!e.target.closest('#memberPicker'))
+    document.getElementById('memberDropdown').classList.remove('open');
+}
+
+
+
+// Patch renders to respect member filter
+const _origRenderTasksOverview = renderTasksOverview;
+renderTasksOverview = function(){
+  if(currentMember!=='admin'){
+    const el=document.getElementById('tkFilterPerson');
+    if(el) el.value = '';
+  }
+  _origRenderTasksOverview();
+};
+
+function isAdminLoggedIn() {
+  try {
+    return sessionStorage.getItem('wt_session_admin') === 'true';
+  } catch(e) {
+    return false;
+  }
+}
+
+// ===== LOGIN / LOGOUT =====
+function showLoginScreen(){
+  const ls = document.getElementById('loginScreen');
+  if(ls) ls.style.display='flex';
+}
+
+function hideLoginScreen(){
+  const ls = document.getElementById('loginScreen');
+  if(ls) ls.style.display='none';
+  document.body.classList.remove('login-mode');
+  // Show app version after login
+  const ver = document.getElementById('appVersion');
+  if(ver) ver.style.display = 'block';
+}
+
+// ===== AVATAR =====
+let _pendingAvatar = undefined;
+function applyAllAvatars(){
+  const avs = _settings.avatars || {};
+  ['admin'].forEach(m=>{
+    const src = avs[m] || null;
+    const icon = MEMBER_CONFIG[m]?.avatar || 'H';
+    const loginEl = document.getElementById('loginAv_'+m);
+    if(loginEl) loginEl.innerHTML = src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block">` : icon;
+    const mdEl = document.getElementById('md-avatar-'+m);
+    if(mdEl) mdEl.innerHTML = src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block">` : icon;
+  });
+  const hdrEl = document.getElementById('memberAvatar');
+  if(hdrEl){
+    const src = avs[currentMember] || null;
+    hdrEl.innerHTML = src ? `<img src="${src}" style="width:100%;height:100%;object-fit:cover;display:block">` : (MEMBER_CONFIG[currentMember]?.avatar||'H');
+  }
+}
+
+// ===== SETTINGS =====
+let _settings = {};
+function openSettings(){
+  document.getElementById('settingsModal').classList.add('open');
+}
+function closeSettings(){ document.getElementById('settingsModal').classList.remove('open'); }
+
+function saveSettings(){
+  const btn = document.getElementById('settingsSaveBtn');
+  if (btn) {
+    btn.textContent='Đang lưu...'; btn.disabled=true;
+  }
+  saveAppData();
+  setTimeout(()=>{
+    if (btn) {
+      btn.textContent='✓ Lưu'; btn.disabled=false;
+    }
+    closeSettings();
+    toast('✓ Đã lưu cài đặt giao diện');
+  }, 500);
+}
+
+// ===== UNIFIED SEARCH =====
+let _uniMode = 'link'; // 'link' | 'prompt'
+const UNI_MODES = {
+  link:   { icon:'🔗', placeholder:'Tìm link / website...', addColor:'#e74c3c' },
+  prompt: { icon:'✍️', placeholder:'Tìm prompt...',         addColor:'#8e44ad' },
+};
+
+function uniToggleMode(){
+  _uniMode = _uniMode==='link' ? 'prompt' : 'link';
+  const m = UNI_MODES[_uniMode];
+  document.getElementById('uniModeBtn').textContent = m.icon;
+  document.getElementById('uniInput').placeholder = m.placeholder;
+  document.getElementById('uniAddBtn').style.color = m.addColor;
+  document.getElementById('uniInput').value = '';
+  uniClose();
+}
+
+function uniSearch(){
+  if(_uniMode==='link') qlSearch();
+  else pqSearch();
+}
+
+function uniClose(){
+  qlClose();
+  pqClose();
+}
+
+function uniAdd(){
+  if(_uniMode==='link') qlOpenAdd();
+  else pqOpenAdd();
+}
+
+function uniKeydown(e){
+  if(_uniMode==='link') qlKeydown(e);
+  else if(e.key==='Escape'){ pqClose(); e.target.blur(); }
+}
+
+// Patch ql/pq to read from uniInput
+function qlGetInput(){ return document.getElementById('uniInput')?.value||''; }
+function pqGetInput(){ return document.getElementById('uniInput')?.value||''; }
+
+// ===== PROFILE AVATARS =====
+function getProfileAvatars(){
+  try{ const s=JSON.parse(localStorage.getItem('wt_settings')||'{}'); return s.avatars||{}; }catch(e){ return {}; }
+}
+
+// ===== GLOBAL KB CARD TOOLTIP =====
+function showKbTooltip(e, name, desc){
+  const tip=document.getElementById('kbTooltip');
+  if(!tip) return;
+  tip.innerHTML=`<div style="font-weight:600;margin-bottom:${desc?'6px':'0'}">${name}</div>${desc?`<div style="color:rgba(255,255,255,.75)">${desc}</div>`:''}`;
+  tip.style.display='block';
+  moveKbTooltip(e);
+}
+function moveKbTooltip(e){
+  const tip=document.getElementById('kbTooltip');
+  if(!tip||tip.style.display==='none') return;
+  const x=e.clientX+14, y=e.clientY+14;
+  const w=tip.offsetWidth, h=tip.offsetHeight;
+  tip.style.left=(x+w>window.innerWidth ? x-w-20 : x)+'px';
+  tip.style.top=(y+h>window.innerHeight ? y-h-20 : y)+'px';
+}
+function hideKbTooltip(){
+  const tip=document.getElementById('kbTooltip');
+  if(tip) tip.style.display='none';
+}
+
+// ===== ADMIN AUTHENTICATION SUCCESS CALLBACK (V48 Isolation) =====
+function onAdminLoginSuccess() {
+  currentMember = 'admin';
+  try { localStorage.setItem('wt_activeMember', 'admin'); } catch(e) {}
+  switchWorkspace('job', document.querySelector('.sidebar-nav-item'));
+  restorePosition();
+  renderDashboard();
+  renderTasksOverview();
+}
+
+// ===== CHANGE PASSWORD =====
+function openChangePassword(){
+  const title = document.getElementById('cpwTitle');
+  if (title) title.textContent = `🔑 Đổi mật khẩu - Admin`;
+  const cpwOld = document.getElementById('cpwOld');
+  if (cpwOld) cpwOld.value='';
+  const cpwNew = document.getElementById('cpwNew');
+  if (cpwNew) cpwNew.value='';
+  const cpwConfirm = document.getElementById('cpwConfirm');
+  if (cpwConfirm) cpwConfirm.value='';
+  const cpwErr = document.getElementById('cpwErr');
+  if (cpwErr) cpwErr.style.display='none';
+  const modal = document.getElementById('changePwModal');
+  if (modal) modal.classList.add('open');
+  if (cpwOld) setTimeout(()=>cpwOld.focus(),100);
+}
+function closeChangePassword(){ const modal = document.getElementById('changePwModal'); if (modal) modal.classList.remove('open'); }
+function saveChangePassword(){
+  const old = document.getElementById('cpwOld')?.value || '';
+  const nw = document.getElementById('cpwNew')?.value || '';
+  const cf = document.getElementById('cpwConfirm')?.value || '';
+  const err = document.getElementById('cpwErr');
+
+  if (!old || !nw || !cf) {
+    if (err) { err.textContent = 'Vui lòng nhập đầy đủ các trường!'; err.style.display = 'block'; }
+    return;
+  }
 
   if (nw !== cf) {
     if (err) { err.textContent = 'Mật khẩu mới và xác nhận mật khẩu không khớp!'; err.style.display = 'block'; }
@@ -6136,7 +6487,149 @@ function saveTaskPending(){
   const reason = (document.getElementById("tpm_reason").value||"").trim();
   if(!reason){ toast("Vui lòng nhập lý do pending!","#e74c3c"); return; }
   const note = (document.getElementById("tpm_note").value||"").trim();
+  if(rawId.startsWith("gv_")){
+    const gvId = parseInt(rawId.replace("gv_",""));
+    const g = giaoViecList.find(x=>x.id===gvId);
+    if(!g) return;
+    g.pendingReason=reason; g.pendingNote=note; g.pendingDate=todayVN(); g.pendingStatus="Chờ xử lý";
+    saveAppData(); closeTaskPendingModal(); renderGiaoViec();
+    toast("⏸ Đã pending: "+g.taskName);
+  } else {
+    const t = tasks.find(x=>x.id===parseInt(rawId));
+    if(!t) return;
+    t.pendingReason=reason; t.pendingNote=note; t.pendingDate=todayVN(); t.pendingStatus="Chờ xử lý";
+    saveAppData(); closeTaskPendingModal(); renderTasksOverview();
+    toast("⏸ Đã pending task: "+t.name);
+  }
+}
 
+function resolveTaskPending(taskId){
+  const t = tasks.find(x=>x.id===taskId);
+  if(!t) return;
+  delete t.pendingReason; delete t.pendingNote; delete t.pendingDate; delete t.pendingStatus;
+  saveAppData(); renderTasksOverview();
+  toast("✓ Đã bỏ pending task: "+t.name);
+}
+
+function resolveTaskPendingFromModal(){
+  const rawId = document.getElementById("tpm_taskId").value;
+  if(rawId.startsWith("gv_")){
+    resolveGvPending(parseInt(rawId.replace("gv_","")), null);
+    closeTaskPendingModal();
+  } else {
+    resolveTaskPending(parseInt(rawId));
+    closeTaskPendingModal();
+  }
+}
+
+function updateTaskPendingStatus(taskId, status){
+  const t = tasks.find(x=>x.id===taskId);
+  if(t){ t.pendingStatus=status; saveAppData(); }
+}
+
+// ===== GIAO VIỆC =====
+let _gvTaskRef = null; // task being assigned
+
+function switchTasksTab(tab){
+  try{ sessionStorage.setItem('wt_activeSubPage', tab); } catch(e){}
+  document.getElementById('panel-mytasks').style.display = tab==='mytasks' ? 'block' : 'none';
+  document.getElementById('panel-giaoviec').style.display = tab==='giaoviec' ? 'block' : 'none';
+  document.getElementById('tab-mytasks').classList.toggle('active', tab==='mytasks');
+  document.getElementById('tab-giaoviec').classList.toggle('active', tab==='giaoviec');
+  // Ẩn taskSubBoard khi chuyển sang giao việc
+  if(tab==='giaoviec'){
+    const sub = document.getElementById('taskSubBoard');
+    if(sub) sub.style.display='none';
+    const ov = document.getElementById('tasksOverview');
+    if(ov) ov.style.display='block';
+    document.querySelector('main')?.classList.remove('board-mode');
+    renderGiaoViec();
+  }
+}
+
+
+
+// Gọi sau mỗi thay đổi card GV: tự cập nhật status và thông báo khi done
+
+// GV: open kanban board for a giao viec item
+let _gvBoardId = null;
+
+
+
+// GV add/edit card modal (reuse the same modal as tasks)
+let _gvEditCardId = null;
+let _gvEditCardTaskId = null;
+let _gvEditCardColId = null;
+
+
+
+
+
+// ===== GV CARD BULK SELECT =====
+let _gvSelectedCardIds = new Set();
+let _currentGvBoardId = null;
+
+
+
+
+
+
+
+
+
+
+
+
+// GV: pending task cha (trong giao viec)
+
+// GV: pending summary
+
+
+
+
+
+
+
+
+
+function confirmNghiemThu(id){
+  const g = giaoViecList.find(x=>x.id===id);
+  if(!g) return;
+  g.status='Đã nghiệm thu';
+  g.acceptedAt=todayVN();
+  saveAppData();
+  renderGiaoViec();
+  toast('✅ Đã nghiệm thu: '+g.taskName);
+}
+
+
+
+
+
+
+
+
+
+// Assignee search dropdown
+
+
+// Close dropdown on outside click
+document.addEventListener('click',e=>{ if(!e.target.closest('#giaoViecModal')) { const d=document.getElementById('gvAssigneeDropdown'); if(d) d.style.display='none'; } });
+
+// Manage assignees
+function openManageAssignees(){
+  renderAssigneeList();
+  document.getElementById('manageAssigneesModal').classList.add('open');
+  setTimeout(()=>document.getElementById('newAssigneeName').focus(),100);
+}
+function closeManageAssignees(){
+  document.getElementById('manageAssigneesModal').classList.remove('open');
+}
+
+function renderAssigneeList(){
+  const el = document.getElementById('assigneeList');
+  if(!el) return;
+  if(!assignees.length){ el.innerHTML='<div style="text-align:center;color:var(--text-muted);padding:16px">Chưa có người nhận nào</div>'; return; }
   el.innerHTML = assignees.map((a,i)=>`
     <div style="display:flex;align-items:center;gap:8px;background:#f8f9fa;border:1px solid var(--gray-border);border-radius:6px;padding:8px 10px">
       <input type="text" value="${a}" onchange="renameAssignee(${i},this.value)"
