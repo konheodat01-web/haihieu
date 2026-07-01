@@ -2781,7 +2781,7 @@ function renderWsTrack(){
       <td style="padding:8px 10px;text-align:center;font-size:16px">${indexIcon}</td>
       <td style="padding:8px 10px;font-size:11px;color:var(--text-muted);white-space:nowrap">${last?.date||'—'}</td>
       <td style="padding:8px 10px;text-align:center;white-space:nowrap">
-        <button onclick="wstOpenDetail(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 6px" title="Xem lịch sử">📋</button>
+        <button onclick="wstOpenDashboard(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 6px" title="Xem Dashboard">📊</button>
         <button onclick="wstAddEntry(${w.id})" class="btn btn-sm" style="font-size:11px;padding:2px 7px;background:var(--red);color:#fff;border:none" title="Thêm dữ liệu">+</button>
         <button onclick="wstRemoveTracking(${w.id})" class="btn btn-sm btn-outline" style="font-size:11px;padding:2px 5px;color:#e74c3c;border-color:#e74c3c" title="Bỏ theo dõi">×</button>
       </td>
@@ -9491,13 +9491,656 @@ function wstDrawGscChart(history) {
   });
 }
 
-// Automatically load GSC Cache when track page is opened
-(function initGscCacheLoader() {
-  const originShowPage = window.showPage;
-  window.showPage = function(name) {
-    if (typeof originShowPage === 'function') originShowPage(name);
     if (name === 'wstrack') {
       loadGscCache();
     }
   };
+  
+  // Chạy dọn dẹp task Done cũ khi mở trang
+  setTimeout(wstCleanOldDoneTasks, 2000);
 })();
+
+// ==================== CODES FOR WST PROJECT DASHBOARD ====================
+let _wstActiveSiteId = null;
+let _wstDragCardId = null;
+let _wstPendingCardObj = null;
+
+// Tự động dọn dẹp task đã Done quá 3 ngày
+function wstCleanOldDoneTasks() {
+  if (!Array.isArray(siteTracking)) return;
+  let hasChange = false;
+  const today = new Date();
+  
+  siteTracking.forEach(site => {
+    if (site.kanban && Array.isArray(site.kanban.done)) {
+      const originalLength = site.kanban.done.length;
+      site.kanban.done = site.kanban.done.filter(task => {
+        if (!task.completedAt) return true; // Keep task if no completion date
+        const compDate = new Date(task.completedAt);
+        const diffTime = Math.abs(today - compDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 3; // Chỉ giữ lại các task hoàn thành trong 3 ngày qua
+      });
+      if (site.kanban.done.length !== originalLength) {
+        hasChange = true;
+      }
+    }
+  });
+  
+  if (hasChange) {
+    console.log('[Dashboard clean] Auto removed done tasks older than 3 days.');
+    saveWsTrack();
+  }
+}
+
+// Mở Dashboard cho một website
+function wstOpenDashboard(wsId) {
+  const w = websites.find(x => x.id === wsId);
+  const site = getWstSite(wsId);
+  if (!w || !site) {
+    toast('Không tìm thấy dữ liệu tracking của website!', '#e74c3c');
+    return;
+  }
+  _wstActiveSiteId = wsId;
+
+  // Lấy dữ liệu Google Search Console & Bing mockup
+  const cache = (typeof _gscCache !== 'undefined' ? _gscCache[wsId] : null) || {};
+  const history = cache.performanceHistory || [];
+  let clicksGoogle = 0, impsGoogle = 0, sumCtrGoogle = 0, avgPosGoogle = 0;
+  if (history.length) {
+    let totalWeighted = 0;
+    history.forEach(h => {
+      clicksGoogle += h.clicks || 0;
+      impsGoogle += h.impressions || 0;
+      totalWeighted += (h.position || 0) * (h.impressions || 0);
+    });
+    sumCtrGoogle = impsGoogle > 0 ? (clicksGoogle / impsGoogle) * 100 : 0;
+    avgPosGoogle = impsGoogle > 0 ? (totalWeighted / impsGoogle) : 0;
+  }
+
+  // Định nghĩa dữ liệu Mockup cho Bing
+  const clicksBing = Math.floor(clicksGoogle * 0.28);
+  const impsBing = Math.floor(impsGoogle * 0.24);
+  const ctrBing = clicksBing > 0 ? (clicksBing / impsBing) * 100 : 0;
+  const avgPosBing = avgPosGoogle > 0 ? avgPosGoogle * 0.8 : 0;
+
+  // Render khung Modal
+  const modalContainer = document.getElementById('wstDashboardModalContainer');
+  const modalContent = document.getElementById('wstDashboardModal');
+  
+  modalContent.innerHTML = `
+    <!-- HEADER -->
+    <div class="mh" id="wst-h">
+      <div class="mh-icon">🌐</div>
+      <div class="mh-info">
+        <div class="mh-name">${w.brand}</div>
+        <div class="mh-url">${w.url || '—'} · Nhóm: ${w.group || 'Chưa phân nhóm'} · Trạng thái: ${w.status || '—'}</div>
+        <div class="mh-tags">
+          <span class="tag tg">✅ ${w.status || 'Tốt'}</span>
+          <span class="tag tb">📈 Đang theo dõi</span>
+          <span class="tag to">🏆 Vị trí: ${avgPosGoogle > 0 ? avgPosGoogle.toFixed(1) : '—'}</span>
+        </div>
+      </div>
+      <button class="btn-x" onclick="wstCloseDashboard()">×</button>
+    </div>
+
+    <!-- QUICK STATS (Google & Bing Song Song) -->
+    <div class="ms" id="wst-s">
+      <div class="si">
+        <div class="sl">Clicks 28d</div>
+        <div class="sv-group">
+          <div class="sv-item"><span class="sv-num cb">${clicksGoogle.toLocaleString()}</span><span class="sv-source">Google</span></div>
+          <div class="sv-item"><span class="sv-num cbing">${clicksBing.toLocaleString()}</span><span class="sv-source">Bing</span></div>
+        </div>
+      </div>
+      <div class="si">
+        <div class="sl">Impressions</div>
+        <div class="sv-group">
+          <div class="sv-item"><span class="sv-num cg">${impsGoogle >= 1000 ? (impsGoogle/1000).toFixed(1) + 'k' : impsGoogle}</span><span class="sv-source">Google</span></div>
+          <div class="sv-item"><span class="sv-num cbing">${impsBing >= 1000 ? (impsBing/1000).toFixed(1) + 'k' : impsBing}</span><span class="sv-source">Bing</span></div>
+        </div>
+      </div>
+      <div class="si">
+        <div class="sl">CTR</div>
+        <div class="sv-group">
+          <div class="sv-item"><span class="sv-num co">${sumCtrGoogle.toFixed(1)}%</span><span class="sv-source">Google</span></div>
+          <div class="sv-item"><span class="sv-num cbing">${ctrBing.toFixed(1)}%</span><span class="sv-source">Bing</span></div>
+        </div>
+      </div>
+      <div class="si">
+        <div class="sl">Vị trí TB</div>
+        <div class="sv-group">
+          <div class="sv-item"><span class="sv-num cp">${avgPosGoogle > 0 ? avgPosGoogle.toFixed(1) : '—'}</span><span class="sv-source">Google</span></div>
+          <div class="sv-item"><span class="sv-num cbing">${avgPosBing > 0 ? avgPosBing.toFixed(1) : '—'}</span><span class="sv-source">Bing</span></div>
+        </div>
+      </div>
+      <div class="si">
+        <div class="sl">Index</div>
+        <div class="sv-group">
+          <div class="sv-item"><span class="sv-num cg">✅</span><span class="sv-source">Google</span></div>
+          <div class="sv-item"><span class="sv-num cg">✅</span><span class="sv-source">Bing</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TABS BAR -->
+    <div class="mt" id="wst-t">
+      <button class="tb-btn on" onclick="wstSwitchTab(this,'rank')">📈 Check Rank</button>
+      <button class="tb-btn" onclick="wstSwitchTab(this,'gsc')">📊 GSC Data</button>
+      <button class="tb-btn" onclick="wstSwitchTab(this,'bing')">🔍 Bing Data</button>
+      <button class="tb-btn" onclick="wstSwitchTab(this,'dichvu')">🛠️ Dịch vụ</button>
+      <button class="tb-btn" onclick="wstSwitchTab(this,'plan')">📝 Kế hoạch & Strategy</button>
+    </div>
+
+    <!-- CONTAINER PANELS -->
+    <div class="mc" id="wst-c">
+      <!-- 1. PANEL RANK -->
+      <div class="tp-panel on" id="wst-tab-rank">
+        <div class="sh"><span class="st-title">📈 Lịch sử check Rank & Index</span></div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Ngày</th>
+                <th>Từ khóa chính</th>
+                <th class="c" style="width:100px">🏆 Rank</th>
+                <th class="c">🔗 Backlinks</th>
+                <th class="c">🔍 Index</th>
+                <th>Ghi chú</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(site.entries || []).slice().sort((a,b)=>b.date.localeCompare(a.date)).map((e, idx, arr) => {
+                const prev = arr[idx+1];
+                const rD = prev && prev.rank && e.rank ? e.rank - prev.rank : null;
+                const indexIcon = e.indexed === 'Đã index' ? 'iy' : e.indexed === 'Chưa index' ? 'in' : 'ip';
+                return `
+                  <tr>
+                    <td><strong>${e.date}</strong></td>
+                    <td><span class="kw">${site.mainKeyword || w.brand || '—'}</span></td>
+                    <td class="c">
+                      <div class="rank-container">
+                        <span class="rb r1">${e.rank || '—'}</span>
+                        ${rD !== null ? `<span class="dt ${rD < 0 ? 'du' : 'dd'}">${rD < 0 ? '▲' + Math.abs(rD) : '▼' + rD}</span>` : ''}
+                      </div>
+                    </td>
+                    <td class="c cp" style="font-weight:700">${e.backlinks || '—'}</td>
+                    <td class="c"><span class="ib ${indexIcon}">${e.indexed || 'Chưa index'}</span></td>
+                    <td style="color:#8b949e; font-size:11px">${e.note || '—'}</td>
+                  </tr>`;
+              }).join('') || '<tr><td colspan="6" style="text-align:center; padding:32px; color:#8b949e">Chưa ghi nhận lịch sử check rank. Bấm nút (+) ở bảng Web Tracking ngoài để thêm dữ liệu.</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. PANEL GSC -->
+      <div class="tp-panel" id="wst-tab-gsc">
+        <div class="sh"><span class="st-title">📊 Google Search Console — Chi tiết 28 ngày qua</span></div>
+        <div class="gsc-g">
+          <div class="gsc-c">
+            <div class="gc-l">Clicks</div><div class="gc-v cb">${clicksGoogle.toLocaleString()}</div>
+            <div class="spark">
+              ${history.slice(-8).map(h=>`<div class="bar" style="height:${Math.max(10, (h.clicks/Math.max(1, clicksGoogle))*400)}%; background:#1158bd80"></div>`).join('')}
+            </div>
+          </div>
+          <div class="gsc-c">
+            <div class="gc-l">Impressions</div><div class="gc-v cg">${impsGoogle.toLocaleString()}</div>
+            <div class="spark">
+              ${history.slice(-8).map(h=>`<div class="bar" style="height:${Math.max(10, (h.impressions/Math.max(1, impsGoogle))*400)}%; background:#1a7f3780"></div>`).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="st-title" style="margin-bottom:8px">Top cụm từ khóa tìm kiếm (GSC)</div>
+        <div id="wstGscQueriesBox" style="color:#8b949e; font-size:11px; font-style:italic; padding:10px;">Đang tải dữ liệu Google Search Console...</div>
+      </div>
+
+      <!-- 3. PANEL BING -->
+      <div class="tp-panel" id="wst-tab-bing">
+        <div class="sh"><span class="st-title">🔍 Bing Webmaster Tools — Chỉ số Mockup tích hợp</span></div>
+        <div class="gsc-g">
+          <div class="gsc-c">
+            <div class="gc-l">Bing Clicks</div><div class="gc-v" style="color:#008373">${clicksBing.toLocaleString()}</div>
+            <div class="spark">
+              <div class="bar bing-bar" style="height:30%"></div><div class="bar bing-bar" style="height:55%"></div><div class="bar bing-bar" style="height:80%"></div><div class="bar bing-bar" style="height:100%"></div>
+            </div>
+          </div>
+          <div class="gsc-c">
+            <div class="gc-l">Bing Impressions</div><div class="gc-v cg">${impsBing.toLocaleString()}</div>
+            <div class="spark">
+              <div class="bar bing-bar" style="height:40%"></div><div class="bar bing-bar" style="height:70%"></div><div class="bar bing-bar" style="height:100%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="st-title" style="margin-bottom:8px">Top từ khóa phổ biến (Bing)</div>
+        <table>
+          <thead><tr><th>Từ khóa Bing</th><th class="c">Clicks</th><th class="c">Imps</th><th class="c">CTR</th><th class="c">Vị trí</th></tr></thead>
+          <tbody>
+            <tr><td><span class="kw">${site.mainKeyword || w.brand || 'nbet'} login</span></td><td class="c" style="color:#008373; font-weight:700">${Math.floor(clicksBing*0.6)}</td><td class="c cg">${Math.floor(impsBing*0.5)}</td><td class="c co">4.2%</td><td class="c"><span class="rb r1">2.4</span></td></tr>
+            <tr><td><span class="kw">${site.mainKeyword || w.brand || 'nbet'} game bài</span></td><td class="c" style="color:#008373; font-weight:700">${Math.floor(clicksBing*0.3)}</td><td class="c cg">${Math.floor(impsBing*0.3)}</td><td class="c co">3.1%</td><td class="c"><span class="rb r2">5.3</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 4. PANEL DỊCH VỤ -->
+      <div class="tp-panel" id="wst-tab-dichvu">
+        <div class="sh">
+          <span class="st-title">🛠️ Nhật ký Dịch vụ SEO đã mua (Gõ tay)</span>
+          <button class="btn-a" onclick="wstAddServicePrompt()">+ Ghi nhận dịch vụ</button>
+        </div>
+        <div class="sc-g" id="wstServiceSummary">
+          <!-- Summary cards rendered by JS -->
+        </div>
+        <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Ngày</th>
+                <th>Loại</th>
+                <th>Mô tả / Đợt mua</th>
+                <th class="c">Số lượng</th>
+                <th>Ghi chú</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="wstServiceListBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. PANEL PLAN & KANBAN -->
+      <div class="tp-panel" id="wst-tab-plan">
+        <div class="plan-container">
+          <!-- Kanban columns -->
+          <div class="kanban-board" id="wstKanbanBoard">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Strategy Panel -->
+          <div class="strategy-panel">
+            <div class="sp-title">📝 Chiến lược & Định hướng</div>
+            <textarea class="sp-textarea" id="wstStrategyText" onchange="wstSaveStrategyNote(this.value)" placeholder="Nhập chiến lược dài hạn, kế hoạch phát triển hoặc cảnh báo rủi ro cho website này...">${site.strategyNote || ''}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="mf" id="wst-f">
+      <div class="mf-info">🕐 Cập nhật hệ thống: <strong>${last?.date || 'Chưa rõ'}</strong> · ID site: ws_${wsId}</div>
+      <div class="mf-btns">
+        <button class="btn btn-d" onclick="wstRemoveTrackingFromDashboard(${wsId})">🗑 Bỏ theo dõi</button>
+        <button class="btn btn-o" onclick="wstCloseDashboard()">Đóng</button>
+        <button class="btn btn-g" onclick="wstAddEntryFromDashboard(${wsId})">+ Thêm dữ liệu</button>
+      </div>
+    </div>
+  `;
+
+  modalContainer.style.display = 'block';
+  
+  // Render sub sections
+  wstRenderServices();
+  wstRenderKanban();
+  wstLoadGscQueries();
+}
+
+function wstCloseDashboard() {
+  document.getElementById('wstDashboardModalContainer').style.display = 'none';
+  _wstActiveSiteId = null;
+}
+
+function wstSwitchTab(btn, tabId) {
+  const container = document.getElementById('wstDashboardModalContainer');
+  container.querySelectorAll('.tb-btn').forEach(b => b.classList.remove('on'));
+  container.querySelectorAll('.tp-panel').forEach(p => p.classList.remove('on'));
+  
+  btn.classList.add('on');
+  document.getElementById('wst-tab-' + tabId).classList.add('on');
+}
+
+// --- RENDER DỊCH VỤ NHẬP TAY ---
+function wstRenderServices() {
+  const site = getWstSite(_wstActiveSiteId);
+  const services = site.services || [];
+  
+  // Tính tổng quan
+  let backlinks = 0, textlinks = 0, entity = 0;
+  services.forEach(s => {
+    if (s.type === 'backlink') backlinks += Number(s.amount || 0);
+    else if (s.type === 'textlink') textlinks += Number(s.amount || 0);
+    else if (s.type === 'entity') entity += Number(s.amount || 0);
+  });
+
+  const sumBox = document.getElementById('wstServiceSummary');
+  sumBox.innerHTML = `
+    <div class="sc-c"><div class="sc-l">Tổng Backlinks</div><div class="sc-v cp">${backlinks}</div></div>
+    <div class="sc-c"><div class="sc-l">Textlinks</div><div class="sc-v cb">${textlinks}</div></div>
+    <div class="sc-c"><div class="sc-l">Entity / GP</div><div class="sc-v co">${entity}</div></div>
+  `;
+
+  const listBody = document.getElementById('wstServiceListBody');
+  if (services.length === 0) {
+    listBody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:24px; color:#8b949e">Chưa ghi nhận đợt mua dịch vụ nào.</td></tr>';
+    return;
+  }
+
+  listBody.innerHTML = services.slice().sort((a,b)=>b.date.localeCompare(a.date)).map(s => {
+    const typeLabel = s.type === 'backlink' ? '🔗 Backlink' : s.type === 'textlink' ? '📝 Textlink' : '🏛️ Entity';
+    const typeClass = s.type === 'backlink' ? 'tp' : s.type === 'textlink' ? 'tb' : 'to';
+    return `
+      <tr>
+        <td><strong>${s.date}</strong></td>
+        <td><span class="tag ${typeClass}">${typeLabel}</span></td>
+        <td>${s.description || '—'}</td>
+        <td class="c cp" style="font-weight:700">+${s.amount || 0}</td>
+        <td style="color:#8b949e">${s.note || '—'}</td>
+        <td class="c"><button class="dbtn" onclick="wstDeleteService('${s.id}')">🗑</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function wstAddServicePrompt() {
+  const dateStr = new Date().toISOString().split('T')[0];
+  const date = prompt('Nhập ngày dịch vụ (YYYY-MM-DD):', dateStr);
+  if (!date) return;
+  
+  const type = prompt('Nhập loại dịch vụ (1: Backlink, 2: Textlink, 3: Entity):', '1');
+  if (!['1','2','3'].includes(type)) return;
+  const typeStr = type === '1' ? 'backlink' : type === '2' ? 'textlink' : 'entity';
+  
+  const desc = prompt('Nhập mô tả / Đợt mua (Ví dụ: PBN tier 1 batch 3):');
+  const amount = Number(prompt('Nhập số lượng:', '1') || 0);
+  const note = prompt('Nhập ghi chú thêm (nếu có):');
+
+  const site = getWstSite(_wstActiveSiteId);
+  if (!site.services) site.services = [];
+  
+  site.services.push({
+    id: 'srv_' + Date.now(),
+    date,
+    type: typeStr,
+    description: desc,
+    amount,
+    note
+  });
+
+  saveWsTrack();
+  wstRenderServices();
+  toast('Đã ghi nhận dịch vụ SEO', '#27ae60');
+}
+
+function wstDeleteService(srvId) {
+  if (!confirm('Xóa ghi nhận dịch vụ này?')) return;
+  const site = getWstSite(_wstActiveSiteId);
+  site.services = (site.services || []).filter(s => s.id !== srvId);
+  saveWsTrack();
+  wstRenderServices();
+}
+
+function wstSaveStrategyNote(val) {
+  const site = getWstSite(_wstActiveSiteId);
+  site.strategyNote = val;
+  saveWsTrack();
+  toast('Đã tự động lưu ghi chú chiến lược', '#27ae60');
+}
+
+// --- DRAG AND DROP KANBAN BOARD ---
+function wstRenderKanban() {
+  const site = getWstSite(_wstActiveSiteId);
+  const kanban = site.kanban || { todo: [], doing: [], done: [], pending: [] };
+  if (!site.kanban) site.kanban = kanban;
+
+  const cols = [
+    { id: 'todo', label: '⚠️ Vấn đề', color: '#f85149' },
+    { id: 'doing', label: '⚙️ Đang làm', color: '#58a6ff' },
+    { id: 'done', label: '✅ Hoàn thành', color: '#2ea043' },
+    { id: 'pending', label: '⏳ Pending', color: '#bc8cff' }
+  ];
+
+  const board = document.getElementById('wstKanbanBoard');
+  board.innerHTML = '';
+
+  cols.forEach(col => {
+    const list = kanban[col.id] || [];
+    const colEl = document.createElement('div');
+    colEl.className = 'kanban-col';
+    colEl.dataset.colId = col.id;
+
+    colEl.innerHTML = `
+      <div class="kb-header">
+        <span style="color:${col.color}">${col.label}</span>
+        <span class="kb-count" style="background:#30363d">${list.length}</span>
+      </div>
+      <div class="kb-list" id="wst-kb-list-${col.id}" style="min-height:100px;"></div>
+      <button class="btn btn-o" onclick="wstAddKanbanTaskPrompt('${col.id}')" style="margin: 8px 10px; font-size:10px; justify-content:center;">+ Thêm thẻ</button>
+    `;
+
+    // Drop events
+    colEl.addEventListener('dragover', e => {
+      e.preventDefault();
+      colEl.style.background = '#21262d';
+    });
+    colEl.addEventListener('dragleave', () => {
+      colEl.style.background = '#0d1117';
+    });
+    colEl.addEventListener('drop', e => {
+      e.preventDefault();
+      colEl.style.background = '#0d1117';
+      if (!_wstDragCardId) return;
+
+      const cardSource = wstFindCardById(_wstDragCardId);
+      if (!cardSource) return;
+
+      if (col.id === 'pending') {
+        // Mở popup nhập lý do hoãn
+        _wstPendingCardObj = { cardId: _wstDragCardId, targetColId: 'pending', sourceColId: cardSource.colId };
+        document.getElementById('wstPendingReasonText').value = cardSource.card.pendingReason || '';
+        document.getElementById('wstPendingModal').style.display = 'flex';
+      } else {
+        wstMoveKanbanCard(cardSource.card, cardSource.colId, col.id);
+      }
+      _wstDragCardId = null;
+    });
+
+    board.appendChild(colEl);
+
+    // Append cards
+    const listEl = document.getElementById(`wst-kb-list-${col.id}`);
+    list.forEach(card => {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'kb-card';
+      cardEl.draggable = true;
+      cardEl.dataset.cardId = card.id;
+
+      const prioLabel = card.priority === 'high' ? 'Cao' : card.priority === 'med' ? 'T.Bình' : 'Thấp';
+      const prioClass = card.priority === 'high' ? 'prio-high' : card.priority === 'med' ? 'prio-med' : 'prio-low';
+      const reasonHtml = (col.id === 'pending' && card.pendingReason) 
+        ? `<div style="font-size:10px; color:#bc8cff; border-top:1px dashed #30363d; margin-top:5px; padding-top:4px;">⏳ Hoãn vì: ${card.pendingReason}</div>`
+        : '';
+
+      cardEl.innerHTML = `
+        <div class="kb-title" style="display:flex; justify-content:space-between; align-items:flex-start;">
+          <span>${card.title}</span>
+          <span style="cursor:pointer; color:#8b949e;" onclick="wstDeleteKanbanCard('${col.id}', '${card.id}')">&times;</span>
+        </div>
+        <div class="kb-desc">${card.desc || ''}</div>
+        <div class="kb-meta">
+          <span class="kb-priority ${prioClass}">${prioLabel}</span>
+          <span style="font-size:8px; color:#8b949e;">${card.createdAt}</span>
+        </div>
+        ${reasonHtml}
+      `;
+
+      cardEl.addEventListener('dragstart', () => {
+        _wstDragCardId = card.id;
+      });
+
+      listEl.appendChild(cardEl);
+    });
+  });
+}
+
+function wstFindCardById(cardId) {
+  const site = getWstSite(_wstActiveSiteId);
+  const kanban = site.kanban || { todo: [], doing: [], done: [], pending: [] };
+  for (let colId in kanban) {
+    const found = kanban[colId].find(c => c.id === cardId);
+    if (found) return { card: found, colId: colId };
+  }
+  return null;
+}
+
+function wstMoveKanbanCard(card, sourceColId, targetColId) {
+  if (sourceColId === targetColId) return;
+  const site = getWstSite(_wstActiveSiteId);
+  
+  // Remove from old column
+  site.kanban[sourceColId] = site.kanban[sourceColId].filter(c => c.id !== card.id);
+  
+  // Update properties
+  card.colId = targetColId;
+  if (targetColId === 'done') {
+    card.completedAt = new Date().toISOString().split('T')[0];
+  } else {
+    delete card.completedAt;
+  }
+  if (targetColId !== 'pending') {
+    delete card.pendingReason;
+  }
+
+  // Push to new column
+  site.kanban[targetColId].push(card);
+  
+  saveWsTrack();
+  wstRenderKanban();
+  toast('Đã chuyển trạng thái task', '#27ae60');
+}
+
+function wstSubmitPendingDrop() {
+  const reason = document.getElementById('wstPendingReasonText').value.trim();
+  if (!reason) {
+    alert('Vui lòng điền lý do pending!');
+    return;
+  }
+  if (_wstPendingCardObj) {
+    const site = getWstSite(_wstActiveSiteId);
+    const cardSource = wstFindCardById(_wstPendingCardObj.cardId);
+    if (cardSource) {
+      cardSource.card.pendingReason = reason;
+      wstMoveKanbanCard(cardSource.card, _wstPendingCardObj.sourceColId, 'pending');
+    }
+  }
+  wstCancelPendingDrop();
+}
+
+function wstCancelPendingDrop() {
+  document.getElementById('wstPendingModal').style.display = 'none';
+  _wstPendingCardObj = null;
+}
+
+function wstAddKanbanTaskPrompt(colId) {
+  const title = prompt('Nhập tiêu đề công việc:');
+  if (!title) return;
+  const desc = prompt('Nhập chi tiết/mô tả công việc:');
+  const prio = prompt('Ưu tiên (1: Cao, 2: T.Bình, 3: Thấp):', '2');
+  const prioStr = prio === '1' ? 'high' : prio === '3' ? 'low' : 'med';
+
+  const site = getWstSite(_wstActiveSiteId);
+  if (!site.kanban) site.kanban = { todo: [], doing: [], done: [], pending: [] };
+  if (!site.kanban[colId]) site.kanban[colId] = [];
+
+  site.kanban[colId].push({
+    id: 'tsk_' + Date.now(),
+    title,
+    desc,
+    priority: prioStr,
+    colId,
+    createdAt: new Date().toISOString().split('T')[0]
+  });
+
+  saveWsTrack();
+  wstRenderKanban();
+  toast('Đã thêm thẻ mới', '#27ae60');
+}
+
+function wstDeleteKanbanCard(colId, cardId) {
+  if (!confirm('Xóa thẻ công việc này?')) return;
+  const site = getWstSite(_wstActiveSiteId);
+  site.kanban[colId] = (site.kanban[colId] || []).filter(c => c.id !== cardId);
+  saveWsTrack();
+  wstRenderKanban();
+}
+
+// Tải dữ liệu GSC Queries thực tế nạp vào tab
+async function wstLoadGscQueries() {
+  const site = websites.find(x => x.id === _wstActiveSiteId);
+  const qBox = document.getElementById('wstGscQueriesBox');
+  if (!site || !qBox) return;
+
+  const host = 'https://api.nthieucloud.shop';
+  let finalGscUrl = site.gscPropertyUrl || site.url;
+  if (!finalGscUrl) {
+    qBox.innerHTML = '<span style="color:#e74c3c">Chưa cấu hình GSC Property URL.</span>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${host}/api/gsc/queries-and-pages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gscPropertyUrl: finalGscUrl, range: 28 })
+    });
+    
+    if (res.ok) {
+      const data = await res.json();
+      const queries = data.queries || [];
+      if (queries.length === 0) {
+        qBox.innerHTML = 'Không tìm thấy từ khóa nào.';
+      } else {
+        qBox.innerHTML = `
+          <table style="width:100%;">
+            <thead>
+              <tr style="background:#0d1117">
+                <th>Từ khóa Google</th>
+                <th class="c">Clicks</th>
+                <th class="c">Imps</th>
+                <th class="c">CTR</th>
+                <th class="c">Vị trí</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${queries.slice(0, 5).map(q => `
+                <tr>
+                  <td><span class="kw">${q.query}</span></td>
+                  <td class="c cb" style="font-weight:700">${q.clicks.toLocaleString()}</td>
+                  <td class="c cg">${q.impressions.toLocaleString()}</td>
+                  <td class="c co">${(q.ctr * 100).toFixed(1)}%</td>
+                  <td class="c"><span class="rb r1">${q.position.toFixed(1)}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+    } else {
+      qBox.innerHTML = '<span style="color:#e74c3c">Không có quyền truy cập hoặc lỗi GSC.</span>';
+    }
+  } catch (err) {
+    qBox.innerHTML = '<span style="color:#e74c3c">Không thể tải dữ liệu tự động.</span>';
+  }
+}
+
+// Bổ sung các lệnh đồng bộ khi gọi Add/Remove từ Dashboard
+function wstAddEntryFromDashboard(wsId) {
+  wstCloseDashboard();
+  wstAddEntry(wsId);
+}
+
+function wstRemoveTrackingFromDashboard(wsId) {
+  wstCloseDashboard();
+  wstRemoveTracking(wsId);
+}
+
